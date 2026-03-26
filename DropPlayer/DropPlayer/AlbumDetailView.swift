@@ -11,12 +11,12 @@ struct AlbumDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 0) {
+            LazyVStack(spacing: 0) {
                 // Header
                 header
 
                 // Track list
-                LazyVStack(spacing: 0) {
+                Group {
                     ForEach(Array(sortedTracks.enumerated()), id: \.element.id) { index, track in
                         TrackRowView(
                             track: track,
@@ -46,12 +46,12 @@ struct AlbumDetailView: View {
     // MARK: - Sub-views
 
     private var header: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 8) {
             AlbumArtView(image: artwork, size: .flexible)
                 .containerRelativeFrame(.horizontal) { w, _ in min(w * 0.58, 300) }
                 .cornerRadius(12)
                 .shadow(radius: 10, y: 4)
-                .padding(.top, 24)
+                .padding(.top, 12)
 
             VStack(spacing: 4) {
                 Text(album.displayTitle)
@@ -94,9 +94,9 @@ struct AlbumDetailView: View {
                 .disabled(sortedTracks.isEmpty)
             }
             .padding(.horizontal)
-            .padding(.bottom, 8)
+            .padding(.bottom, 4)
         }
-        .padding(.bottom, 8)
+        .padding(.bottom, 4)
     }
 
     private var sortedTracks: [Track] {
@@ -149,7 +149,7 @@ struct TrackRowView: View {
             }
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.vertical, 8)
         .contentShape(Rectangle())
     }
 

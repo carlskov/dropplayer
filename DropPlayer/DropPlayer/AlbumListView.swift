@@ -29,6 +29,7 @@ struct AlbumListView: View {
                     albumGrid
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .navigationTitle("Library")
             .searchable(text: $searchText, prompt: "Search albums or artists")
             .toolbar {
@@ -77,8 +78,8 @@ struct AlbumListView: View {
     private var albumGrid: some View {
         ScrollView {
             LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 160, maximum: 220), spacing: 16)],
-                spacing: 20
+                columns: [GridItem(.adaptive(minimum: 160, maximum: 220), spacing: 12)],
+                spacing: 12
             ) {
                 ForEach(filteredAlbums) { album in
                     NavigationLink(destination: AlbumDetailView(album: album)) {
@@ -87,7 +88,8 @@ struct AlbumListView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding()
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
         }
     }
 

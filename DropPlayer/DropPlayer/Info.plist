@@ -19,8 +19,23 @@
     <string>1</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
-    <key>NSPrincipalClass</key>
-    <string>NSApplication</string>
+
+    <!-- Full-screen support: required so iOS doesn't letterbox the app -->
+    <key>UILaunchScreen</key>
+    <dict/>
+
+    <!-- Scene manifest: required for modern full-screen SwiftUI apps -->
+    <key>UIApplicationSceneManifest</key>
+    <dict>
+        <key>UIApplicationSupportsMultipleScenes</key>
+        <false/>
+        <key>UISceneConfigurations</key>
+        <dict/>
+    </dict>
+
+    <!-- Supports current pointer/indirect input devices -->
+    <key>UIApplicationSupportsIndirectInputEvents</key>
+    <true/>
 
     <!-- Background audio playback -->
     <key>UIBackgroundModes</key>

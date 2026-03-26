@@ -12,20 +12,21 @@ struct NowPlayingView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Artwork — fills width minus side padding, stays square via aspectRatio
+                // Artwork — width set explicitly via containerRelativeFrame so it's always square
                 AlbumArtView(image: artwork, size: .flexible)
+                    .containerRelativeFrame(.horizontal) { w, _ in w - 64 }
                     .cornerRadius(16)
                     .shadow(radius: 16, y: 8)
                     .scaleEffect(player.isPlaying ? 1.0 : 0.88)
                     .animation(.spring(response: 0.4, dampingFraction: 0.6), value: player.isPlaying)
                     .padding(.top, 8)
-                    .padding(.horizontal, 32)
 
-                Spacer(minLength: 16)
+                Spacer(minLength: 0)
 
                 // Track info
                 trackInfoSection
                     .padding(.horizontal, 32)
+                    .padding(.top, 16)
 
                 // Seek bar
                 seekBarSection
@@ -45,8 +46,10 @@ struct NowPlayingView: View {
                         .padding(.top, 8)
                 }
 
-                Spacer(minLength: 24)
+                Spacer(minLength: 0)
+                    .frame(minHeight: 24)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
