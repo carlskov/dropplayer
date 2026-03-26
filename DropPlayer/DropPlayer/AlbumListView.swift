@@ -78,7 +78,7 @@ struct AlbumListView: View {
     private var albumGrid: some View {
         ScrollView {
             LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 150, maximum: 180), spacing: 12)],
+                columns: [GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 12)],
                 spacing: 12
             ) {
                 ForEach(filteredAlbums) { album in
@@ -160,7 +160,8 @@ struct AlbumCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            AlbumArtView(image: artwork, size: .fixed(150))
+            AlbumArtView(image: artwork, size: .flexible)
+                .aspectRatio(1, contentMode: .fit)
                 .cornerRadius(8)
                 .shadow(radius: 4, y: 2)
 
@@ -176,6 +177,7 @@ struct AlbumCardView: View {
                 .truncationMode(.tail)
                 .foregroundStyle(.secondary)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .task {
             artwork = await library.loadArtwork(for: album)
         }
