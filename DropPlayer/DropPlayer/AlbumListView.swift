@@ -78,7 +78,7 @@ struct AlbumListView: View {
     private var albumGrid: some View {
         ScrollView {
             LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 160, maximum: 220), spacing: 12)],
+                columns: [GridItem(.adaptive(minimum: 150, maximum: 180), spacing: 12)],
                 spacing: 12
             ) {
                 ForEach(filteredAlbums) { album in
@@ -159,26 +159,22 @@ struct AlbumCardView: View {
     @EnvironmentObject var library: LibraryViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            AlbumArtView(image: artwork, size: .flexible)
+        VStack(alignment: .leading, spacing: 4) {
+            AlbumArtView(image: artwork, size: .fixed(150))
                 .cornerRadius(8)
                 .shadow(radius: 4, y: 2)
 
             Text(album.displayTitle)
                 .font(.caption.bold())
-                .lineLimit(2)
+                .lineLimit(1)
+                .truncationMode(.tail)
                 .foregroundStyle(.primary)
 
             Text(album.displayArtist)
                 .font(.caption2)
                 .lineLimit(1)
+                .truncationMode(.tail)
                 .foregroundStyle(.secondary)
-
-            if let year = album.year {
-                Text(year)
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
         }
         .task {
             artwork = await library.loadArtwork(for: album)
