@@ -1,0 +1,133 @@
+import Foundation
+import SwiftyDropbox
+
+/// Wraps all Dropbox API calls: folder listing, metadata and temporary link fetching.
+final class DropboxBrowserService {
+    static let shared = DropboxBrowserService()
+    private init() {}
+
+    private var client: DropboxClient? {
+        DropboxClientsManager.authorizedClient
+    }
+
+    // MARK: - Folder listing
+
+    /// Returns all immediate child entries (files & folders) at ``path``.
+    func listFolder(path: String) async throws -> [Files.Metadata] {
+        guard let client else { throw DropboxError.notAuthenticated }
+
+        return try await withCheckedThrowingContinuation { continuation in
+            client.files.listFolder(path: path == "/" ? "" : path).response { result, error in
+                if let error {
+                    continuation.resume(throwing: DropboxError.api(error.description))
+                    return
+                }
+                guard let result else {
+                    continuation.resume(throwing: DropboxError.emptyResponse)
+                    return
+                }
+                // Handle pagination by collecting all pages
+                var entries = result.entries
+                if result.hasMore {
+                    Task {
+                        do {
+                            let more = try await self.continueListFolder(cursor: result.cursor)
+                            continuation.resume(returning: entries + more)
+                        } catch {
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                } else {
+                    continuation.resume(returning: entries)
+                }
+            }
+        }
+    }
+
+    private func continueListFolder(cursor: String) async throws -> [Files.Metadata] {
+        guard let client else { throw DropboxError.notAuthenticated }
+        var allEntries: [Files.Metadata] = []
+
+        return try await withCheckedThrowingContinuation { continuation in
+            client.files.listFolderContinue(cursor: cursor).response { result, error in
+                if let error {
+                    continuation.resume(throwing: DropboxError.api(error.description))
+                    return
+                }
+                guard let result else {
+                    continuation.resume(throwing: DropboxError.emptyResponse)
+                    return
+                }
+                allEntries += result.entries
+                if result.hasMore {
+                    Task {
+                        do {
+                            let more = try await self.continueListFolder(cursor: result.cursor)
+                            continuation.resume(returning: allEntries + more)
+                        } catch {
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                } else {
+                    continuation.resume(returning: allEntries)
+                }
+            }
+        }
+    }
+
+    // MARK: - Temporary streaming link
+
+    /// Returns a short-lived HTTPS URL that can be used to stream a file.
+    func temporaryLink(for path: String) async throws -> URL {
+        guard let client else { throw DropboxError.notAuthenticated }
+
+        return try await withCheckedThrowingContinuation { continuation in
+            client.files.getTemporaryLink(path: path).response { result, error in
+                if let error {
+                    continuation.resume(throwing: DropboxError.api(error.description))
+                    return
+                }
+                guard let urlString = result?.link, let url = URL(string: urlString) else {
+                    continuation.resume(throwing: DropboxError.emptyResponse)
+                    return
+                }
+                continuation.resume(returning: url)
+            }
+        }
+    }
+
+    // MARK: - Album art download
+
+    /// Downloads the raw bytes of a file (used for cover art images, keep small).
+    func downloadData(path: String) async throws -> Data {
+        guard let client else { throw DropboxError.notAuthenticated }
+
+        return try await withCheckedThrowingContinuation { continuation in
+            client.files.download(path: path).response { result, error in
+                if let error {
+                    continuation.resume(throwing: DropboxError.api(error.description))
+                    return
+                }
+                guard let data = result?.1 else {
+                    continuation.resume(throwing: DropboxError.emptyResponse)
+                    return
+                }
+                continuation.resume(returning: data)
+            }
+        }
+    }
+}
+
+enum DropboxError: LocalizedError {
+    case notAuthenticated
+    case emptyResponse
+    case api(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .notAuthenticated: return "Not signed in to Dropbox."
+        case .emptyResponse: return "Received an empty response from Dropbox."
+        case .api(let msg): return msg
+        }
+    }
+}
