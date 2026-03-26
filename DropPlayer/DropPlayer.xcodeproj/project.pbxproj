@@ -24,6 +24,7 @@
 		B015 /* MiniPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A015 /* MiniPlayerView.swift */; };
 		B016 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A016 /* Assets.xcassets */; };
 		B017 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A017 /* AppSettings.swift */; };
+		FFB81D4D2F75A4E900ABA63F /* SwiftyDropbox in Frameworks */ = {isa = PBXBuildFile; productRef = PKGDEP1 /* SwiftyDropbox */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,7 +47,6 @@
 		A017 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		A018 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		PROD /* DropPlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DropPlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		PKGREF /* Package.resolved */ = {isa = PBXFileReference; lastKnownFileType = text; path = Package.resolved; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,44 +54,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FFB81D4D2F75A4E900ABA63F /* SwiftyDropbox in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		ROOTGRP /* DropPlayer */ = {
-			isa = PBXGroup;
-			children = (
-				SRCGRP /* DropPlayer */,
-				PRODGRP /* Products */,
-			);
-			sourceTree = "<group>";
-		};
-		PRODGRP /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				PROD /* DropPlayer.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		SRCGRP /* DropPlayer */ = {
-			isa = PBXGroup;
-			children = (
-				A001 /* DropPlayerApp.swift */,
-				A002 /* ContentView.swift */,
-				A017 /* AppSettings.swift */,
-				A018 /* Info.plist */,
-				A016 /* Assets.xcassets */,
-				DROPBOXGRP /* Dropbox */,
-				MODELSGRP /* Models */,
-				VIEWSGRP /* Views */,
-				PLAYERGRP /* Player */,
-			);
-			path = DropPlayer;
-			sourceTree = "<group>";
-		};
 		DROPBOXGRP /* Dropbox */ = {
 			isa = PBXGroup;
 			children = (
@@ -111,6 +80,46 @@
 			name = Models;
 			sourceTree = "<group>";
 		};
+		PLAYERGRP /* Player */ = {
+			isa = PBXGroup;
+			children = (
+				A012 /* PlayerEngine.swift */,
+			);
+			name = Player;
+			sourceTree = "<group>";
+		};
+		PRODGRP /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				PROD /* DropPlayer.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		ROOTGRP = {
+			isa = PBXGroup;
+			children = (
+				SRCGRP /* DropPlayer */,
+				PRODGRP /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		SRCGRP /* DropPlayer */ = {
+			isa = PBXGroup;
+			children = (
+				A001 /* DropPlayerApp.swift */,
+				A002 /* ContentView.swift */,
+				A017 /* AppSettings.swift */,
+				A018 /* Info.plist */,
+				A016 /* Assets.xcassets */,
+				DROPBOXGRP /* Dropbox */,
+				MODELSGRP /* Models */,
+				VIEWSGRP /* Views */,
+				PLAYERGRP /* Player */,
+			);
+			path = DropPlayer;
+			sourceTree = "<group>";
+		};
 		VIEWSGRP /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -123,14 +132,6 @@
 				A015 /* MiniPlayerView.swift */,
 			);
 			name = Views;
-			sourceTree = "<group>";
-		};
-		PLAYERGRP /* Player */ = {
-			isa = PBXGroup;
-			children = (
-				A012 /* PlayerEngine.swift */,
-			);
-			name = Player;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -179,7 +180,7 @@
 				en,
 				Base,
 			);
-			mainGroup = ROOTGRP /* DropPlayer */;
+			mainGroup = ROOTGRP;
 			packageReferences = (
 				PKGREF1 /* XCRemoteSwiftPackageReference "SwiftyDropbox" */,
 			);
@@ -354,6 +355,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = TUFBR54PZS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DropPlayer/Info.plist;
@@ -384,6 +386,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = TUFBR54PZS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DropPlayer/Info.plist;
@@ -447,7 +450,6 @@
 			productName = SwiftyDropbox;
 		};
 /* End XCSwiftPackageProductDependency section */
-
 	};
 	rootObject = PROJECT /* Project object */;
 }
