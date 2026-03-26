@@ -3,19 +3,31 @@ import SwiftUI
 /// Persistent mini player bar shown above the tab bar.
 struct MiniPlayerView: View {
     @EnvironmentObject var player: PlayerEngine
+    @EnvironmentObject var library: LibraryViewModel
     @State private var showNowPlaying = false
+    @State private var artwork: UIImage?
 
     var body: some View {
         Button {
             showNowPlaying = true
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: "music.note")
-                    .font(.title3)
-                    .foregroundStyle(.blue)
-                    .frame(width: 36, height: 36)
-                    .background(Color(.systemGray6))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                // Album art thumbnail
+                Group {
+                    if let image = artwork {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(1, contentMode: .fill)
+                    } else {
+                        Image(systemName: "music.note")
+                            .font(.title3)
+                            .foregroundStyle(.blue)
+                            .frame(width: 36, height: 36)
+                            .background(Color(.systemGray6))
+                    }
+                }
+                .frame(width: 36, height: 36)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(player.currentTrack?.displayTitle ?? "")
@@ -56,6 +68,13 @@ struct MiniPlayerView: View {
         .buttonStyle(.plain)
         .sheet(isPresented: $showNowPlaying) {
             NowPlayingView()
+        }
+        .task(id: player.currentTrack?.id) {
+            artwork = nil
+            if let track = player.currentTrack,
+               let album = library.albums.first(where: { $0.tracks.contains(where: { $0.id == track.id }) }) {
+                artwork = await library.loadArtwork(for: album)
+            }
         }
     }
 }
