@@ -12,12 +12,16 @@ struct NowPlayingView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Artwork
-                artworkSection
+                // Artwork — fills width minus side padding, stays square via aspectRatio
+                AlbumArtView(image: artwork, size: .flexible)
+                    .cornerRadius(16)
+                    .shadow(radius: 16, y: 8)
+                    .scaleEffect(player.isPlaying ? 1.0 : 0.88)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.6), value: player.isPlaying)
                     .padding(.top, 8)
                     .padding(.horizontal, 32)
 
-                Spacer(minLength: 24)
+                Spacer(minLength: 16)
 
                 // Track info
                 trackInfoSection
@@ -30,7 +34,7 @@ struct NowPlayingView: View {
 
                 // Transport controls
                 transportControls
-                    .padding(.top, 16)
+                    .padding(.top, 20)
                     .padding(.horizontal, 32)
 
                 // Error
@@ -41,7 +45,7 @@ struct NowPlayingView: View {
                         .padding(.top, 8)
                 }
 
-                Spacer(minLength: 32)
+                Spacer(minLength: 24)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -68,14 +72,6 @@ struct NowPlayingView: View {
     }
 
     // MARK: - Sub-views
-
-    private var artworkSection: some View {
-        AlbumArtView(image: artwork, size: .flexible)
-            .cornerRadius(16)
-            .shadow(radius: 16, y: 8)
-            .scaleEffect(player.isPlaying ? 1.0 : 0.88)
-            .animation(.spring(response: 0.4, dampingFraction: 0.6), value: player.isPlaying)
-    }
 
     private var trackInfoSection: some View {
         HStack {

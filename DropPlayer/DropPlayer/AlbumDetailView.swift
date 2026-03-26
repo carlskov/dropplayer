@@ -30,7 +30,7 @@ struct AlbumDetailView: View {
                         Divider().padding(.leading, 52)
                     }
                 }
-                .padding(.bottom, 100)
+                .padding(.bottom, 16)
             }
         }
         .navigationTitle(album.displayTitle)
@@ -47,7 +47,8 @@ struct AlbumDetailView: View {
 
     private var header: some View {
         VStack(spacing: 16) {
-            AlbumArtView(image: artwork, size: .fixed(220))
+            AlbumArtView(image: artwork, size: .flexible)
+                .containerRelativeFrame(.horizontal) { w, _ in min(w * 0.58, 300) }
                 .cornerRadius(12)
                 .shadow(radius: 10, y: 4)
                 .padding(.top, 24)
@@ -65,9 +66,10 @@ struct AlbumDetailView: View {
                         .foregroundStyle(.tertiary)
                 }
             }
+            .padding(.horizontal)
 
             // Playback controls
-            HStack(spacing: 24) {
+            HStack(spacing: 16) {
                 Button {
                     player.play(track: sortedTracks[0], in: sortedTracks)
                     showNowPlaying = true

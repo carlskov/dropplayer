@@ -8,10 +8,6 @@ struct AlbumListView: View {
     @State private var showFolderPicker = false
     @State private var searchText = ""
 
-    private let columns = [
-        GridItem(.adaptive(minimum: 160, maximum: 200), spacing: 16)
-    ]
-
     private var filteredAlbums: [Album] {
         guard !searchText.isEmpty else { return library.albums }
         return library.albums.filter {
@@ -80,7 +76,10 @@ struct AlbumListView: View {
 
     private var albumGrid: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 20) {
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 160, maximum: 220), spacing: 16)],
+                spacing: 20
+            ) {
                 ForEach(filteredAlbums) { album in
                     NavigationLink(destination: AlbumDetailView(album: album)) {
                         AlbumCardView(album: album)
@@ -89,7 +88,6 @@ struct AlbumListView: View {
                 }
             }
             .padding()
-            .padding(.bottom, 80) // space for mini player
         }
     }
 

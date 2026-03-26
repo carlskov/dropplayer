@@ -25,17 +25,15 @@ struct MainTabView: View {
     @EnvironmentObject var player: PlayerEngine
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            TabView {
-                AlbumListView()
-                    .tabItem {
-                        Label("Library", systemImage: "music.note.list")
-                    }
-            }
-
+        TabView {
+            AlbumListView()
+                .tabItem {
+                    Label("Library", systemImage: "music.note.list")
+                }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             if player.currentTrack != nil {
                 MiniPlayerView()
-                    .padding(.bottom, 49) // tab bar height
             }
         }
         .ignoresSafeArea(.keyboard)

@@ -39,7 +39,9 @@ private extension View {
         case .fixed(let s):
             self.frame(width: s, height: s)
         case .flexible:
-            self.frame(maxWidth: .infinity)
+            self
+                .aspectRatio(1, contentMode: .fit)
+                .frame(maxWidth: .infinity)
         }
     }
 }
