@@ -3,7 +3,6 @@ import SwiftyDropbox
 import UIKit
 import Combine
 
-/// Scans a Dropbox folder tree and builds Albums from sub-folders.
 @MainActor
 final class LibraryViewModel: ObservableObject {
     @Published var albums: [Album] = []
@@ -13,16 +12,23 @@ final class LibraryViewModel: ObservableObject {
 
     private let service = DropboxBrowserService.shared
     private var artworkCache: [String: UIImage] = [:]
+    private let cacheKey = "CachedAlbums"
 
-    // Supported audio extensions
     private let audioExtensions: Set<String> = ["mp3", "flac", "aac", "m4a", "ogg", "wav", "aiff", "alac", "opus"]
-    // Supported artwork filenames (case-insensitive)
     private let artworkFileNames: Set<String> = ["cover", "folder", "front", "albumart", "album", "artwork"]
     private let artworkExtensions: Set<String> = ["jpg", "jpeg", "png", "webp"]
+
+    init() {
+        loadCachedAlbums()
+    }
 
     // MARK: - Public API
 
     func scanLibrary(at rootPath: String) async {
+        await rescanLibrary(at: rootPath)
+    }
+
+    func rescanLibrary(at rootPath: String) async {
         isScanning = true
         scanError = nil
         albums = []
@@ -30,6 +36,7 @@ final class LibraryViewModel: ObservableObject {
         do {
             let discovered = try await scanFolder(path: rootPath, depth: 0)
             albums = discovered.sorted { $0.displayTitle.localizedCaseInsensitiveCompare($1.displayTitle) == .orderedAscending }
+            saveAlbums()
         } catch {
             scanError = error.localizedDescription
         }
@@ -44,6 +51,19 @@ final class LibraryViewModel: ObservableObject {
               let image = UIImage(data: data) else { return nil }
         artworkCache[artPath] = image
         return image
+    }
+
+    // MARK: - Caching
+
+    private func loadCachedAlbums() {
+        guard let data = UserDefaults.standard.data(forKey: cacheKey),
+              let cached = try? JSONDecoder().decode([Album].self, from: data) else { return }
+        albums = cached
+    }
+
+    private func saveAlbums() {
+        guard let data = try? JSONEncoder().encode(albums) else { return }
+        UserDefaults.standard.set(data, forKey: cacheKey)
     }
 
     // MARK: - Scanning

@@ -49,7 +49,12 @@
 		A019 /* NowPlayingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingCoordinator.swift; sourceTree = "<group>"; };
 		A018 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		PROD /* DropPlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DropPlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
-/* End PBXFileReference section */
+			TESTPROD /* DropPlayerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DropPlayerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+			FA001 /* AlbumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumTests.swift; sourceTree = "<group>"; };
+			FA002 /* TrackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackTests.swift; sourceTree = "<group>"; };
+			FA003 /* NowPlayingCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingCoordinatorTests.swift; sourceTree = "<group>"; };
+			FA004 /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
+			FA005 /* PlayerEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerEngineTests.swift; sourceTree = "<group>"; };
 
 /* Begin PBXFrameworksBuildPhase section */
 		FBP1 /* Frameworks */ = {
@@ -61,6 +66,16 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXContainerItemProxy section */
+			TESTPROXY /* PBXContainerItemProxy */ = {
+				isa = PBXContainerItemProxy;
+				containerPortal = PROJECT /* Project object */;
+				proxyType = 1;
+				remoteGlobalIDString = TARGET1;
+				remoteInfo = DropPlayer;
+			};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXGroup section */
 		DROPBOXGRP /* Dropbox */ = {
@@ -94,6 +109,7 @@
 			isa = PBXGroup;
 			children = (
 				PROD /* DropPlayer.app */,
+				TESTPROD /* DropPlayerTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -102,8 +118,21 @@
 			isa = PBXGroup;
 			children = (
 				SRCGRP /* DropPlayer */,
+				TESTGRP /* DropPlayerTests */,
 				PRODGRP /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		TESTGRP /* DropPlayerTests */ = {
+			isa = PBXGroup;
+			children = (
+				FA001 /* AlbumTests.swift */,
+				FA002 /* TrackTests.swift */,
+				FA003 /* NowPlayingCoordinatorTests.swift */,
+				FA004 /* AppSettingsTests.swift */,
+				FA005 /* PlayerEngineTests.swift */,
+			);
+			path = DropPlayerTests;
 			sourceTree = "<group>";
 		};
 		SRCGRP /* DropPlayer */ = {
@@ -160,7 +189,31 @@
 			productReference = PROD /* DropPlayer.app */;
 			productType = "com.apple.product-type.application";
 		};
+		TESTTARGET /* DropPlayerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CFGLISTTEST /* Build configuration list for PBXNativeTarget "DropPlayerTests" */;
+			buildPhases = (
+				TESTSRC /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				TESTDEP /* PBXTargetDependency */,
+			);
+			name = DropPlayerTests;
+			productName = DropPlayerTests;
+			productReference = TESTPROD /* DropPlayerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
+
+/* Begin PBXTargetDependency section */
+		TESTDEP /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = TARGET1 /* DropPlayer */;
+			targetProxy = TESTPROXY /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXProject section */
 		PROJECT /* Project object */ = {
@@ -172,6 +225,10 @@
 				TargetAttributes = {
 					TARGET1 = {
 						CreatedOnToolsVersion = 15.0;
+					};
+					TESTTARGET = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = TARGET1;
 					};
 				};
 			};
@@ -192,6 +249,7 @@
 			projectRoot = "";
 			targets = (
 				TARGET1 /* DropPlayer */,
+				TESTTARGET /* DropPlayerTests */,
 			);
 		};
 /* End PBXProject section */
@@ -229,6 +287,18 @@
 				B015 /* MiniPlayerView.swift in Sources */,
 				B017 /* AppSettings.swift in Sources */,
 				B018 /* NowPlayingCoordinator.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		TESTSRC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				T001 /* AlbumTests.swift in Sources */,
+				T002 /* TrackTests.swift in Sources */,
+				T003 /* NowPlayingCoordinatorTests.swift in Sources */,
+				T004 /* AppSettingsTests.swift in Sources */,
+				T005 /* PlayerEngineTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -413,6 +483,42 @@
 			};
 			name = Release;
 		};
+		CFGTEST1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dropplayer.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DropPlayer.app/DropPlayer";
+			};
+			name = Debug;
+		};
+		CFGTEST2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dropplayer.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DropPlayer.app/DropPlayer";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -430,6 +536,15 @@
 			buildConfigurations = (
 				CFG1 /* Debug */,
 				CFG2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CFGLISTTEST /* Build configuration list for PBXNativeTarget "DropPlayerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CFGTEST1 /* Debug */,
+				CFGTEST2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

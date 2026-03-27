@@ -37,10 +37,10 @@ struct AlbumListView: View {
                     Menu {
                         Button {
                             if let path = settings.musicFolderPath {
-                                Task { await library.scanLibrary(at: path) }
+                                Task { await library.rescanLibrary(at: path) }
                             }
                         } label: {
-                            Label("Refresh Library", systemImage: "arrow.clockwise")
+                            Label("Rescan Library", systemImage: "arrow.clockwise")
                         }
 
                         Button {
@@ -64,11 +64,6 @@ struct AlbumListView: View {
             }
             .sheet(isPresented: $showFolderPicker) {
                 FolderPickerView(isInitialSetup: false)
-            }
-        }
-        .task {
-            if library.albums.isEmpty, let path = settings.musicFolderPath {
-                await library.scanLibrary(at: path)
             }
         }
     }
