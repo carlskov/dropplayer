@@ -16,6 +16,7 @@ struct ContentView: View {
                 MainTabView()
             }
         }
+        .environmentObject(NowPlayingCoordinator.shared)
         .animation(.easeInOut, value: settings.isAuthenticated)
         .animation(.easeInOut, value: settings.musicFolderPath)
     }
@@ -23,6 +24,7 @@ struct ContentView: View {
 
 struct MainTabView: View {
     @EnvironmentObject var player: PlayerEngine
+    @EnvironmentObject var nowPlaying: NowPlayingCoordinator
 
     var body: some View {
         TabView {
@@ -37,5 +39,11 @@ struct MainTabView: View {
             }
         }
         .ignoresSafeArea(.keyboard)
+        .sheet(isPresented: $nowPlaying.isPresented) {
+            NowPlayingView()
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
     }
 }

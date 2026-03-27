@@ -1,75 +1,51 @@
 import SwiftUI
 
-/// Full-screen Now Playing sheet.
 struct NowPlayingView: View {
     @EnvironmentObject var player: PlayerEngine
     @EnvironmentObject var library: LibraryViewModel
-    @Environment(\.dismiss) private var dismiss
 
     @State private var artwork: UIImage?
-    @GestureState private var dragOffset: CGFloat = 0
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Artwork — width set explicitly via containerRelativeFrame so it's always square
-                AlbumArtView(image: artwork, size: .flexible)
-                    .containerRelativeFrame(.horizontal) { w, _ in w - 64 }
-                    .cornerRadius(16)
-                    .shadow(radius: 16, y: 8)
-                    .scaleEffect(player.isPlaying ? 1.0 : 0.88)
-                    .animation(.spring(response: 0.4, dampingFraction: 0.6), value: player.isPlaying)
+        VStack(spacing: 0) {
+            Capsule()
+                .fill(Color.secondary.opacity(0.4))
+                .frame(width: 36, height: 5)
+                .padding(.top, 8)
+                .padding(.bottom, 12)
+
+            AlbumArtView(image: artwork, size: .fixed(200))
+                .cornerRadius(12)
+                .shadow(radius: 12, y: 4)
+                .scaleEffect(player.isPlaying ? 1.0 : 0.88)
+                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: player.isPlaying)
+                .padding(.horizontal, 16)
+                .padding(.top, 4)
+
+            trackInfoSection
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+
+            seekBarSection
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+
+            transportControls
+                .padding(.top, 16)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
+
+            if let error = player.errorMessage {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
                     .padding(.top, 8)
-
-                Spacer(minLength: 0)
-
-                // Track info
-                trackInfoSection
-                    .padding(.horizontal, 32)
-                    .padding(.top, 16)
-
-                // Seek bar
-                seekBarSection
-                    .padding(.horizontal, 28)
-                    .padding(.top, 12)
-
-                // Transport controls
-                transportControls
-                    .padding(.top, 20)
-                    .padding(.horizontal, 32)
-
-                // Error
-                if let error = player.errorMessage {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .padding(.top, 8)
-                }
-
-                Spacer(minLength: 0)
-                    .frame(minHeight: 24)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    VStack(spacing: 2) {
-                        Text("Now Playing")
-                            .font(.caption.bold())
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") { dismiss() }
-                }
             }
         }
         .task(id: player.currentTrack?.id) {
-            if let track = player.currentTrack {
-                // Try to find the album containing this track and load its artwork
-                if let album = library.albums.first(where: { $0.tracks.contains(where: { $0.id == track.id }) }) {
-                    artwork = await library.loadArtwork(for: album)
-                }
+            if let track = player.currentTrack,
+               let album = library.albums.first(where: { $0.tracks.contains(where: { $0.id == track.id }) }) {
+                artwork = await library.loadArtwork(for: album)
             }
         }
     }
@@ -127,9 +103,7 @@ struct NowPlayingView: View {
             }
 
             Button {
-                if player.isBuffering {
-                    // no-op while buffering
-                } else {
+                if !player.isBuffering {
                     player.togglePlayPause()
                 }
             } label: {

@@ -78,7 +78,7 @@ struct AlbumListView: View {
     private var albumGrid: some View {
         ScrollView {
             LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 12)],
+                columns: [GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 16)],
                 spacing: 12
             ) {
                 ForEach(filteredAlbums) { album in

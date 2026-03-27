@@ -6,38 +6,35 @@ struct AlbumDetailView: View {
 
     @EnvironmentObject var library: LibraryViewModel
     @EnvironmentObject var player: PlayerEngine
+    @EnvironmentObject var nowPlaying: NowPlayingCoordinator
     @State private var artwork: UIImage?
-    @State private var showNowPlaying = false
+
+    private func playTrack(_ track: Track) {
+        player.play(track: track, in: sortedTracks)
+        nowPlaying.isPresented = true
+    }
 
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                // Header
                 header
 
-                // Track list
-                Group {
-                    ForEach(Array(sortedTracks.enumerated()), id: \.element.id) { index, track in
-                        TrackRowView(
-                            track: track,
-                            index: index + 1,
-                            isPlaying: player.currentTrack?.id == track.id && player.isPlaying
-                        )
-                        .onTapGesture {
-                            player.play(track: track, in: sortedTracks)
-                            showNowPlaying = true
-                        }
-                        Divider().padding(.leading, 52)
+                ForEach(Array(sortedTracks.enumerated()), id: \.element.id) { index, track in
+                    TrackRowView(
+                        track: track,
+                        index: index + 1,
+                        isPlaying: player.currentTrack?.id == track.id && player.isPlaying
+                    )
+                    .onTapGesture {
+                        playTrack(track)
                     }
+                    Divider().padding(.leading, 52)
                 }
                 .padding(.bottom, 16)
             }
         }
         .navigationTitle(album.displayTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showNowPlaying) {
-            NowPlayingView()
-        }
         .task {
             artwork = await library.loadArtwork(for: album)
         }
@@ -68,11 +65,10 @@ struct AlbumDetailView: View {
             }
             .padding(.horizontal)
 
-            // Playback controls
             HStack(spacing: 16) {
                 Button {
                     player.play(track: sortedTracks[0], in: sortedTracks)
-                    showNowPlaying = true
+                    nowPlaying.isPresented = true
                 } label: {
                     Label("Play", systemImage: "play.fill")
                         .frame(maxWidth: .infinity)
@@ -84,7 +80,7 @@ struct AlbumDetailView: View {
                     let shuffled = sortedTracks.shuffled()
                     if let first = shuffled.first {
                         player.play(track: first, in: shuffled)
-                        showNowPlaying = true
+                        nowPlaying.isPresented = true
                     }
                 } label: {
                     Label("Shuffle", systemImage: "shuffle")

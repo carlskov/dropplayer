@@ -4,15 +4,14 @@ import SwiftUI
 struct MiniPlayerView: View {
     @EnvironmentObject var player: PlayerEngine
     @EnvironmentObject var library: LibraryViewModel
-    @State private var showNowPlaying = false
+    @EnvironmentObject var nowPlaying: NowPlayingCoordinator
     @State private var artwork: UIImage?
 
     var body: some View {
         Button {
-            showNowPlaying = true
+            nowPlaying.isPresented = true
         } label: {
             HStack(spacing: 12) {
-                // Album art thumbnail
                 Group {
                     if let image = artwork {
                         Image(uiImage: image)
@@ -42,7 +41,6 @@ struct MiniPlayerView: View {
 
                 Spacer()
 
-                // Play/pause
                 Button {
                     player.togglePlayPause()
                 } label: {
@@ -50,7 +48,6 @@ struct MiniPlayerView: View {
                         .font(.title2)
                 }
 
-                // Skip
                 Button {
                     player.skipForward()
                 } label: {
@@ -66,9 +63,6 @@ struct MiniPlayerView: View {
             .padding(.horizontal, 8)
         }
         .buttonStyle(.plain)
-        .sheet(isPresented: $showNowPlaying) {
-            NowPlayingView()
-        }
         .task(id: player.currentTrack?.id) {
             artwork = nil
             if let track = player.currentTrack,

@@ -24,6 +24,7 @@
 		B015 /* MiniPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A015 /* MiniPlayerView.swift */; };
 		B016 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A016 /* Assets.xcassets */; };
 		B017 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A017 /* AppSettings.swift */; };
+		B018 /* NowPlayingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A019 /* NowPlayingCoordinator.swift */; };
 		FFB81D4D2F75A4E900ABA63F /* SwiftyDropbox in Frameworks */ = {isa = PBXBuildFile; productRef = PKGDEP1 /* SwiftyDropbox */; };
 /* End PBXBuildFile section */
 
@@ -45,6 +46,7 @@
 		A015 /* MiniPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniPlayerView.swift; sourceTree = "<group>"; };
 		A016 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A017 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		A019 /* NowPlayingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingCoordinator.swift; sourceTree = "<group>"; };
 		A018 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		PROD /* DropPlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DropPlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -128,6 +130,7 @@
 				A009 /* AlbumListView.swift */,
 				A010 /* AlbumDetailView.swift */,
 				A011 /* NowPlayingView.swift */,
+				A019 /* NowPlayingCoordinator.swift */,
 				A014 /* AlbumArtView.swift */,
 				A015 /* MiniPlayerView.swift */,
 			);
@@ -225,6 +228,7 @@
 				B014 /* AlbumArtView.swift in Sources */,
 				B015 /* MiniPlayerView.swift in Sources */,
 				B017 /* AppSettings.swift in Sources */,
+				B018 /* NowPlayingCoordinator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
