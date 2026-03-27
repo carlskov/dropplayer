@@ -12,6 +12,7 @@ struct AlbumDetailView: View {
     private func playTrack(_ track: Track) {
         player.play(track: track, in: sortedTracks)
         nowPlaying.isPresented = true
+        Task { _ = await library.loadArtwork(for: album) }
     }
 
     var body: some View {

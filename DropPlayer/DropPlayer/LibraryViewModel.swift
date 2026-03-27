@@ -12,6 +12,7 @@ final class LibraryViewModel: ObservableObject {
     @Published var scanProgress: String = ""
 
     private let service = DropboxBrowserService.shared
+    private var artworkCache: [String: UIImage] = [:]
 
     // Supported audio extensions
     private let audioExtensions: Set<String> = ["mp3", "flac", "aac", "m4a", "ogg", "wav", "aiff", "alac", "opus"]
@@ -38,8 +39,10 @@ final class LibraryViewModel: ObservableObject {
 
     func loadArtwork(for album: Album) async -> UIImage? {
         guard let artPath = album.artworkDropboxPath else { return nil }
+        if let cached = artworkCache[artPath] { return cached }
         guard let data = try? await service.downloadData(path: artPath),
               let image = UIImage(data: data) else { return nil }
+        artworkCache[artPath] = image
         return image
     }
 

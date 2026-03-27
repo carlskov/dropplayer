@@ -41,9 +41,13 @@ struct MiniPlayerView: View {
 
                 Spacer()
 
-                Button {
-                    player.togglePlayPause()
-                } label: {
+        Button {
+            player.togglePlayPause()
+            if let track = player.currentTrack,
+               let album = library.albums.first(where: { $0.tracks.contains(where: { $0.id == track.id }) }) {
+                Task { _ = await library.loadArtwork(for: album) }
+            }
+        } label: {
                     Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
                         .font(.title2)
                 }
