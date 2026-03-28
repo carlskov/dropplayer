@@ -39,11 +39,8 @@ struct MainTabView: View {
             }
         }
         .ignoresSafeArea(.keyboard)
-        .sheet(isPresented: $nowPlaying.isPresented) {
+        .fullScreenCover(isPresented: $nowPlaying.isPresented) {
             NowPlayingView()
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-                .presentationBackground(.ultraThinMaterial)
         }
     }
 }

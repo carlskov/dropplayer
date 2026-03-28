@@ -3,43 +3,59 @@ import SwiftUI
 struct NowPlayingView: View {
     @EnvironmentObject var player: PlayerEngine
     @EnvironmentObject var library: LibraryViewModel
+    @EnvironmentObject var nowPlaying: NowPlayingCoordinator
 
     @State private var artwork: UIImage?
 
     var body: some View {
-        VStack(spacing: 0) {
-            Capsule()
-                .fill(Color.secondary.opacity(0.4))
-                .frame(width: 36, height: 5)
-                .padding(.top, 8)
-                .padding(.bottom, 12)
+        ZStack {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .ignoresSafeArea()
 
-            AlbumArtView(image: artwork, size: .fixed(200))
-                .cornerRadius(12)
-                .shadow(radius: 12, y: 4)
-                .scaleEffect(player.isPlaying ? 1.0 : 0.88)
-                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: player.isPlaying)
-                .padding(.horizontal, 16)
-                .padding(.top, 4)
+            VStack(spacing: 0) {
+                ZStack {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .font(.title2)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-            trackInfoSection
-                .padding(.horizontal, 16)
+                    Text("Now Playing")
+                        .font(.headline)
+                }
+                .padding(.horizontal, 20)
                 .padding(.top, 16)
 
-            seekBarSection
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
+                Spacer()
 
-            transportControls
-                .padding(.top, 16)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
+                AlbumArtView(image: artwork, size: .fixed(280))
+                    .cornerRadius(16)
+                    .shadow(radius: 24, y: 12)
+                    .scaleEffect(player.isPlaying ? 1.0 : 0.88)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.6), value: player.isPlaying)
 
-            if let error = player.errorMessage {
-                Text(error)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .padding(.top, 8)
+                trackInfoSection
+                    .padding(.horizontal, 24)
+                    .padding(.top, 32)
+
+                seekBarSection
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
+
+                transportControls
+                    .padding(.top, 24)
+
+                if let error = player.errorMessage {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .padding(.top, 16)
+                }
+
+                Spacer()
             }
         }
         .task(id: player.currentTrack?.id) {
@@ -50,13 +66,17 @@ struct NowPlayingView: View {
         }
     }
 
+    private func dismiss() {
+        nowPlaying.isPresented = false
+    }
+
     // MARK: - Sub-views
 
     private var trackInfoSection: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text(player.currentTrack?.displayTitle ?? "—")
-                    .font(.title3.bold())
+                    .font(.title2.bold())
                     .lineLimit(1)
                 Text(queueInfo)
                     .font(.subheadline)
@@ -94,12 +114,12 @@ struct NowPlayingView: View {
     }
 
     private var transportControls: some View {
-        HStack(spacing: 48) {
+        HStack(spacing: 60) {
             Button {
                 player.skipBack()
             } label: {
                 Image(systemName: "backward.fill")
-                    .font(.title)
+                    .font(.system(size: 32))
             }
 
             Button {
@@ -116,14 +136,13 @@ struct NowPlayingView: View {
                             .font(.system(size: 44))
                     }
                 }
-                .frame(width: 56, height: 56)
             }
 
             Button {
                 player.skipForward()
             } label: {
                 Image(systemName: "forward.fill")
-                    .font(.title)
+                    .font(.system(size: 32))
             }
         }
         .foregroundStyle(.primary)
