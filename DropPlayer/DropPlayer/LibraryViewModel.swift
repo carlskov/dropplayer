@@ -3,6 +3,7 @@ import SwiftyDropbox
 import UIKit
 import Combine
 
+
 @MainActor
 final class LibraryViewModel: ObservableObject {
     @Published var albums: [Album] = []
@@ -13,6 +14,7 @@ final class LibraryViewModel: ObservableObject {
     private let service = DropboxBrowserService.shared
     private var artworkCache: [String: UIImage] = [:]
     private let cacheKey = "CachedAlbums"
+    private let metadataExtractor = MetadataExtractor(service: DropboxBrowserService.shared)
 
     private let audioExtensions: Set<String> = ["mp3", "flac", "aac", "m4a", "ogg", "wav", "aiff", "alac", "opus"]
     private let artworkFileNames: Set<String> = ["cover", "folder", "front", "albumart", "album", "artwork"]
@@ -95,8 +97,18 @@ final class LibraryViewModel: ObservableObject {
                 artworkDropboxPath: preferredArtworkPath(from: imageFiles)
             )
 
-            // Parse metadata from file names / folder name
-            parseAlbumMetadata(into: &album, folderName: folderName)
+            // Try to extract metadata from first audio file
+            if let firstFile = audioFiles.sorted(by: { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }).first {
+                let metadata = await metadataExtractor.extractMetadata(from: firstFile.pathLower ?? firstFile.name)
+                if let albumTitle = metadata["album"], !albumTitle.isEmpty { album.title = albumTitle }
+                if let artist = metadata["albumArtist"] ?? metadata["artist"], !artist.isEmpty { album.artist = artist }
+                if let year = metadata["year"], !year.isEmpty { album.year = year }
+            }
+
+            // Fall back to folder name parsing if needed
+            if album.title.isEmpty || album.artist.isEmpty {
+                parseAlbumMetadata(into: &album, folderName: folderName)
+            }
 
             album.tracks = audioFiles
                 .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }

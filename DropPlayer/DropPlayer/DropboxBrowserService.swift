@@ -116,6 +116,22 @@ final class DropboxBrowserService {
             }
         }
     }
+
+    /// Downloads a range of bytes from a file (for reading audio metadata headers).
+    func downloadData(path: String, range: ClosedRange<Int>) async throws -> Data {
+        let url = try await temporaryLink(for: path)
+        var request = URLRequest(url: url)
+        request.setValue("bytes=\(range.lowerBound)-\(range.upperBound)", forHTTPHeaderField: "Range")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 206 || httpResponse.statusCode == 200 else {
+            throw DropboxError.api("Failed to download range")
+        }
+        
+        return data
+    }
 }
 
 enum DropboxError: LocalizedError {

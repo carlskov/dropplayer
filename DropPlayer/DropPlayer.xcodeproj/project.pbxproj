@@ -25,6 +25,7 @@
 		B016 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A016 /* Assets.xcassets */; };
 		B017 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A017 /* AppSettings.swift */; };
 		B018 /* NowPlayingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A019 /* NowPlayingCoordinator.swift */; };
+		B019 /* MetadataExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020 /* MetadataExtractor.swift */; };
 		FFB81D4D2F75A4E900ABA63F /* SwiftyDropbox in Frameworks */ = {isa = PBXBuildFile; productRef = PKGDEP1 /* SwiftyDropbox */; };
 /* End PBXBuildFile section */
 
@@ -58,6 +59,7 @@
 		A017 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		A018 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A019 /* NowPlayingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingCoordinator.swift; sourceTree = "<group>"; };
+		A020 /* MetadataExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetadataExtractor.swift; sourceTree = "<group>"; };
 		FA001 /* AlbumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumTests.swift; sourceTree = "<group>"; };
 		FA002 /* TrackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackTests.swift; sourceTree = "<group>"; };
 		FA003 /* NowPlayingCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingCoordinatorTests.swift; sourceTree = "<group>"; };
@@ -94,6 +96,7 @@
 				A005 /* Album.swift */,
 				A006 /* Track.swift */,
 				A013 /* LibraryViewModel.swift */,
+				A020 /* MetadataExtractor.swift */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -280,6 +283,7 @@
 				B015 /* MiniPlayerView.swift in Sources */,
 				B017 /* AppSettings.swift in Sources */,
 				B018 /* NowPlayingCoordinator.swift in Sources */,
+				B019 /* MetadataExtractor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
