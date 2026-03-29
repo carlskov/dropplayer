@@ -21,7 +21,7 @@ struct AlbumArtView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color(.systemGray5))
                     Image(systemName: "music.note")
-                        .font(.system(size: 32))
+                        .font(.system(size: 48))
                         .foregroundStyle(.tertiary)
                 }
                 .aspectRatio(1, contentMode: .fit)
