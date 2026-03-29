@@ -85,7 +85,7 @@ struct AlbumDetailView: View {
                     Label("Play", systemImage: "play.fill")
                         .font(.body.bold())
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 4)
+                        // .padding(.vertical, 4)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
@@ -101,7 +101,7 @@ struct AlbumDetailView: View {
                     Label("Shuffle", systemImage: "shuffle")
                         .font(.body.bold())
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 4)
+                        // .padding(.vertical, 4)
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.large)
