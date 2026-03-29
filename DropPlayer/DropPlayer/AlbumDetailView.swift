@@ -60,8 +60,8 @@ struct AlbumDetailView: View {
                     .foregroundStyle(.secondary)
                 if let year = album.year {
                     Text(year)
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding(.horizontal)
