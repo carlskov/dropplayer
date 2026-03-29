@@ -30,6 +30,7 @@ struct AlbumDetailView: View {
                         playTrack(track)
                     }
                 }
+                .padding(.bottom, 16)
 
                 labelFooter
                     .padding(.horizontal, 16)
