@@ -10,7 +10,7 @@ struct ContentView: View {
         Group {
             if !settings.isAuthenticated {
                 SetupView()
-            } else if settings.musicFolderPath == nil {
+            } else if settings.musicFolderPaths.isEmpty {
                 FolderPickerView(isInitialSetup: true)
             } else {
                 MainTabView()
@@ -18,7 +18,7 @@ struct ContentView: View {
         }
         .environmentObject(NowPlayingCoordinator.shared)
         .animation(.easeInOut, value: settings.isAuthenticated)
-        .animation(.easeInOut, value: settings.musicFolderPath)
+        .animation(.easeInOut, value: settings.musicFolderPaths.isEmpty)
     }
 }
 

@@ -26,6 +26,7 @@
 		B017 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A017 /* AppSettings.swift */; };
 		B018 /* NowPlayingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A019 /* NowPlayingCoordinator.swift */; };
 		B019 /* MetadataExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020 /* MetadataExtractor.swift */; };
+		B020 /* LibraryFoldersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A021 /* LibraryFoldersView.swift */; };
 		FFB81D4D2F75A4E900ABA63F /* SwiftyDropbox in Frameworks */ = {isa = PBXBuildFile; productRef = PKGDEP1 /* SwiftyDropbox */; };
 /* End PBXBuildFile section */
 
@@ -60,6 +61,7 @@
 		A018 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A019 /* NowPlayingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingCoordinator.swift; sourceTree = "<group>"; };
 		A020 /* MetadataExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetadataExtractor.swift; sourceTree = "<group>"; };
+		A021 /* LibraryFoldersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryFoldersView.swift; sourceTree = "<group>"; };
 		FA001 /* AlbumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumTests.swift; sourceTree = "<group>"; };
 		FA002 /* TrackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackTests.swift; sourceTree = "<group>"; };
 		FA003 /* NowPlayingCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingCoordinatorTests.swift; sourceTree = "<group>"; };
@@ -97,6 +99,7 @@
 				A006 /* Track.swift */,
 				A013 /* LibraryViewModel.swift */,
 				A020 /* MetadataExtractor.swift */,
+				A021 /* LibraryFoldersView.swift */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -279,6 +282,7 @@
 				B011 /* NowPlayingView.swift in Sources */,
 				B012 /* PlayerEngine.swift in Sources */,
 				B013 /* LibraryViewModel.swift in Sources */,
+				B020 /* LibraryFoldersView.swift in Sources */,
 				B014 /* AlbumArtView.swift in Sources */,
 				B015 /* MiniPlayerView.swift in Sources */,
 				B017 /* AppSettings.swift in Sources */,

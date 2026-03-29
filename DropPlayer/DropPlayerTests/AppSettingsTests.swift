@@ -3,17 +3,20 @@ import XCTest
 
 final class AppSettingsTests: XCTestCase {
     private let authKey = "isAuthenticated"
-    private let folderKey = "musicFolderPath"
+    private let folderPathsKey = "musicFolderPaths"
+    private let legacyFolderKey = "musicFolderPath"
 
     override func setUp() {
         super.setUp()
         UserDefaults.standard.removeObject(forKey: authKey)
-        UserDefaults.standard.removeObject(forKey: folderKey)
+        UserDefaults.standard.removeObject(forKey: folderPathsKey)
+        UserDefaults.standard.removeObject(forKey: legacyFolderKey)
     }
 
     override func tearDown() {
         UserDefaults.standard.removeObject(forKey: authKey)
-        UserDefaults.standard.removeObject(forKey: folderKey)
+        UserDefaults.standard.removeObject(forKey: folderPathsKey)
+        UserDefaults.standard.removeObject(forKey: legacyFolderKey)
         super.tearDown()
     }
 
@@ -22,9 +25,9 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertFalse(settings.isAuthenticated)
     }
 
-    func testInitialMusicFolderPathIsNil() {
+    func testInitialMusicFolderPathsIsEmpty() {
         let settings = AppSettings()
-        XCTAssertNil(settings.musicFolderPath)
+        XCTAssertTrue(settings.musicFolderPaths.isEmpty)
     }
 
     func testLogOutSetsIsAuthenticatedToFalse() {
@@ -34,11 +37,11 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertFalse(settings.isAuthenticated)
     }
 
-    func testLogOutSetsMusicFolderPathToNil() {
+    func testLogOutClearsMusicFolderPaths() {
         let settings = AppSettings()
-        settings.musicFolderPath = "/Music"
+        settings.musicFolderPaths = ["/Music"]
         settings.logOut()
-        XCTAssertNil(settings.musicFolderPath)
+        XCTAssertTrue(settings.musicFolderPaths.isEmpty)
     }
 
     func testIsAuthenticatedPersistsToUserDefaults() {
@@ -47,10 +50,19 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertTrue(UserDefaults.standard.bool(forKey: authKey))
     }
 
-    func testMusicFolderPathPersistsToUserDefaults() {
+    func testMusicFolderPathsPersistToUserDefaults() {
         let settings = AppSettings()
-        settings.musicFolderPath = "/Dropbox/Music"
-        XCTAssertEqual(UserDefaults.standard.string(forKey: folderKey), "/Dropbox/Music")
+        settings.musicFolderPaths = ["/Music", "/Audiobooks"]
+        let data = UserDefaults.standard.data(forKey: folderPathsKey)!
+        let decoded = try! JSONDecoder().decode([String].self, from: data)
+        XCTAssertEqual(decoded, ["/Music", "/Audiobooks"])
+    }
+
+    func testInitReadsMusicFolderPathsFromUserDefaults() {
+        let data = try! JSONEncoder().encode(["/Jazz", "/Rock"])
+        UserDefaults.standard.set(data, forKey: folderPathsKey)
+        let settings = AppSettings()
+        XCTAssertEqual(settings.musicFolderPaths, ["/Jazz", "/Rock"])
     }
 
     func testInitReadsIsAuthenticatedFromUserDefaults() {
@@ -59,9 +71,9 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertTrue(settings.isAuthenticated)
     }
 
-    func testInitReadsMusicFolderPathFromUserDefaults() {
-        UserDefaults.standard.set("/Jazz", forKey: folderKey)
+    func testLegacySingleFolderMigration() {
+        UserDefaults.standard.set("/Jazz", forKey: legacyFolderKey)
         let settings = AppSettings()
-        XCTAssertEqual(settings.musicFolderPath, "/Jazz")
+        XCTAssertEqual(settings.musicFolderPaths, ["/Jazz"])
     }
 }

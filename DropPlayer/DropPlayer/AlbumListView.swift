@@ -5,7 +5,7 @@ struct AlbumListView: View {
     @EnvironmentObject var library: LibraryViewModel
     @EnvironmentObject var settings: AppSettings
 
-    @State private var showFolderPicker = false
+    @State private var showFolderManager = false
     @State private var searchText = ""
 
     private var filteredAlbums: [Album] {
@@ -36,17 +36,16 @@ struct AlbumListView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         Button {
-                            if let path = settings.musicFolderPath {
-                                Task { await library.rescanLibrary(at: path) }
-                            }
+                            Task { await library.rescanLibrary(at: settings.musicFolderPaths) }
                         } label: {
                             Label("Rescan Library", systemImage: "arrow.clockwise")
                         }
+                        .disabled(settings.musicFolderPaths.isEmpty)
 
                         Button {
-                            showFolderPicker = true
+                            showFolderManager = true
                         } label: {
-                            Label("Change Folder", systemImage: "folder")
+                            Label("Manage Folders", systemImage: "folder.badge.gearshape")
                         }
 
                         Divider()
@@ -62,8 +61,8 @@ struct AlbumListView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showFolderPicker) {
-                FolderPickerView(isInitialSetup: false)
+            .sheet(isPresented: $showFolderManager) {
+                LibraryFoldersView()
             }
         }
     }
@@ -115,8 +114,8 @@ struct AlbumListView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
-            Button("Change Folder") {
-                showFolderPicker = true
+            Button("Manage Folders") {
+                showFolderManager = true
             }
             .buttonStyle(.bordered)
         }
@@ -136,9 +135,7 @@ struct AlbumListView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
             Button("Retry") {
-                if let path = settings.musicFolderPath {
-                    Task { await library.scanLibrary(at: path) }
-                }
+                Task { await library.scanLibrary(at: settings.musicFolderPaths) }
             }
             .buttonStyle(.bordered)
         }

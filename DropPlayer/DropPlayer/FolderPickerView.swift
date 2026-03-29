@@ -31,10 +31,8 @@ struct FolderPickerView: View {
             .navigationTitle(currentPath == "/" ? "Dropbox" : lastComponent(of: currentPath))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                if !isInitialSetup {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") { dismiss() }
-                    }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
                 }
 
                 if !navigationStack.isEmpty {
@@ -48,10 +46,11 @@ struct FolderPickerView: View {
                 }
 
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Use This Folder") {
+                    Button(isInitialSetup ? "Use This Folder" : "Add This Folder") {
                         selectFolder(currentPath)
                     }
                     .bold()
+                    .disabled(settings.musicFolderPaths.contains(currentPath))
                 }
             }
         }
@@ -134,13 +133,13 @@ struct FolderPickerView: View {
     }
 
     private func selectFolder(_ path: String) {
-        settings.musicFolderPath = path
+        if !settings.musicFolderPaths.contains(path) {
+            settings.musicFolderPaths.append(path)
+        }
         Task {
-            await library.scanLibrary(at: path)
+            await library.scanLibrary(at: settings.musicFolderPaths)
         }
-        if !isInitialSetup {
-            dismiss()
-        }
+        dismiss()
     }
 
     private func lastComponent(of path: String) -> String {

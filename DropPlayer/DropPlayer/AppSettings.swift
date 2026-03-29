@@ -7,23 +7,37 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(isAuthenticated, forKey: Keys.isAuthenticated) }
     }
 
-    /// The Dropbox path the user chose to scan, e.g. "/Music"
-    @Published var musicFolderPath: String? {
-        didSet { UserDefaults.standard.set(musicFolderPath, forKey: Keys.musicFolderPath) }
+    /// The Dropbox paths the user chose to scan, e.g. ["/Music", "/Audiobooks"]
+    @Published var musicFolderPaths: [String] {
+        didSet {
+            if let data = try? JSONEncoder().encode(musicFolderPaths) {
+                UserDefaults.standard.set(data, forKey: Keys.musicFolderPaths)
+            }
+        }
     }
 
     private enum Keys {
         static let isAuthenticated = "isAuthenticated"
-        static let musicFolderPath = "musicFolderPath"
+        static let musicFolderPaths = "musicFolderPaths"
+        static let musicFolderPathLegacy = "musicFolderPath"
     }
 
     init() {
         self.isAuthenticated = UserDefaults.standard.bool(forKey: Keys.isAuthenticated)
-        self.musicFolderPath = UserDefaults.standard.string(forKey: Keys.musicFolderPath)
+
+        if let data = UserDefaults.standard.data(forKey: Keys.musicFolderPaths),
+           let paths = try? JSONDecoder().decode([String].self, from: data) {
+            self.musicFolderPaths = paths
+        } else if let legacy = UserDefaults.standard.string(forKey: Keys.musicFolderPathLegacy) {
+            // Migrate single-folder setting from previous version
+            self.musicFolderPaths = [legacy]
+        } else {
+            self.musicFolderPaths = []
+        }
     }
 
     func logOut() {
         isAuthenticated = false
-        musicFolderPath = nil
+        musicFolderPaths = []
     }
 }

@@ -26,17 +26,21 @@ final class LibraryViewModel: ObservableObject {
 
     // MARK: - Public API
 
-    func scanLibrary(at rootPath: String) async {
-        await rescanLibrary(at: rootPath)
+    func scanLibrary(at paths: [String]) async {
+        await rescanLibrary(at: paths)
     }
 
-    func rescanLibrary(at rootPath: String) async {
+    func rescanLibrary(at paths: [String]) async {
         isScanning = true
         scanError = nil
         albums = []
 
         do {
-            let discovered = try await scanFolder(path: rootPath, depth: 0)
+            var discovered: [Album] = []
+            for path in paths {
+                let results = try await scanFolder(path: path, depth: 0)
+                discovered.append(contentsOf: results)
+            }
             albums = discovered.sorted { $0.displayTitle.localizedCaseInsensitiveCompare($1.displayTitle) == .orderedAscending }
             saveAlbums()
         } catch {
