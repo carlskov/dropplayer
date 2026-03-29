@@ -61,11 +61,13 @@ struct AlbumDetailView: View {
                 .cornerRadius(12)
                 .shadow(radius: 10, y: 4)
                 .padding(.top, 12)
+                .padding(.bottom, 4)
 
             VStack(spacing: 4) {
                 Text(album.displayTitle)
-                    .font(.title2.bold())
+                    .font(.title3.bold())
                     .multilineTextAlignment(.center)
+                    .padding(.bottom, 4)
                 Text(album.displayArtist)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -76,6 +78,7 @@ struct AlbumDetailView: View {
                 }
             }
             .padding(.horizontal)
+            .padding(.bottom, 8)
 
             HStack(spacing: 12) {
                 Button {
