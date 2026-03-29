@@ -22,7 +22,7 @@ final class PlayerEngine: NSObject, ObservableObject {
     private var timeObserver: Any?
     private var itemStatusObservation: NSKeyValueObservation?
     private var cancellables = Set<AnyCancellable>()
-    private var currentArtwork: UIImage?
+    @Published var currentArtwork: UIImage?
     private var currentAlbum: Album?
 
     override init() {

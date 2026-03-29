@@ -5,7 +5,6 @@ struct NowPlayingView: View {
     @EnvironmentObject var library: LibraryViewModel
     @EnvironmentObject var nowPlaying: NowPlayingCoordinator
 
-    @State private var artwork: UIImage?
     @State private var currentAlbum: Album?
     @State private var trackArtist: String?
     @State private var trackTitle: String?
@@ -34,7 +33,7 @@ struct NowPlayingView: View {
 
                 Spacer()
 
-                AlbumArtView(image: artwork, size: .flexible)
+                AlbumArtView(image: player.currentArtwork, size: .flexible)
                     .containerRelativeFrame(.horizontal) { w, _ in min(w * 0.82, 400) }
                     .cornerRadius(16)
                     .shadow(radius: 24, y: 12)
@@ -74,7 +73,6 @@ struct NowPlayingView: View {
                 let (fetchedMeta, fetchedArt) = await (meta, art)
                 trackArtist = fetchedMeta.artist
                 trackTitle = fetchedMeta.title
-                artwork = fetchedArt
                 player.updateArtwork(fetchedArt)
                 player.updateAlbum(album)
             } else {
