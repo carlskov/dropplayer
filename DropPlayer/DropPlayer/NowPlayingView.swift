@@ -34,7 +34,7 @@ struct NowPlayingView: View {
 
                 Spacer()
 
-                AlbumArtView(image: artwork, size: .fixed(280))
+                AlbumArtView(image: artwork, size: .fixed(340))
                     .cornerRadius(16)
                     .shadow(radius: 24, y: 12)
                     .scaleEffect(player.isPlaying ? 1.0 : 0.88)
