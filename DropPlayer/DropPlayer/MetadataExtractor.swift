@@ -78,6 +78,8 @@ final class MetadataExtractor {
                 case "TDRC", "TYER", "TYE": result["year"] = String(value.prefix(4))
                 case "TIT2": result["title"] = value
                 case "TRCK": result["track"] = value
+                case "TCOP": result["copyright"] = value
+                case "TPUB": result["label"] = value
                 default: break
                 }
             }
@@ -177,6 +179,8 @@ final class MetadataExtractor {
         case "©nam": return "title"
         case "©day": return "year"
         case "©trk": return "track"
+        case "cprt": return "copyright"
+        case "©pub": return "label"
         default: return nil
         }
     }
@@ -275,6 +279,8 @@ final class MetadataExtractor {
                 case "TITLE": result["title"] = value
                 case "DATE", "YEAR": result["year"] = String(value.prefix(4))
                 case "TRACKNUMBER", "TRACK": result["track"] = value
+                case "COPYRIGHT": result["copyright"] = value
+                case "ORGANIZATION", "LABEL", "PUBLISHER": result["label"] = value
                 default: break
                 }
             }
@@ -316,6 +322,8 @@ final class MetadataExtractor {
                             case "IPRD": result["album"] = text
                             case "ICRD": result["year"] = String(text.prefix(4))
                             case "ITRK": result["track"] = text
+                            case "ICOP": result["copyright"] = text
+                            case "IPUB": result["label"] = text
                             default: break
                             }
                         }

@@ -29,6 +29,8 @@ struct Album: Identifiable, Hashable, Codable {
     var tracks: [Track]
     var artworkDropboxPath: String?
     var tagsLoaded: Bool = false
+    var copyright: String? = nil
+    var label: String? = nil
 
     var displayTitle: String {
         title.isEmpty ? folderName : title

@@ -30,7 +30,11 @@ struct AlbumDetailView: View {
                         playTrack(track)
                     }
                 }
-                .padding(.bottom, 16)
+
+                labelFooter
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+                    .padding(.bottom, 24)
             }
         }
         .navigationTitle(album.displayTitle)
@@ -113,6 +117,26 @@ struct AlbumDetailView: View {
             if t0 != t1 { return t0 < t1 }
             return $0.displayTitle.localizedCaseInsensitiveCompare($1.displayTitle) == .orderedAscending
         }
+    }
+
+    private var labelFooter: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            let count = sortedTracks.count
+            Text("\(count) \(count == 1 ? "song" : "songs")")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+            if let label = album.label {
+                Text(label)
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+            if let copyright = album.copyright {
+                Text(copyright)
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

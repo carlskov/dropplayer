@@ -290,6 +290,12 @@ final class LibraryViewModel: ObservableObject {
                 if let year = metadata["year"], !year.isEmpty {
                     album.year = year
                 }
+                if let copyright = metadata["copyright"], !copyright.isEmpty {
+                    album.copyright = copyright
+                }
+                if let label = metadata["label"], !label.isEmpty {
+                    album.label = label
+                }
                 albumMetadataApplied = true
             }
         }
