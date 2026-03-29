@@ -65,15 +65,18 @@ struct AlbumDetailView: View {
             }
             .padding(.horizontal)
 
-            HStack(spacing: 16) {
+            HStack(spacing: 12) {
                 Button {
                     player.play(track: sortedTracks[0], in: sortedTracks)
                     nowPlaying.isPresented = true
                 } label: {
                     Label("Play", systemImage: "play.fill")
+                        .font(.body.bold())
                         .frame(maxWidth: .infinity)
+                        .padding(.vertical, 4)
                 }
                 .buttonStyle(.borderedProminent)
+                .controlSize(.large)
                 .disabled(sortedTracks.isEmpty)
 
                 Button {
@@ -84,13 +87,17 @@ struct AlbumDetailView: View {
                     }
                 } label: {
                     Label("Shuffle", systemImage: "shuffle")
+                        .font(.body.bold())
                         .frame(maxWidth: .infinity)
+                        .padding(.vertical, 4)
                 }
                 .buttonStyle(.bordered)
+                .controlSize(.large)
                 .disabled(sortedTracks.isEmpty)
             }
             .padding(.horizontal)
-            .padding(.bottom, 4)
+            .padding(.top, 4)
+            .padding(.bottom, 20)
         }
         .padding(.bottom, 4)
     }
