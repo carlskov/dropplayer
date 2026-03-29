@@ -70,7 +70,7 @@ struct AlbumDetailView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 if let year = album.year {
-                    Text(year)
+                    Text([year, album.label].compactMap { $0 }.joined(separator: " · "))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -132,11 +132,6 @@ struct AlbumDetailView: View {
             Text("\(count) \(count == 1 ? "song" : "songs")")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
-            if let label = album.label {
-                Text(label)
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            }
             if let copyright = album.copyright {
                 Text(copyright)
                     .font(.caption)
