@@ -9,7 +9,7 @@ struct DropPlayerApp: App {
 
     init() {
         // Replace "YOUR_APP_KEY" with your Dropbox app key from https://www.dropbox.com/developers/apps
-        DropboxClientsManager.setupWithAppKey("j94hl849cn6qdou")
+        DropboxClientsManager.setupWithAppKey("nidpcwsova63utb")
     }
 
     var body: some Scene {
