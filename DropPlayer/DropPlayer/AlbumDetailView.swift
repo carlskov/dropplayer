@@ -37,7 +37,7 @@ struct AlbumDetailView: View {
 
                 labelFooter
                     .padding(.horizontal, 16)
-                    .padding(.top, 12)
+                    .padding(.top, 0)
                     .padding(.bottom, 24)
             }
         }
@@ -65,9 +65,9 @@ struct AlbumDetailView: View {
 
             VStack(spacing: 4) {
                 Text(album.displayTitle)
-                    .font(.title3.bold())
+                    .font(.title2.bold())
                     .multilineTextAlignment(.center)
-                    .padding(.bottom, 4)
+                    .padding(.bottom, 2)
                 Text(album.displayArtist)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
