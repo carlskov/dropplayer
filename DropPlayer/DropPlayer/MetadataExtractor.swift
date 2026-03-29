@@ -119,7 +119,7 @@ final class MetadataExtractor {
             let boxSize = (Int(bytes[offset]) << 24) | (Int(bytes[offset+1]) << 16) | (Int(bytes[offset+2]) << 8) | Int(bytes[offset+3])
             guard boxSize >= 8, offset + boxSize <= bytes.count else { break }
             
-            let boxType = String(bytes: [bytes[offset+4], bytes[offset+5], bytes[offset+6], bytes[offset+7]], encoding: .ascii) ?? ""
+            let boxType = String(bytes: [bytes[offset+4], bytes[offset+5], bytes[offset+6], bytes[offset+7]], encoding: .isoLatin1) ?? ""
             
             let contentStart = offset + 8
             let contentEnd = offset + boxSize
@@ -130,8 +130,13 @@ final class MetadataExtractor {
                 switch boxType {
                 case "ilst":
                     parseMP4Metadata(bytes: content, into: &result)
-                case "moov", "meta", "udta":
+                case "moov", "udta":
                     parseMP4Box(bytes: content, into: &result, depth: depth + 1)
+                case "meta":
+                    // meta is a FullBox: version(1) + flags(3) = 4 bytes before children
+                    if content.count > 4 {
+                        parseMP4Box(bytes: Array(content.dropFirst(4)), into: &result, depth: depth + 1)
+                    }
                 default:
                     break
                 }
@@ -148,7 +153,7 @@ final class MetadataExtractor {
             let boxSize = (Int(bytes[offset]) << 24) | (Int(bytes[offset+1]) << 16) | (Int(bytes[offset+2]) << 8) | Int(bytes[offset+3])
             guard boxSize >= 8, offset + boxSize <= bytes.count else { break }
             
-            let boxType = String(bytes: [bytes[offset+4], bytes[offset+5], bytes[offset+6], bytes[offset+7]], encoding: .ascii) ?? ""
+            let boxType = String(bytes: [bytes[offset+4], bytes[offset+5], bytes[offset+6], bytes[offset+7]], encoding: .isoLatin1) ?? ""
             
             let contentStart = offset + 8
             let contentEnd = offset + boxSize
@@ -167,7 +172,7 @@ final class MetadataExtractor {
     private func mp4KeyToName(_ key: String) -> String? {
         switch key {
         case "©alb": return "album"
-        case "©aART": return "albumArtist"
+        case "aART": return "albumArtist"
         case "©ART": return "artist"
         case "©nam": return "title"
         case "©day": return "year"
@@ -177,12 +182,9 @@ final class MetadataExtractor {
     }
 
     private func extractM4AString(bytes: [UInt8]) -> String? {
-        if bytes.count > 8 {
-            return String(bytes: Array(bytes.dropFirst(8)), encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-        } else if !bytes.isEmpty {
-            return String(bytes: bytes, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-        return nil
+        // data atom layout: size(4) + "data"(4) + type_indicator(4) + locale(4) = 16 bytes header
+        guard bytes.count > 16 else { return nil }
+        return String(bytes: Array(bytes.dropFirst(16)), encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     // MARK: - FLAC
