@@ -20,7 +20,7 @@ struct MiniPlayerView: View {
                     } else {
                         Image(systemName: "music.note")
                             .font(.title3)
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(.secondary)
                             .frame(width: 36, height: 36)
                             .background(Color(.systemGray6))
                     }
@@ -59,6 +59,7 @@ struct MiniPlayerView: View {
         } label: {
                     Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
                         .font(.title2)
+                        .foregroundStyle(.secondary)
                 }
 
                 Button {
@@ -66,6 +67,7 @@ struct MiniPlayerView: View {
                 } label: {
                     Image(systemName: "forward.fill")
                         .font(.title2)
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding(.horizontal, 16)

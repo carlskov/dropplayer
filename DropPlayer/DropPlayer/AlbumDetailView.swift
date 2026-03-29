@@ -67,7 +67,7 @@ struct AlbumDetailView: View {
                 Text(album.displayTitle)
                     .font(.title2.bold())
                     .multilineTextAlignment(.center)
-                    .padding(.bottom, 2)
+                    // .padding(.bottom, 2)
                 Text(album.displayArtist)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -78,7 +78,7 @@ struct AlbumDetailView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.bottom, 8)
+            // .padding(.bottom, 8)
 
             HStack(spacing: 12) {
                 Button {
