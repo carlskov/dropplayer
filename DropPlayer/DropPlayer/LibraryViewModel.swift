@@ -16,7 +16,7 @@ final class LibraryViewModel: ObservableObject {
     private let cacheKey = "CachedAlbums"
     private let metadataExtractor = MetadataExtractor(service: DropboxBrowserService.shared)
 
-    private let audioExtensions: Set<String> = ["mp3", "flac", "aac", "m4a", "ogg", "wav", "aiff", "alac", "opus"]
+    private let audioExtensions: Set<String> = ["mp3", "flac", "aac", "m4a", "ogg", "wav", "aiff", "aif", "alac", "opus"]
     private let artworkFileNames: Set<String> = ["cover", "folder", "front", "albumart", "album", "artwork"]
     private let artworkExtensions: Set<String> = ["jpg", "jpeg", "png", "webp"]
 

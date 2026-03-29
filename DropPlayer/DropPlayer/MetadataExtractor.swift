@@ -32,7 +32,7 @@ final class MetadataExtractor {
             return parseVorbis(bytes: bytes)
         case "wav":
             return parseWAV(bytes: bytes)
-        case "aiff":
+        case "aiff", "aif":
             return parseAIFF(bytes: bytes)
         default:
             return [:]
@@ -286,7 +286,7 @@ final class MetadataExtractor {
         guard bytes.count >= 44 else { return result }
         
         // Check RIFF header
-        guard bytes[0] == 0x52, bytes[1] == 0x49, bytes[2] == 0x46, bytes[2] == 0x46 else { return result }
+        guard bytes[0] == 0x52, bytes[1] == 0x49, bytes[2] == 0x46, bytes[3] == 0x46 else { return result }
         
         // Look for LIST INFO chunk
         var offset = 12
