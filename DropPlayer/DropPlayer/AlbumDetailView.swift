@@ -43,7 +43,7 @@ struct AlbumDetailView: View {
     // MARK: - Sub-views
 
     private var header: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 16) {
             AlbumArtView(image: artwork, size: .flexible)
                 .containerRelativeFrame(.horizontal) { w, _ in min(w * 0.78, 400) }
                 .cornerRadius(12)
