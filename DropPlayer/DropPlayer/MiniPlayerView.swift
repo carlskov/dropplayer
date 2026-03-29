@@ -69,11 +69,11 @@ struct MiniPlayerView: View {
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .padding(.vertical, 12)
             .background(.ultraThinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .shadow(radius: 4, y: -1)
-            .padding(.horizontal, 8)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(radius: 6, y: -2)
+            .padding(.horizontal, 12)
         }
         .buttonStyle(.plain)
         .task(id: player.currentTrack?.id) {
