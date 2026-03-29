@@ -62,6 +62,14 @@ struct NowPlayingView: View {
                 Spacer()
             }
         }
+        .gesture(
+            DragGesture(minimumDistance: 40, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.height > 0 && abs(value.translation.height) > abs(value.translation.width) {
+                        dismiss()
+                    }
+                }
+        )
         .task(id: player.currentTrack?.id) {
             trackArtist = nil
             trackTitle = nil
