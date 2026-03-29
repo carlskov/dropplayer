@@ -22,6 +22,7 @@ final class PlayerEngine: NSObject, ObservableObject {
     private var timeObserver: Any?
     private var itemStatusObservation: NSKeyValueObservation?
     private var cancellables = Set<AnyCancellable>()
+    private var currentArtwork: UIImage?
 
     override init() {
         super.init()
@@ -36,6 +37,11 @@ final class PlayerEngine: NSObject, ObservableObject {
         queue = tracks
         currentIndex = tracks.firstIndex(where: { $0.id == track.id }) ?? 0
         loadAndPlay(track: track)
+    }
+
+    func updateArtwork(_ image: UIImage?) {
+        currentArtwork = image
+        updateNowPlayingInfo()
     }
 
     func togglePlayPause() {
@@ -77,6 +83,7 @@ final class PlayerEngine: NSObject, ObservableObject {
 
     private func loadAndPlay(track: Track) {
         currentTrack = track
+        currentArtwork = nil
         isBuffering = true
         isPlaying = false
         errorMessage = nil
@@ -193,6 +200,10 @@ final class PlayerEngine: NSObject, ObservableObject {
             MPMediaItemPropertyPlaybackDuration: duration,
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0
         ]
+        if let image = currentArtwork {
+            let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+            info[MPMediaItemPropertyArtwork] = artwork
+        }
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }
 }

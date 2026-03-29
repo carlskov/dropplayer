@@ -37,6 +37,7 @@ struct AlbumDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             artwork = await library.loadArtwork(for: album)
+            player.updateArtwork(artwork)
         }
     }
 
