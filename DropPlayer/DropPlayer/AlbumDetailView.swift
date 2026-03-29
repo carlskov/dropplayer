@@ -29,7 +29,6 @@ struct AlbumDetailView: View {
                     .onTapGesture {
                         playTrack(track)
                     }
-                    Divider().padding(.leading, 52)
                 }
                 .padding(.bottom, 16)
             }
@@ -132,10 +131,18 @@ struct TrackRowView: View {
             }
             .frame(width: 28, alignment: .center)
 
-            Text(track.displayTitle)
-                .font(isPlaying ? .body.bold() : .body)
-                .foregroundStyle(isPlaying ? .blue : .primary)
-                .lineLimit(1)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(track.displayTitle)
+                    .font(isPlaying ? .body.bold() : .body)
+                    .foregroundStyle(isPlaying ? .blue : .primary)
+                    .lineLimit(1)
+                if let artist = track.artist, !artist.isEmpty {
+                    Text(artist)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
 
             Spacer()
 
@@ -146,7 +153,7 @@ struct TrackRowView: View {
             }
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.vertical, 4)
         .contentShape(Rectangle())
     }
 
