@@ -10,7 +10,7 @@ struct AlbumDetailView: View {
     @State private var artwork: UIImage?
 
     private func playTrack(_ track: Track) {
-        player.play(track: track, in: sortedTracks)
+        player.play(track: track, in: sortedTracks, album: album)
         nowPlaying.isPresented = true
         Task { _ = await library.loadArtwork(for: album) }
     }
@@ -68,7 +68,7 @@ struct AlbumDetailView: View {
 
             HStack(spacing: 12) {
                 Button {
-                    player.play(track: sortedTracks[0], in: sortedTracks)
+                    player.play(track: sortedTracks[0], in: sortedTracks, album: album)
                     nowPlaying.isPresented = true
                 } label: {
                     Label("Play", systemImage: "play.fill")
@@ -83,7 +83,7 @@ struct AlbumDetailView: View {
                 Button {
                     let shuffled = sortedTracks.shuffled()
                     if let first = shuffled.first {
-                        player.play(track: first, in: shuffled)
+                        player.play(track: first, in: shuffled, album: album)
                         nowPlaying.isPresented = true
                     }
                 } label: {

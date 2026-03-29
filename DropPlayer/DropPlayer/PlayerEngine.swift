@@ -23,6 +23,7 @@ final class PlayerEngine: NSObject, ObservableObject {
     private var itemStatusObservation: NSKeyValueObservation?
     private var cancellables = Set<AnyCancellable>()
     private var currentArtwork: UIImage?
+    private var currentAlbum: Album?
 
     override init() {
         super.init()
@@ -33,14 +34,20 @@ final class PlayerEngine: NSObject, ObservableObject {
 
     // MARK: - Public API
 
-    func play(track: Track, in tracks: [Track]) {
+    func play(track: Track, in tracks: [Track], album: Album? = nil) {
         queue = tracks
         currentIndex = tracks.firstIndex(where: { $0.id == track.id }) ?? 0
+        currentAlbum = album
         loadAndPlay(track: track)
     }
 
     func updateArtwork(_ image: UIImage?) {
         currentArtwork = image
+        updateNowPlayingInfo()
+    }
+
+    func updateAlbum(_ album: Album?) {
+        currentAlbum = album
         updateNowPlayingInfo()
     }
 
@@ -84,7 +91,6 @@ final class PlayerEngine: NSObject, ObservableObject {
     private func loadAndPlay(track: Track) {
         currentTrack = track
         currentArtwork = nil
-        isBuffering = true
         isPlaying = false
         errorMessage = nil
         currentTime = 0
@@ -200,6 +206,13 @@ final class PlayerEngine: NSObject, ObservableObject {
             MPMediaItemPropertyPlaybackDuration: duration,
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0
         ]
+        let artist = track.artist ?? currentAlbum?.displayArtist
+        if let artist, !artist.isEmpty {
+            info[MPMediaItemPropertyArtist] = artist
+        }
+        if let albumTitle = currentAlbum?.displayTitle {
+            info[MPMediaItemPropertyAlbumTitle] = albumTitle
+        }
         if let image = currentArtwork {
             let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
             info[MPMediaItemPropertyArtwork] = artwork

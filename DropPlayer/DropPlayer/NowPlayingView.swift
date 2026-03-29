@@ -75,6 +75,7 @@ struct NowPlayingView: View {
                 trackTitle = fetchedMeta.title
                 artwork = fetchedArt
                 player.updateArtwork(fetchedArt)
+                player.updateAlbum(album)
             } else {
                 currentAlbum = nil
             }
