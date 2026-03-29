@@ -35,7 +35,7 @@ struct NowPlayingView: View {
                     .containerRelativeFrame(.horizontal) { w, _ in min(w * 0.82, 400) }
                     .cornerRadius(16)
                     .shadow(radius: 24, y: 12)
-                    .padding(.top, 32)
+                    .padding(.top, 48)
                     .scaleEffect(player.isPlaying ? 1.0 : 0.88)
                     .animation(.spring(response: 0.4, dampingFraction: 0.6), value: player.isPlaying)
                     .onTapGesture { goToAlbum() }
@@ -105,25 +105,31 @@ struct NowPlayingView: View {
 
     private var trackInfoSection: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .center, spacing: 4) {
                 Text(trackTitle ?? player.currentTrack?.displayTitle ?? "—")
                     .font(.title2.bold())
                     .lineLimit(1)
+                    .multilineTextAlignment(.center)
                 Text(trackArtist ?? currentAlbum?.displayArtist ?? "—")
                     .font(.title3)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .multilineTextAlignment(.center)
                 Text(currentAlbum?.displayTitle ?? "—")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .padding(.top,2)
+                    .multilineTextAlignment(.center)
                     .onTapGesture { goToAlbum() }
                 Text(trackPositionInfo)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .lineLimit(1)
+                    .padding(.top, 8)
+                    // .padding(.bottom)
             }
-            Spacer()
+            .frame(maxWidth: .infinity)
         }
     }
 
