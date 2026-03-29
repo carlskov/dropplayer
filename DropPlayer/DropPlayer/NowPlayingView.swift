@@ -39,6 +39,7 @@ struct NowPlayingView: View {
                     .shadow(radius: 24, y: 12)
                     .scaleEffect(player.isPlaying ? 1.0 : 0.88)
                     .animation(.spring(response: 0.4, dampingFraction: 0.6), value: player.isPlaying)
+                    .onTapGesture { goToAlbum() }
 
                 trackInfoSection
                     .padding(.horizontal, 24)
@@ -83,6 +84,15 @@ struct NowPlayingView: View {
         nowPlaying.isPresented = false
     }
 
+    private func goToAlbum() {
+        guard let album = currentAlbum else { return }
+        nowPlaying.isPresented = false
+        // Small delay so the sheet dismissal animates before the push
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            nowPlaying.navigateToAlbum = album
+        }
+    }
+
     // MARK: - Sub-views
 
     private var trackInfoSection: some View {
@@ -99,6 +109,7 @@ struct NowPlayingView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .onTapGesture { goToAlbum() }
                 Text(trackPositionInfo)
                     .font(.caption)
                     .foregroundStyle(.tertiary)

@@ -19,7 +19,7 @@ struct Track: Identifiable, Hashable, Codable {
 
 // MARK: - Album
 
-struct Album: Identifiable, Codable {
+struct Album: Identifiable, Hashable, Codable {
     let id: String
     let folderPath: String
     let folderName: String

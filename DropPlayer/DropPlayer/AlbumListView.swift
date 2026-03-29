@@ -7,6 +7,8 @@ struct AlbumListView: View {
 
     @State private var showFolderManager = false
     @State private var searchText = ""
+    @State private var navigationPath: [Album] = []
+    @EnvironmentObject var nowPlaying: NowPlayingCoordinator
 
     private var filteredAlbums: [Album] {
         guard !searchText.isEmpty else { return library.albums }
@@ -17,7 +19,7 @@ struct AlbumListView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             Group {
                 if library.isScanning {
                     scanningView
@@ -76,6 +78,14 @@ struct AlbumListView: View {
             .sheet(isPresented: $showFolderManager) {
                 LibraryFoldersView()
             }
+            .navigationDestination(for: Album.self) { album in
+                AlbumDetailView(album: album)
+            }
+            .onChange(of: nowPlaying.navigateToAlbum) { _, album in
+                guard let album else { return }
+                navigationPath = [album]
+                nowPlaying.navigateToAlbum = nil
+            }
         }
     }
 
@@ -88,7 +98,7 @@ struct AlbumListView: View {
                 spacing: 12
             ) {
                 ForEach(filteredAlbums) { album in
-                    NavigationLink(destination: AlbumDetailView(album: album)) {
+                    NavigationLink(value: album) {
                         AlbumCardView(album: album)
                     }
                     .buttonStyle(.plain)
