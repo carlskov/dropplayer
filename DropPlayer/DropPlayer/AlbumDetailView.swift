@@ -12,7 +12,10 @@ struct AlbumDetailView: View {
     private func playTrack(_ track: Track) {
         player.play(track: track, in: sortedTracks, album: album)
         nowPlaying.isPresented = true
-        Task { _ = await library.loadArtwork(for: album) }
+        Task {
+            let image = await library.loadArtwork(for: album)
+            player.updateArtwork(image)
+        }
     }
 
     var body: some View {
@@ -42,7 +45,10 @@ struct AlbumDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             artwork = await library.loadArtwork(for: album)
-            player.updateArtwork(artwork)
+            // Only push to the player/widget when this album is actually playing
+            if album.tracks.contains(where: { $0.id == player.currentTrack?.id }) {
+                player.updateArtwork(artwork)
+            }
         }
     }
 
