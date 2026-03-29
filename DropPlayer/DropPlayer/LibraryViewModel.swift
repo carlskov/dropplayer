@@ -46,6 +46,13 @@ final class LibraryViewModel: ObservableObject {
         isScanning = false
     }
 
+    func loadTrackMetadata(for track: Track) async -> (artist: String?, title: String?) {
+        let metadata = await metadataExtractor.extractMetadata(from: track.dropboxPath)
+        let artist = metadata["artist"].flatMap { $0.isEmpty ? nil : $0 }
+        let title = metadata["title"].flatMap { $0.isEmpty ? nil : $0 }
+        return (artist, title)
+    }
+
     func loadArtwork(for album: Album) async -> UIImage? {
         guard let artPath = album.artworkDropboxPath else { return nil }
         if let cached = artworkCache[artPath] { return cached }

@@ -6,6 +6,9 @@ struct NowPlayingView: View {
     @EnvironmentObject var nowPlaying: NowPlayingCoordinator
 
     @State private var artwork: UIImage?
+    @State private var currentAlbum: Album?
+    @State private var trackArtist: String?
+    @State private var trackTitle: String?
 
     var body: some View {
         ZStack {
@@ -59,9 +62,19 @@ struct NowPlayingView: View {
             }
         }
         .task(id: player.currentTrack?.id) {
+            trackArtist = nil
+            trackTitle = nil
             if let track = player.currentTrack,
                let album = library.albums.first(where: { $0.tracks.contains(where: { $0.id == track.id }) }) {
-                artwork = await library.loadArtwork(for: album)
+                currentAlbum = album
+                async let meta = library.loadTrackMetadata(for: track)
+                async let art = library.loadArtwork(for: album)
+                let (fetchedMeta, fetchedArt) = await (meta, art)
+                trackArtist = fetchedMeta.artist
+                trackTitle = fetchedMeta.title
+                artwork = fetchedArt
+            } else {
+                currentAlbum = nil
             }
         }
     }
@@ -75,21 +88,32 @@ struct NowPlayingView: View {
     private var trackInfoSection: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(player.currentTrack?.displayTitle ?? "—")
+                Text(trackTitle ?? player.currentTrack?.displayTitle ?? "—")
                     .font(.title2.bold())
                     .lineLimit(1)
-                Text(queueInfo)
+                Text(trackArtist ?? currentAlbum?.displayArtist ?? "—")
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Text(currentAlbum?.displayTitle ?? "—")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Text(trackPositionInfo)
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
                     .lineLimit(1)
             }
             Spacer()
         }
     }
 
-    private var queueInfo: String {
-        guard !player.queue.isEmpty else { return "" }
-        return "\(player.currentIndex + 1) of \(player.queue.count)"
+    private var trackPositionInfo: String {
+        guard let trackNumber = player.currentTrack?.trackNumber else { return "" }
+        if let total = currentAlbum.map({ $0.tracks.count }), total > 0 {
+            return "Track \(trackNumber) of \(total)"
+        }
+        return "Track \(trackNumber)"
     }
 
     private var seekBarSection: some View {
