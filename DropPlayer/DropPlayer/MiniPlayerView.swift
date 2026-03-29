@@ -36,6 +36,15 @@ struct MiniPlayerView: View {
                         Text("Buffering…")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                    } else {
+                        let artist = player.currentTrack?.artist
+                            ?? library.albums.first(where: { $0.tracks.contains(where: { $0.id == player.currentTrack?.id }) })?.displayArtist
+                        if let artist {
+                            Text(artist)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
                     }
                 }
 
