@@ -6,10 +6,11 @@ struct Track: Identifiable, Hashable, Codable {
     let id: String
     let dropboxPath: String
     let fileName: String
-    let title: String
-    let trackNumber: Int?
+    var title: String
+    var trackNumber: Int?
     let discNumber: Int?
     let durationSeconds: Double?
+    var artist: String? = nil
 
     var displayTitle: String {
         title.isEmpty ? fileName : title
@@ -27,6 +28,7 @@ struct Album: Identifiable, Codable {
     var year: String?
     var tracks: [Track]
     var artworkDropboxPath: String?
+    var tagsLoaded: Bool = false
 
     var displayTitle: String {
         title.isEmpty ? folderName : title

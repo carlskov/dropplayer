@@ -33,6 +33,18 @@ struct AlbumListView: View {
             .navigationTitle("Library")
             .searchable(text: $searchText, prompt: "Search albums or artists")
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    if library.isTagScanning {
+                        HStack(spacing: 6) {
+                            ProgressView().scaleEffect(0.8)
+                            Text("Scanning file tags")
+                                .font(.headline)
+                        }
+                    } else {
+                        Text("Library")
+                            .font(.headline)
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         Button {

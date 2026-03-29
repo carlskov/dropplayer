@@ -10,6 +10,10 @@ final class LibraryViewModel: ObservableObject {
     @Published var isScanning = false
     @Published var scanError: String?
     @Published var scanProgress: String = ""
+    @Published var isTagScanning = false
+    @Published var tagScanProgress: String = ""
+
+    private var tagScanTask: Task<Void, Never>?
 
     private let service = DropboxBrowserService.shared
     private var artworkCache: [String: UIImage] = [:]
@@ -31,6 +35,10 @@ final class LibraryViewModel: ObservableObject {
     }
 
     func rescanLibrary(at paths: [String]) async {
+        tagScanTask?.cancel()
+        tagScanTask = nil
+        isTagScanning = false
+
         isScanning = true
         scanError = nil
         albums = []
@@ -48,6 +56,10 @@ final class LibraryViewModel: ObservableObject {
         }
 
         isScanning = false
+
+        if !albums.isEmpty {
+            startTagScan()
+        }
     }
 
     func loadTrackMetadata(for track: Track) async -> (artist: String?, title: String?) {
@@ -95,7 +107,6 @@ final class LibraryViewModel: ObservableObject {
         let subFolders = entries.compactMap { $0 as? Files.FolderMetadata }
 
         if !audioFiles.isEmpty {
-            // This folder is an album
             let folderName = lastPathComponent(path)
             var album = Album(
                 id: path,
@@ -108,18 +119,7 @@ final class LibraryViewModel: ObservableObject {
                 artworkDropboxPath: preferredArtworkPath(from: imageFiles)
             )
 
-            // Try to extract metadata from first audio file
-            if let firstFile = audioFiles.sorted(by: { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }).first {
-                let metadata = await metadataExtractor.extractMetadata(from: firstFile.pathLower ?? firstFile.name)
-                if let albumTitle = metadata["album"], !albumTitle.isEmpty { album.title = albumTitle }
-                if let artist = metadata["albumArtist"] ?? metadata["artist"], !artist.isEmpty { album.artist = artist }
-                if let year = metadata["year"], !year.isEmpty { album.year = year }
-            }
-
-            // Fall back to folder name parsing if needed
-            if album.title.isEmpty || album.artist.isEmpty {
-                parseAlbumMetadata(into: &album, folderName: folderName)
-            }
+            parseAlbumMetadata(into: &album, folderName: folderName)
 
             album.tracks = audioFiles
                 .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
@@ -226,5 +226,80 @@ final class LibraryViewModel: ObservableObject {
 
     private func lastPathComponent(_ path: String) -> String {
         (path as NSString).lastPathComponent
+    }
+
+    // MARK: - Background Tag Scan
+
+    func startTagScan() {
+        tagScanTask?.cancel()
+        isTagScanning = true
+        tagScanProgress = ""
+
+        tagScanTask = Task { [weak self] in
+            guard let self else { return }
+
+            let albumIds = self.albums.map { $0.id }
+
+            for albumId in albumIds {
+                guard !Task.isCancelled else { break }
+                await self.scanTagsForAlbum(withId: albumId)
+            }
+
+            guard !Task.isCancelled else { return }
+            self.albums.sort {
+                $0.displayTitle.localizedCaseInsensitiveCompare($1.displayTitle) == .orderedAscending
+            }
+            self.saveAlbums()
+            self.isTagScanning = false
+            self.tagScanProgress = ""
+        }
+    }
+
+    private func scanTagsForAlbum(withId albumId: String) async {
+        guard let albumIndex = albums.firstIndex(where: { $0.id == albumId }) else { return }
+
+        var album = albums[albumIndex]
+        tagScanProgress = album.displayTitle
+
+        var albumMetadataApplied = false
+
+        for i in album.tracks.indices {
+            guard !Task.isCancelled else { return }
+
+            let metadata = await metadataExtractor.extractMetadata(from: album.tracks[i].dropboxPath)
+            guard !metadata.isEmpty else { continue }
+
+            if let title = metadata["title"], !title.isEmpty {
+                album.tracks[i].title = title
+            }
+            if let trackStr = metadata["track"],
+               let num = Int(trackStr.components(separatedBy: "/").first ?? trackStr) {
+                album.tracks[i].trackNumber = num
+            }
+            if let artist = metadata["artist"], !artist.isEmpty {
+                album.tracks[i].artist = artist
+            }
+
+            if !albumMetadataApplied {
+                if let albumTitle = metadata["album"], !albumTitle.isEmpty {
+                    album.title = albumTitle
+                }
+                if let albumArtist = metadata["albumArtist"] ?? metadata["artist"], !albumArtist.isEmpty {
+                    album.artist = albumArtist
+                }
+                if let year = metadata["year"], !year.isEmpty {
+                    album.year = year
+                }
+                albumMetadataApplied = true
+            }
+        }
+
+        album.tagsLoaded = true
+
+        if let idx = albums.firstIndex(where: { $0.id == albumId }) {
+            albums[idx] = album
+        }
+
+        saveAlbums()
     }
 }
