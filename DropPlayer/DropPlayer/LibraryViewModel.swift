@@ -235,23 +235,51 @@ final class LibraryViewModel: ObservableObject {
 
     /// Tries to infer album title and artist from a folder name like "Artist - Album (Year)".
     private func parseAlbumMetadata(into album: inout Album, folderName: String) {
-        // Pattern: "Artist - Album Title (Year)"
-        let pattern = #"^(.+?)\s+[-–]\s+(.+?)(?:\s+\((\d{4})\))?$"#
-        if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: folderName, range: NSRange(folderName.startIndex..., in: folderName)) {
-            if let artistRange = Range(match.range(at: 1), in: folderName) {
-                album.artist = String(folderName[artistRange])
+        // Try multiple patterns for folder names
+        let patterns = [
+            #"^(.+?)\s+[-–—]\s+(.+?)(?:\s+\((\d{4})\))?$"#,  // "Artist - Album (Year)"
+            #"^(.+?)\s+[-–—]\s+(.+)$"#,                       // "Artist - Album"
+            #"^(.+?)\s+[-–—]\s+(.+?)(?:\s+\[.+\])?$"#,      // "Artist - Album [genre]"
+        ]
+
+        for pattern in patterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: []),
+               let match = regex.firstMatch(in: folderName, range: NSRange(folderName.startIndex..., in: folderName)) {
+                if let artistRange = Range(match.range(at: 1), in: folderName) {
+                    album.artist = String(folderName[artistRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+                if let titleRange = Range(match.range(at: 2), in: folderName) {
+                    album.title = String(folderName[titleRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+                if match.numberOfRanges > 3, let yearRange = Range(match.range(at: 3), in: folderName), !yearRange.isEmpty {
+                    album.year = String(folderName[yearRange])
+                }
+                return
             }
-            if let titleRange = Range(match.range(at: 2), in: folderName) {
-                album.title = String(folderName[titleRange])
-            }
-            if match.numberOfRanges > 3, let yearRange = Range(match.range(at: 3), in: folderName), !yearRange.isEmpty {
-                album.year = String(folderName[yearRange])
-            }
+        }
+
+        // No pattern matched — try to infer artist from first track filename
+        if let firstTrack = album.tracks.first, let trackArtist = inferArtistFromFilename(firstTrack.fileName) {
+            album.artist = trackArtist
+            album.title = folderName
         } else {
-            // No dash separator — use folder name as album title
             album.title = folderName
         }
+    }
+
+    private func inferArtistFromFilename(_ filename: String) -> String? {
+        let nameWithoutExt = (filename as NSString).deletingPathExtension
+        let patterns = [
+            #"^(\S.*?)\s+[-–—]\s+.+$"#,  // "Artist - Title"
+        ]
+        for pattern in patterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: []),
+               let match = regex.firstMatch(in: nameWithoutExt, range: NSRange(nameWithoutExt.startIndex..., in: nameWithoutExt)),
+               let artistRange = Range(match.range(at: 1), in: nameWithoutExt) {
+                return String(nameWithoutExt[artistRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+        return nil
     }
 
     private func lastPathComponent(_ path: String) -> String {
