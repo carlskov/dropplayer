@@ -70,12 +70,21 @@ final class LibraryViewModel: ObservableObject {
     }
 
     func loadArtwork(for album: Album) async -> UIImage? {
-        guard let artPath = album.artworkDropboxPath else { return nil }
-        if let cached = artworkCache[artPath] { return cached }
-        guard let data = try? await service.downloadData(path: artPath),
-              let image = UIImage(data: data) else { return nil }
-        artworkCache[artPath] = image
-        return image
+        if let artPath = album.artworkDropboxPath {
+            let cacheKey = "file:\(artPath)"
+            if let cached = artworkCache[cacheKey] { return cached }
+            if let data = try? await service.downloadData(path: artPath),
+               let image = UIImage(data: data) {
+                artworkCache[cacheKey] = image
+                return image
+            }
+        }
+        if let firstTrack = album.tracks.first,
+           let artworkData = await metadataExtractor.extractArtwork(from: firstTrack.dropboxPath),
+           let image = UIImage(data: artworkData) {
+            return image
+        }
+        return nil
     }
 
     // MARK: - Caching

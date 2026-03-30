@@ -18,6 +18,213 @@ final class MetadataExtractor {
         }
     }
 
+    func extractArtwork(from path: String) async -> Data? {
+        do {
+            let data = try await service.downloadData(path: path, range: 0...1048575)
+            guard !data.isEmpty else { return nil }
+            return extractArtworkFromBytes(bytes: [UInt8](data), path: path)
+        } catch {
+            return nil
+        }
+    }
+
+    private func extractArtworkFromBytes(bytes: [UInt8], path: String) -> Data? {
+        let ext = (path as NSString).pathExtension.lowercased()
+        switch ext {
+        case "mp3":
+            return extractID3Artwork(bytes: bytes)
+        case "m4a", "aac", "alac":
+            return extractM4AArtwork(bytes: bytes)
+        case "flac":
+            return extractFLACArtwork(bytes: bytes)
+        default:
+            return nil
+        }
+    }
+
+    // MARK: - Artwork Extraction
+
+    private func extractID3Artwork(bytes: [UInt8]) -> Data? {
+        guard bytes.count >= 10,
+              bytes[0] == 0x49, bytes[1] == 0x44, bytes[2] == 0x33 else { return nil }
+
+        let version = bytes[3]
+        guard version == 4 || version == 3 || version == 2 else { return nil }
+
+        let tagSize: Int
+        if version >= 3 {
+            tagSize = (Int(bytes[6]) << 21) | (Int(bytes[7]) << 14) | (Int(bytes[8]) << 7) | Int(bytes[9])
+        } else {
+            tagSize = (Int(bytes[6]) << 21) | (Int(bytes[7]) << 14) | (Int(bytes[8]) << 7) | Int(bytes[9])
+        }
+        guard tagSize > 0, bytes.count >= 10 + tagSize else { return nil }
+
+        let headerSize = version >= 3 ? 10 : 6
+        var offset = 10
+        let endOffset = min(10 + tagSize, bytes.count)
+
+        var frontCover: Data?
+        var firstImage: Data?
+
+        while offset + headerSize <= endOffset {
+            guard bytes[offset] != 0 else {
+                offset += 1
+                continue
+            }
+
+            let frameID: String
+            let frameHeaderSize: Int
+            if version >= 3 {
+                frameID = String(bytes: [bytes[offset], bytes[offset+1], bytes[offset+2], bytes[offset+3]], encoding: .ascii) ?? ""
+                frameHeaderSize = 10
+            } else {
+                frameID = String(bytes: [bytes[offset], bytes[offset+1], bytes[offset+2]], encoding: .ascii) ?? ""
+                frameHeaderSize = 6
+            }
+            guard !frameID.isEmpty else {
+                offset += 1
+                continue
+            }
+
+            let frameSize: Int
+            if version == 4 {
+                frameSize = (Int(bytes[offset+4]) << 21) | (Int(bytes[offset+5]) << 14) | (Int(bytes[offset+6]) << 7) | Int(bytes[offset+7])
+            } else if version == 3 {
+                frameSize = (Int(bytes[offset+4]) << 24) | (Int(bytes[offset+5]) << 16) | (Int(bytes[offset+6]) << 8) | Int(bytes[offset+7])
+            } else {
+                frameSize = (Int(bytes[offset+3]) << 16) | (Int(bytes[offset+4]) << 8) | Int(bytes[offset+5])
+            }
+
+            guard frameSize > 0, offset + frameHeaderSize + frameSize <= bytes.count else { break }
+
+            if frameID == "APIC" || frameID == "PIC" {
+                let contentStart = offset + frameHeaderSize
+                let contentEnd = contentStart + frameSize
+                let content = Array(bytes[contentStart..<contentEnd])
+                if let (pictureType, imageData) = extractAPICData(bytes: content) {
+                    if pictureType == 0x03 && frontCover == nil {
+                        frontCover = imageData
+                    } else if firstImage == nil {
+                        firstImage = imageData
+                    }
+                }
+            }
+
+            offset += frameHeaderSize + frameSize
+        }
+
+        return frontCover ?? firstImage
+    }
+
+    private func extractAPICData(bytes: [UInt8]) -> (UInt8, Data)? {
+        guard bytes.count >= 4 else { return nil }
+        var offset = 0
+
+        offset = 1  // skip encoding byte
+
+        // Check if MIME type is 3-byte format (ID3v2.2 PIC) or null-terminated string
+        if offset + 3 < bytes.count && bytes[offset + 3] == 0 {
+            // Null-terminated MIME type
+            while offset < bytes.count && bytes[offset] != 0 {
+                offset += 1
+            }
+            if offset < bytes.count { offset += 1 }
+        } else {
+            // 3-byte format code (e.g., "JPG", "PNG")
+            offset += 3
+        }
+
+        guard offset < bytes.count else { return nil }
+        let pictureType = bytes[offset]
+        offset += 1
+
+        // Skip description (null-terminated)
+        while offset < bytes.count && bytes[offset] != 0 {
+            offset += 1
+        }
+        if offset < bytes.count { offset += 1 }
+
+        guard offset < bytes.count else { return nil }
+        return (pictureType, Data(bytes[offset...]))
+    }
+
+    private func extractM4AArtwork(bytes: [UInt8]) -> Data? {
+        return extractM4AArtworkRecursive(bytes: bytes, depth: 0)
+    }
+
+    private func extractM4AArtworkRecursive(bytes: [UInt8], depth: Int) -> Data? {
+        guard depth < 10, bytes.count >= 8 else { return nil }
+        var offset = 0
+
+        while offset + 8 <= bytes.count {
+            let boxSize = (Int(bytes[offset]) << 24) | (Int(bytes[offset+1]) << 16) | (Int(bytes[offset+2]) << 8) | Int(bytes[offset+3])
+            guard boxSize >= 8, offset + boxSize <= bytes.count else { break }
+
+            let boxType = String(bytes: [bytes[offset+4], bytes[offset+5], bytes[offset+6], bytes[offset+7]], encoding: .isoLatin1) ?? ""
+
+            if boxType == "covr" {
+                let contentStart = offset + 8
+                let contentEnd = offset + boxSize
+                if contentStart < contentEnd {
+                    return Data(bytes[contentStart..<contentEnd])
+                }
+            } else if boxType == "moov" || boxType == "meta" || boxType == "ilst" {
+                let contentStart = offset + 8
+                let contentEnd = offset + boxSize
+                var content = Array(bytes[contentStart..<contentEnd])
+                if boxType == "meta" && content.count > 4 {
+                    content = Array(content.dropFirst(4))
+                }
+                if let artwork = extractM4AArtworkRecursive(bytes: content, depth: depth + 1) {
+                    return artwork
+                }
+            }
+
+            offset += boxSize
+        }
+        return nil
+    }
+
+    private func extractFLACArtwork(bytes: [UInt8]) -> Data? {
+        guard bytes.count >= 4,
+              bytes[0] == 0x66, bytes[1] == 0x4C, bytes[2] == 0x61, bytes[3] == 0x43 else { return nil }
+
+        var offset = 4
+
+        while offset + 4 < bytes.count {
+            let blockHeader = bytes[offset]
+            let blockType = blockHeader & 0x7F
+            let isLast = (blockHeader & 0x80) != 0
+
+            let blockSize = (Int(bytes[offset+1]) << 16) | (Int(bytes[offset+2]) << 8) | Int(bytes[offset+3])
+            guard blockSize > 0, offset + 4 + blockSize <= bytes.count else { break }
+
+            if blockType == 6 {
+                return extractFLACPictureData(bytes: Array(bytes[(offset + 4)..<(offset + 4 + blockSize)]))
+            }
+
+            offset += 4 + blockSize
+            if isLast { break }
+        }
+        return nil
+    }
+
+    private func extractFLACPictureData(bytes: [UInt8]) -> Data? {
+        guard bytes.count >= 32 else { return nil }
+        var offset = 0
+        let pictureType = (Int(bytes[0]) << 24) | (Int(bytes[1]) << 16) | (Int(bytes[2]) << 8) | Int(bytes[3])
+        offset = 4
+        let mimeLen = (Int(bytes[offset]) << 24) | (Int(bytes[offset+1]) << 16) | (Int(bytes[offset+2]) << 8) | Int(bytes[offset+3])
+        offset = 4 + mimeLen + 4
+        let descLen = (Int(bytes[offset]) << 24) | (Int(bytes[offset+1]) << 16) | (Int(bytes[offset+2]) << 8) | Int(bytes[offset+3])
+        offset = 4 + mimeLen + 4 + 4 + descLen + 16
+        guard offset + 4 <= bytes.count else { return nil }
+        let imageLen = (Int(bytes[offset]) << 24) | (Int(bytes[offset+1]) << 16) | (Int(bytes[offset+2]) << 8) | Int(bytes[offset+3])
+        offset += 4
+        guard offset + imageLen <= bytes.count else { return nil }
+        return Data(bytes[offset..<(offset + imageLen)])
+    }
+
     private func parseMetadata(bytes: [UInt8], path: String) -> [String: String] {
         let ext = (path as NSString).pathExtension.lowercased()
         
