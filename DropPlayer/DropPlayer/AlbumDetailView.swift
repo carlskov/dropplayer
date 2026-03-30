@@ -24,13 +24,18 @@ struct AlbumDetailView: View {
                 header
 
                 ForEach(Array(sortedTracks.enumerated()), id: \.element.id) { index, track in
-                    TrackRowView(
-                        track: track,
-                        index: index + 1,
-                        isPlaying: player.currentTrack?.id == track.id && player.isPlaying
-                    )
-                    .onTapGesture {
-                        playTrack(track)
+                    VStack(spacing: 0) {
+                        if isMultiDisc && (index == 0 || track.discNumber != sortedTracks[index - 1].discNumber) {
+                            DiscHeaderView(discNumber: track.discNumber ?? 1)
+                        }
+                        TrackRowView(
+                            track: track,
+                            index: trackNumberForDisc(track: track, at: index),
+                            isPlaying: player.currentTrack?.id == track.id && player.isPlaying
+                        )
+                        .onTapGesture {
+                            playTrack(track)
+                        }
                     }
                 }
                 .padding(.bottom, 16)
@@ -50,6 +55,27 @@ struct AlbumDetailView: View {
                 player.updateArtwork(artwork)
             }
         }
+    }
+
+    private var isMultiDisc: Bool {
+        let uniqueDiscs = Set(album.tracks.map { $0.discNumber ?? 1 })
+        return uniqueDiscs.count > 1
+    }
+
+    private func trackNumberForDisc(track: Track, at sortedIndex: Int) -> Int {
+        if album.discNumber != nil || album.tracks.contains(where: { $0.discNumber != nil && $0.discNumber != 1 }) {
+            // Multi-disc album: count tracks within this disc
+            let currentDisc = track.discNumber ?? 1
+            var count = 0
+            for t in sortedTracks {
+                if t.discNumber ?? 1 < currentDisc { continue }
+                if t.discNumber ?? 1 > currentDisc { break }
+                count += 1
+                if t.id == track.id { break }
+            }
+            return count
+        }
+        return track.trackNumber ?? (sortedIndex + 1)
     }
 
     // MARK: - Sub-views
@@ -200,5 +226,23 @@ struct TrackRowView: View {
         let m = total / 60
         let s = total % 60
         return String(format: "%d:%02d", m, s)
+    }
+}
+
+// MARK: - Disc Header
+
+struct DiscHeaderView: View {
+    let discNumber: Int
+
+    var body: some View {
+        HStack {
+            Text("Disc \(discNumber)")
+                .font(.subheadline.bold())
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 16)
+        .padding(.bottom, 4)
     }
 }
