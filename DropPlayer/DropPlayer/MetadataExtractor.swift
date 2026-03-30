@@ -98,6 +98,8 @@ final class MetadataExtractor {
         switch encoding {
         case 0x03:
             return String(bytes: textBytes, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        case 0x01:
+            return String(bytes: textBytes, encoding: .utf16)?.trimmingCharacters(in: .whitespacesAndNewlines)
         default:
             return String(bytes: textBytes, encoding: .isoLatin1)?.trimmingCharacters(in: .whitespacesAndNewlines)
         }
