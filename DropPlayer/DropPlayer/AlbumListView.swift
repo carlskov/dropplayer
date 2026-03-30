@@ -8,6 +8,7 @@ struct AlbumListView: View {
     @State private var showFolderManager = false
     @State private var searchText = ""
     @State private var navigationPath: [Album] = []
+    @State private var columnsPerRow: Int = 2
     @EnvironmentObject var nowPlaying: NowPlayingCoordinator
 
     private var filteredAlbums: [Album] {
@@ -45,6 +46,13 @@ struct AlbumListView: View {
                     } else {
                         Text("Library")
                             .font(.headline)
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        columnsPerRow = columnsPerRow == 2 ? 3 : 2
+                    } label: {
+                        Image(systemName: columnsPerRow == 2 ? "square.grid.3x3" : "square.grid.2x2")
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -94,7 +102,7 @@ struct AlbumListView: View {
     private var albumGrid: some View {
         ScrollView {
             LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 16)],
+                columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: columnsPerRow),
                 spacing: 12
             ) {
                 ForEach(filteredAlbums) { album in
