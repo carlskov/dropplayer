@@ -12,6 +12,7 @@ final class LibraryViewModel: ObservableObject {
     @Published var scanProgress: String = ""
     @Published var isTagScanning = false
     @Published var tagScanProgress: String = ""
+    @Published var scanningAlbumId: String?
 
     private var tagScanTask: Task<Void, Never>?
 
@@ -71,17 +72,20 @@ final class LibraryViewModel: ObservableObject {
 
     func loadArtwork(for album: Album) async -> UIImage? {
         if let artPath = album.artworkDropboxPath {
-            let cacheKey = "file:\(artPath)"
-            if let cached = artworkCache[cacheKey] { return cached }
+            let fileCacheKey = "file:\(artPath)"
+            if let cached = artworkCache[fileCacheKey] { return cached }
             if let data = try? await service.downloadData(path: artPath),
                let image = UIImage(data: data) {
-                artworkCache[cacheKey] = image
+                artworkCache[fileCacheKey] = image
                 return image
             }
         }
+        let embeddedCacheKey = "embedded:\(album.id)"
+        if let cached = artworkCache[embeddedCacheKey] { return cached }
         if let firstTrack = album.tracks.first,
            let artworkData = await metadataExtractor.extractArtwork(from: firstTrack.dropboxPath),
            let image = UIImage(data: artworkData) {
+            artworkCache[embeddedCacheKey] = image
             return image
         }
         return nil
@@ -165,7 +169,6 @@ final class LibraryViewModel: ObservableObject {
     }
 
     private func preferredArtworkPath(from files: [Files.FileMetadata]) -> String? {
-        // Prefer cover.jpg > folder.jpg > any other match
         let preferred = ["cover", "folder", "front", "album", "artwork", "albumart"]
         for name in preferred {
             for ext in ["jpg", "jpeg", "png", "webp"] {
@@ -175,6 +178,41 @@ final class LibraryViewModel: ObservableObject {
             }
         }
         return files.first.flatMap { $0.pathLower ?? $0.name }
+    }
+
+    private func rescanFolderContents(for album: inout Album) async {
+        do {
+            let entries = try await service.listFolder(path: album.folderPath)
+            let audioFiles = entries.compactMap { $0 as? Files.FileMetadata }
+                .filter { isAudioFile($0.name) }
+
+            if !audioFiles.isEmpty {
+                let existingTracks = Dictionary(uniqueKeysWithValues: album.tracks.map { ($0.id, $0) })
+
+                album.tracks = audioFiles
+                    .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+                    .map { file -> Track in
+                        let path = file.pathLower ?? file.name
+                        if let existingTrack = existingTracks[path] {
+                            return existingTrack
+                        }
+                        return makeTrack(from: file, albumArtist: album.artist)
+                    }
+            }
+        } catch {
+            // Keep existing tracks on error
+        }
+    }
+
+    private func findArtworkInFolder(path: String) async -> String? {
+        do {
+            let entries = try await service.listFolder(path: path)
+            let imageFiles = entries.compactMap { $0 as? Files.FileMetadata }
+                .filter { isArtworkFile($0.name) }
+            return preferredArtworkPath(from: imageFiles)
+        } catch {
+            return nil
+        }
     }
 
     private func makeTrack(from file: Files.FileMetadata, albumArtist: String?) -> Track {
@@ -313,10 +351,67 @@ final class LibraryViewModel: ObservableObject {
         }
     }
 
+    func rescanTagsForAlbum(_ album: Album) async {
+        guard let index = albums.firstIndex(where: { $0.id == album.id }) else { return }
+
+        isTagScanning = true
+        tagScanProgress = "Rescanning \(album.displayTitle)"
+        scanningAlbumId = album.id
+
+        var updatedAlbum = albums[index]
+        updatedAlbum.tagsLoaded = false
+
+        // Clear artwork cache for this album
+        let artPath = updatedAlbum.artworkDropboxPath ?? "embedded:\(updatedAlbum.id)"
+        artworkCache.removeValue(forKey: "file:\(artPath)")
+        artworkCache.removeValue(forKey: "embedded:\(updatedAlbum.id)")
+
+        // Re-scan folder for audio files
+        await rescanFolderContents(for: &updatedAlbum)
+
+        // Scan for artwork files in folder
+        if let artworkPath = await findArtworkInFolder(path: updatedAlbum.folderPath) {
+            updatedAlbum.artworkDropboxPath = artworkPath
+            let fileCacheKey = "file:\(artworkPath)"
+            if let data = try? await service.downloadData(path: artworkPath),
+               let image = UIImage(data: data) {
+                artworkCache[fileCacheKey] = image
+            }
+        }
+
+        // Scan for embedded artwork from first track
+        if let firstTrack = updatedAlbum.tracks.first,
+           let artworkData = await metadataExtractor.extractArtwork(from: firstTrack.dropboxPath),
+           UIImage(data: artworkData) != nil {
+            artworkCache["embedded:\(updatedAlbum.id)"] = UIImage(data: artworkData)
+        }
+
+        await scanTagsForAlbum(album: &updatedAlbum)
+        updatedAlbum.tagsLoaded = true
+        albums[index] = updatedAlbum
+        saveAlbums()
+
+        isTagScanning = false
+        tagScanProgress = ""
+        scanningAlbumId = nil
+    }
+
     private func scanTagsForAlbum(withId albumId: String) async {
         guard let albumIndex = albums.firstIndex(where: { $0.id == albumId }) else { return }
 
         var album = albums[albumIndex]
+        tagScanProgress = album.displayTitle
+
+        await scanTagsForAlbum(album: &album)
+
+        if let idx = albums.firstIndex(where: { $0.id == albumId }) {
+            albums[idx] = album
+        }
+
+        saveAlbums()
+    }
+
+    private func scanTagsForAlbum(album: inout Album) async {
         tagScanProgress = album.displayTitle
 
         var albumMetadataApplied = false
@@ -363,11 +458,5 @@ final class LibraryViewModel: ObservableObject {
         if album.tracks.contains(where: { $0.trackNumber != nil }) {
             album.tracks.sort { ($0.trackNumber ?? Int.max) < ($1.trackNumber ?? Int.max) }
         }
-
-        if let idx = albums.firstIndex(where: { $0.id == albumId }) {
-            albums[idx] = album
-        }
-
-        saveAlbums()
     }
 }

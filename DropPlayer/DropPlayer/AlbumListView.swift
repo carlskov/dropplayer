@@ -178,14 +178,25 @@ struct AlbumListView: View {
 struct AlbumCardView: View {
     let album: Album
     @State private var artwork: UIImage?
+    @State private var isScanningThisAlbum = false
     @EnvironmentObject var library: LibraryViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            AlbumArtView(image: artwork, size: .flexible)
-                .aspectRatio(1, contentMode: .fit)
-                .cornerRadius(8)
-                .shadow(radius: 4, y: 2)
+            ZStack {
+                AlbumArtView(image: artwork, size: .flexible)
+                    .aspectRatio(1, contentMode: .fit)
+                    .cornerRadius(8)
+                    .shadow(radius: 4, y: 2)
+
+                if isScanningThisAlbum {
+                    Color.black.opacity(0.4)
+                        .cornerRadius(8)
+                    ProgressView()
+                        .scaleEffect(1.2)
+                        .tint(.white)
+                }
+            }
 
             Text(album.displayTitle)
                 .font(.caption.bold())
@@ -200,8 +211,23 @@ struct AlbumCardView: View {
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .contextMenu {
+            Button {
+                Task {
+                    isScanningThisAlbum = true
+                    await library.rescanTagsForAlbum(album)
+                    artwork = await library.loadArtwork(for: album)
+                    isScanningThisAlbum = false
+                }
+            } label: {
+                Label("Rescan Tags", systemImage: "arrow.clockwise")
+            }
+        }
         .task {
             artwork = await library.loadArtwork(for: album)
+        }
+        .onChange(of: library.scanningAlbumId) { _, newId in
+            isScanningThisAlbum = (newId == album.id)
         }
     }
 }
