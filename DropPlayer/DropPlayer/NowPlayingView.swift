@@ -71,8 +71,8 @@ struct NowPlayingView: View {
                 }
         )
         .task(id: player.currentTrack?.id) {
-            trackArtist = nil
-            trackTitle = nil
+            trackArtist = player.currentTrack?.artist
+            trackTitle = player.currentTrack?.title
             if let track = player.currentTrack,
                let album = library.albums.first(where: { $0.tracks.contains(where: { $0.id == track.id }) }) {
                 currentAlbum = album

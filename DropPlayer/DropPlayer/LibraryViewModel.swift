@@ -123,7 +123,7 @@ final class LibraryViewModel: ObservableObject {
 
             album.tracks = audioFiles
                 .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-                .map { makeTrack(from: $0) }
+                .map { makeTrack(from: $0, albumArtist: album.artist) }
 
             await MainActor.run {
                 scanProgress = "Found: \(album.displayTitle)"
@@ -168,25 +168,45 @@ final class LibraryViewModel: ObservableObject {
         return files.first.flatMap { $0.pathLower ?? $0.name }
     }
 
-    private func makeTrack(from file: Files.FileMetadata) -> Track {
+    private func makeTrack(from file: Files.FileMetadata, albumArtist: String?) -> Track {
         let path = file.pathLower ?? file.name
         let name = file.name
         let nameWithoutExt = (name as NSString).deletingPathExtension
 
-        // Simple parse: "01 - Track Title" or "01. Track Title" or "Track Title"
         var trackNumber: Int?
         var title = nameWithoutExt
+        var artist = albumArtist
 
+        // Patterns: "(01) Artist - Title", "01. Artist - Title", "01 - Artist - Title", "Artist - Title"
         let patterns = [
+            #"^\((\d+)\)[.\- ]*(\S.*?)\s+[-–]\s+(.+)$"#,
+            #"^(\d+)[.\- ]+(\S.*?)\s+[-–]\s+(.+)$"#,
             #"^(\d+)[.\- ]+(.+)$"#,
+            #"^(\S.*?)\s+[-–]\s+(.+)$"#,
         ]
         for pattern in patterns {
-            if let regex = try? NSRegularExpression(pattern: pattern),
+            if let regex = try? NSRegularExpression(pattern: pattern, options: []),
                let match = regex.firstMatch(in: nameWithoutExt, range: NSRange(nameWithoutExt.startIndex..., in: nameWithoutExt)) {
-                if let numRange = Range(match.range(at: 1), in: nameWithoutExt),
-                   let titleRange = Range(match.range(at: 2), in: nameWithoutExt) {
-                    trackNumber = Int(nameWithoutExt[numRange])
-                    title = String(nameWithoutExt[titleRange])
+                if match.numberOfRanges == 4 {
+                    if let artistRange = Range(match.range(at: 2), in: nameWithoutExt) {
+                        artist = String(nameWithoutExt[artistRange])
+                    }
+                    if let titleRange = Range(match.range(at: 3), in: nameWithoutExt) {
+                        title = String(nameWithoutExt[titleRange])
+                    }
+                } else if match.numberOfRanges == 3 {
+                    let group1 = Range(match.range(at: 1), in: nameWithoutExt).map({ String(nameWithoutExt[$0]) })
+                    if let numStr = group1, Int(numStr) != nil {
+                        if let numRange = Range(match.range(at: 1), in: nameWithoutExt),
+                           let titleRange = Range(match.range(at: 2), in: nameWithoutExt) {
+                            trackNumber = Int(nameWithoutExt[numRange])
+                            title = String(nameWithoutExt[titleRange])
+                        }
+                    } else if let artistRange = Range(match.range(at: 1), in: nameWithoutExt),
+                              let titleRange = Range(match.range(at: 2), in: nameWithoutExt) {
+                        artist = String(nameWithoutExt[artistRange])
+                        title = String(nameWithoutExt[titleRange])
+                    }
                 }
                 break
             }
@@ -199,7 +219,8 @@ final class LibraryViewModel: ObservableObject {
             title: title,
             trackNumber: trackNumber,
             discNumber: nil,
-            durationSeconds: nil
+            durationSeconds: nil,
+            artist: artist?.isEmpty == true ? nil : artist
         )
     }
 
@@ -301,6 +322,10 @@ final class LibraryViewModel: ObservableObject {
         }
 
         album.tagsLoaded = true
+
+        if album.tracks.contains(where: { $0.trackNumber != nil }) {
+            album.tracks.sort { ($0.trackNumber ?? Int.max) < ($1.trackNumber ?? Int.max) }
+        }
 
         if let idx = albums.firstIndex(where: { $0.id == albumId }) {
             albums[idx] = album

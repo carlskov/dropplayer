@@ -118,15 +118,16 @@ struct AlbumDetailView: View {
     }
 
     private var sortedTracks: [Track] {
-        album.tracks.sorted {
-            let d0 = $0.discNumber ?? 1
-            let d1 = $1.discNumber ?? 1
-            if d0 != d1 { return d0 < d1 }
-            let t0 = $0.trackNumber ?? Int.max
-            let t1 = $1.trackNumber ?? Int.max
-            if t0 != t1 { return t0 < t1 }
-            return $0.displayTitle.localizedCaseInsensitiveCompare($1.displayTitle) == .orderedAscending
+        let hasTrackNumbers = album.tracks.contains(where: { $0.trackNumber != nil })
+        if hasTrackNumbers {
+            return album.tracks.sorted {
+                let d0 = $0.discNumber ?? 1
+                let d1 = $1.discNumber ?? 1
+                if d0 != d1 { return d0 < d1 }
+                return ($0.trackNumber ?? Int.max) < ($1.trackNumber ?? Int.max)
+            }
         }
+        return album.tracks
     }
 
     private var labelFooter: some View {
