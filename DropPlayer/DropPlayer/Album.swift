@@ -8,7 +8,7 @@ struct Track: Identifiable, Hashable, Codable {
     let fileName: String
     var title: String
     var trackNumber: Int?
-    let discNumber: Int?
+    var discNumber: Int?
     let durationSeconds: Double?
     var artist: String? = nil
 
@@ -26,6 +26,7 @@ struct Album: Identifiable, Hashable, Codable {
     var title: String
     var artist: String
     var year: String?
+    var discNumber: Int?
     var tracks: [Track]
     var artworkDropboxPath: String?
     var tagsLoaded: Bool = false

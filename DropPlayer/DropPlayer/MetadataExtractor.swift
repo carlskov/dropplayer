@@ -285,6 +285,7 @@ final class MetadataExtractor {
                 case "TDRC", "TYER", "TYE": result["year"] = String(value.prefix(4))
                 case "TIT2": result["title"] = value
                 case "TRCK": result["track"] = value
+                case "TPOS": result["disk"] = value
                 case "TCOP": result["copyright"] = value
                 case "TPUB": result["label"] = value
                 default: break
@@ -366,13 +367,14 @@ final class MetadataExtractor {
             
             let boxType = String(bytes: [bytes[offset+4], bytes[offset+5], bytes[offset+6], bytes[offset+7]], encoding: .isoLatin1) ?? ""
             
-            let contentStart = offset + 8
-            let contentEnd = offset + boxSize
-            
-            if let key = mp4KeyToName(boxType), contentStart < contentEnd {
-                let content = Array(bytes[contentStart..<contentEnd])
-                if let value = extractM4AString(bytes: content) {
-                    result[key] = value
+            if let key = mp4KeyToName(boxType) {
+                let contentStart = offset + 8
+                let contentEnd = offset + boxSize
+                if contentStart < contentEnd {
+                    let content = Array(bytes[contentStart..<contentEnd])
+                    if let value = extractM4AMetaValue(bytes: content) {
+                        result[key] = value
+                    }
                 }
             }
             
@@ -388,16 +390,37 @@ final class MetadataExtractor {
         case "©nam": return "title"
         case "©day": return "year"
         case "©trk": return "track"
+        case "disk": return "disk"
+        case "©crg": return "disk"
         case "cprt": return "copyright"
         case "©pub": return "label"
         default: return nil
         }
     }
 
-    private func extractM4AString(bytes: [UInt8]) -> String? {
-        // data atom layout: size(4) + "data"(4) + type_indicator(4) + locale(4) = 16 bytes header
-        guard bytes.count > 16 else { return nil }
-        return String(bytes: Array(bytes.dropFirst(16)), encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+    private func extractM4AMetaValue(bytes: [UInt8]) -> String? {
+        // Content is nested boxes - look for 'data' box
+        var offset = 0
+        
+        while offset + 8 <= bytes.count {
+            let innerBoxSize = (Int(bytes[offset]) << 24) | (Int(bytes[offset+1]) << 16) | (Int(bytes[offset+2]) << 8) | Int(bytes[offset+3])
+            guard innerBoxSize >= 8, offset + innerBoxSize <= bytes.count else { break }
+            
+            let innerBoxType = String(bytes: [bytes[offset+4], bytes[offset+5], bytes[offset+6], bytes[offset+7]], encoding: .isoLatin1) ?? ""
+            
+            if innerBoxType == "data" {
+                // data box: size(4) + "data"(4) + type_indicator(4) + locale(4) + value
+                guard innerBoxSize >= 16 else { return nil }
+                let valueStart = offset + 16
+                guard valueStart < bytes.count else { return nil }
+                let valueBytes = Array(bytes[valueStart..<(offset + innerBoxSize)])
+                return String(bytes: valueBytes, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            
+            offset += innerBoxSize
+        }
+        
+        return nil
     }
 
     // MARK: - FLAC
@@ -488,6 +511,7 @@ final class MetadataExtractor {
                 case "TITLE": result["title"] = value
                 case "DATE", "YEAR": result["year"] = String(value.prefix(4))
                 case "TRACKNUMBER", "TRACK": result["track"] = value
+                case "DISCNUMBER", "DISC", "PARTNUMBER", "PART": result["disk"] = value
                 case "COPYRIGHT": result["copyright"] = value
                 case "ORGANIZATION", "LABEL", "PUBLISHER": result["label"] = value
                 default: break

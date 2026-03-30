@@ -50,7 +50,12 @@ final class LibraryViewModel: ObservableObject {
                 let results = try await scanFolder(path: path, depth: 0)
                 discovered.append(contentsOf: results)
             }
-            albums = discovered.sorted { $0.displayTitle.localizedCaseInsensitiveCompare($1.displayTitle) == .orderedAscending }
+            
+            // Quick metadata scan for multi-disc detection
+            await quickScanForMerge(&discovered)
+            
+            let merged = mergeMultiDiscAlbums(discovered)
+            albums = merged.sorted { $0.displayTitle.localizedCaseInsensitiveCompare($1.displayTitle) == .orderedAscending }
             saveAlbums()
         } catch {
             scanError = error.localizedDescription
@@ -320,6 +325,103 @@ final class LibraryViewModel: ObservableObject {
         return nil
     }
 
+    private func extractBaseAlbumName(_ folderName: String) -> (baseName: String, discNumber: Int?) {
+        // Patterns for multi-disc folders
+        let discPatterns = [
+            #"(?i)\s*\(\s*cd\s*(\d+)\s*\)\s*$"#,     // "(CD1)", "(CD 1)"
+            #"(?i)\s*[-–—]\s*cd\s*(\d+)\s*$"#,     // "- CD1", "- CD 1"
+            #"(?i)\s*\[?\s*disc\s*(\d+)\s*\]?\s*$"#, // "[Disc 1]", "Disc 1"
+            #"(?i)\s*part\s*(\d+)\s*$"#,            // "Part 1"
+            #"(?i)\s*vol\.?\s*(\d+)\s*$"#,          // "Vol. 1", "Vol 1"
+            #"\s+(\d+)\s*$"#,                        // " 1" (trailing number)
+        ]
+
+        for pattern in discPatterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: []),
+               let match = regex.firstMatch(in: folderName, range: NSRange(folderName.startIndex..., in: folderName)) {
+                let baseName = String(folderName[..<folderName.index(folderName.startIndex, offsetBy: match.range.location)]).trimmingCharacters(in: .whitespacesAndNewlines)
+                if let discRange = Range(match.range(at: 1), in: folderName),
+                   let discNum = Int(folderName[discRange]) {
+                    return (baseName, discNum)
+                }
+            }
+        }
+
+        return (folderName, nil)
+    }
+
+    private func quickScanForMerge(_ albums: inout [Album]) async {
+        for i in albums.indices {
+            guard let firstTrack = albums[i].tracks.first else { continue }
+            let metadata = await metadataExtractor.extractMetadata(from: firstTrack.dropboxPath)
+            
+            // Extract album title from tags
+            if let albumTitle = metadata["album"], !albumTitle.isEmpty {
+                albums[i].title = albumTitle
+            }
+            
+            // Extract disc info from tags (e.g., "1/2" or just "1")
+            if let diskStr = metadata["disk"] ?? metadata["part"], !diskStr.isEmpty {
+                let parts = diskStr.components(separatedBy: "/")
+                if let firstPart = parts.first, let discNum = Int(firstPart) {
+                    albums[i].discNumber = discNum
+                }
+            }
+        }
+    }
+
+    private func mergeMultiDiscAlbums(_ albums: [Album]) -> [Album] {
+        var albumGroups: [String: [Album]] = [:]
+
+        for album in albums {
+            // Use tag-derived title if available, otherwise folder name
+            let albumName = album.title.isEmpty ? album.folderName : album.title
+            let (baseName, _) = extractBaseAlbumName(albumName)
+            albumGroups[baseName, default: []].append(album)
+        }
+
+        var mergedAlbums: [Album] = []
+
+        for (_, group) in albumGroups {
+            if group.count > 1 {
+                // Sort by disc number
+                let sorted = group.sorted { a, b in
+                    let (_, discA) = extractBaseAlbumName(a.folderName)
+                    let (_, discB) = extractBaseAlbumName(b.folderName)
+                    return (discA ?? 0) < (discB ?? 0)
+                }
+
+                // Merge into first album
+                var mainAlbum = sorted[0]
+                for i in 1..<sorted.count {
+                    for track in sorted[i].tracks {
+                        var mergedTrack = track
+                        mergedTrack.discNumber = i + 1
+                        mainAlbum.tracks.append(mergedTrack)
+                    }
+                    // Keep artwork from first disc if available
+                    if mainAlbum.artworkDropboxPath == nil && sorted[i].artworkDropboxPath != nil {
+                        mainAlbum.artworkDropboxPath = sorted[i].artworkDropboxPath
+                    }
+                }
+
+                // Sort tracks by disc number then track number
+                mainAlbum.tracks.sort { a, b in
+                    let d0 = a.discNumber ?? 1
+                    let d1 = b.discNumber ?? 1
+                    if d0 != d1 { return d0 < d1 }
+                    return (a.trackNumber ?? Int.max) < (b.trackNumber ?? Int.max)
+                }
+
+                mergedAlbums.append(mainAlbum)
+            } else {
+                mergedAlbums.append(group[0])
+            }
+        }
+
+        return mergedAlbums
+    }
+
     private func lastPathComponent(_ path: String) -> String {
         (path as NSString).lastPathComponent
     }
@@ -388,7 +490,10 @@ final class LibraryViewModel: ObservableObject {
 
         await scanTagsForAlbum(album: &updatedAlbum)
         updatedAlbum.tagsLoaded = true
-        albums[index] = updatedAlbum
+        
+        if let currentIndex = albums.firstIndex(where: { $0.id == updatedAlbum.id }) {
+            albums[currentIndex] = updatedAlbum
+        }
         saveAlbums()
 
         isTagScanning = false
