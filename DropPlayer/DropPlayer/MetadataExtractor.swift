@@ -4,6 +4,75 @@ import Foundation
 final class MetadataExtractor {
     private let service: DropboxBrowserService
     
+    private static let id3GenreCodes: [Int: String] = [
+        0: "Blues", 1: "Classic Rock", 2: "Country", 3: "Dance", 4: "Disco",
+        5: "Funk", 6: "Grunge", 7: "Hip-Hop", 8: "Jazz", 9: "Metal",
+        10: "New Age", 11: "Oldies", 12: "Other", 13: "Pop", 14: "R&B",
+        15: "Rap", 16: "Reggae", 17: "Rock", 18: "Techno", 19: "Industrial",
+        20: "Alternative", 21: "Ska", 22: "Death Metal", 23: "Pranks", 24: "Soundtrack",
+        25: "Euro-Techno", 26: "Ambient", 27: "Trip-Hop", 28: "Vocal", 29: "Jazz+Funk",
+        30: "Fusion", 31: "Trance", 32: "Classical", 33: "Instrumental", 34: "Acid",
+        35: "House", 36: "Game", 37: "Sound Clip", 38: "Gospel", 39: "Noise",
+        40: "Alternative Rock", 41: "Bass", 42: "Soul", 43: "Punk", 44: "Space",
+        45: "Meditative", 46: "Instrumental Pop", 47: "Instrumental Rock", 48: "Ethnic", 49: "Gothic",
+        50: "Darkwave", 51: "Techno-Industrial", 52: "Electronic", 53: "Pop-Folk", 54: "Eurodance",
+        55: "Dream", 56: "Southern Rock", 57: "Comedy", 58: "Cult", 59: "Gangsta",
+        60: "Top 40", 61: "Christian Rap", 62: "Pop/Funk", 63: "Jungle", 64: "Native American",
+        65: "Cabaret", 66: "New Wave", 67: "Psychedelic", 68: "Rave", 69: "Showtunes",
+        70: "Trailer", 71: "Lo-Fi", 72: "Tribal", 73: "Acid Punk", 74: "Acid Jazz",
+        75: "Polka", 76: "Retro", 77: "Musical", 78: "Rock & Roll", 79: "Hard Rock",
+        80: "Folk", 81: "Folk-Rock", 82: "National Folk", 83: "Swing", 84: "Fast Fusion",
+        85: "Bebop", 86: "Latin", 87: "Revival", 88: "Celtic", 89: "Bluegrass",
+        90: "Avantgarde", 91: "Gothic Rock", 92: "Progressive Rock", 93: "Psychedelic Rock", 94: "Symphonic Rock",
+        95: "Slow Rock", 96: "Big Band", 97: "Chorus", 98: "Easy Listening", 99: "Acoustic",
+        100: "Humour", 101: "Speech", 102: "Chanson", 103: "Opera", 104: "Chamber Music",
+        105: "Sonata", 106: "Symphony", 107: "Booty Brass", 108: "Primus", 109: "Porn Groove",
+        110: "Satire", 111: "Slow Jam", 112: "Club", 113: "Tango", 114: "Samba",
+        115: "Folklore", 116: "Ballad", 117: "Power Ballad", 118: "Rhythmic Soul", 119: "Freestyle",
+        120: "Duet", 121: "Punk Rock", 122: "Drum Solo", 123: "A Cappella", 124: "Euro-House",
+        125: "Dance Hall", 126: "Goa", 127: "Drum & Bass", 128: "Club-House", 129: "Hardcore Techno",
+        130: "Terror", 131: "Indie", 132: "BritPop", 133: "Negerpunk", 134: "Polsk Punk",
+        135: "Beat", 136: "Christian Gangsta Rap", 137: "Heavy Metal", 138: "Black Metal", 139: "Crossover",
+        140: "Contemporary Christian", 141: "Christian Rock", 142: "Merengue", 143: "Salsa", 144: "Thrash Metal",
+        145: "Anime", 146: "J-Pop", 147: "Synthpop", 148: "Abstract", 149: "Art Rock",
+        150: "Baroque", 151: "Bhangra", 152: "Big Beat", 153: "Breakbeat", 154: "Chillout",
+        155: "Downtempo", 156: "Dub", 157: "EBM", 158: "Eclectic", 159: "Electro",
+        160: "Electroclash", 161: "Emo", 162: "Experimental", 163: "Garage", 164: "Global",
+        165: "IDM", 166: "Illbient", 167: "Industro-Goth", 168: "Jam Band", 169: "Krautrock",
+        170: "Leftfield", 171: "Lounge", 172: "Mathcore", 173: "Microhouse", 174: "Bac", 175: "Podcast",
+        176: "Indie", 177: "Gebet", 178: "Symphonic Rock", 179: "Schlager", 180: "Darkwave",
+        181: "Synthpop", 182: "Soft Rock", 183: "Ling", 184: "Hom", 185: "New Wave",
+        186: "Neue Deutsche Welle", 187: "Neue Deutsche Härte", 188: "Indb", 189: "K-Pop", 190: "K-Rock",
+        191: "Electronica", 192: "Punk", 193: "Drumstep", 194: "Dubstep", 195: "Uplifting Trance",
+        196: "Hardstyle", 197: "Jumpstyle", 198: "Liquid", 199: "RnB/Soul", 200: "Jazztronica",
+        201: "Nu Jazz", 202: "Vaporwave", 203: "Bassline", 204: "Grime", 205: "Wave",
+        206: "Garage", 207: "Stomp & Hanna"
+    ]
+    
+    private func normalizeGenre(_ genre: String) -> String {
+        var working = genre.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if let code = Int(working), let mappedGenre = Self.id3GenreCodes[code] {
+            return mappedGenre
+        }
+        
+        while let openParen = working.firstIndex(of: "("),
+              let closeParen = working[openParen...].firstIndex(of: ")") {
+            let codeRange = working.index(after: openParen)..<closeParen
+            let codeString = String(working[codeRange])
+            
+            if let code = Int(codeString), let mappedGenre = Self.id3GenreCodes[code] {
+                working = mappedGenre + " " + working[..<openParen].trimmingCharacters(in: .whitespaces)
+                working = working.trimmingCharacters(in: .whitespaces)
+                break
+            } else {
+                break
+            }
+        }
+        
+        return working
+    }
+    
     init(service: DropboxBrowserService) {
         self.service = service
     }
@@ -288,7 +357,7 @@ final class MetadataExtractor {
                 case "TPOS": result["disk"] = value
                 case "TCOP": result["copyright"] = value
                 case "TPUB": result["label"] = value
-                case "TCON": result["genre"] = value
+                case "TCON": result["genre"] = normalizeGenre(value)
                 default: break
                 }
             }
@@ -373,8 +442,21 @@ final class MetadataExtractor {
                 let contentEnd = offset + boxSize
                 if contentStart < contentEnd {
                     let content = Array(bytes[contentStart..<contentEnd])
-                    if let value = extractM4AMetaValue(bytes: content) {
-                        result[key] = value
+                    
+                    // gnre box stores genre as 16-bit integer, ©gen stores text
+                    if boxType == "gnre" {
+                        if let genreCode = extractM4AGenreValue(bytes: content),
+                           let genreName = Self.id3GenreCodes[genreCode] {
+                            result["genre"] = genreName
+                        }
+                    } else if key == "genre" {
+                        if let value = extractM4AMetaValue(bytes: content) {
+                            result[key] = normalizeGenre(value)
+                        }
+                    } else {
+                        if let value = extractM4AMetaValue(bytes: content) {
+                            result[key] = value
+                        }
                     }
                 }
             }
@@ -418,6 +500,30 @@ final class MetadataExtractor {
                 guard valueStart < bytes.count else { return nil }
                 let valueBytes = Array(bytes[valueStart..<(offset + innerBoxSize)])
                 return String(bytes: valueBytes, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            
+            offset += innerBoxSize
+        }
+        
+        return nil
+    }
+
+    private func extractM4AGenreValue(bytes: [UInt8]) -> Int? {
+        var offset = 0
+        
+        while offset + 8 <= bytes.count {
+            let innerBoxSize = (Int(bytes[offset]) << 24) | (Int(bytes[offset+1]) << 16) | (Int(bytes[offset+2]) << 8) | Int(bytes[offset+3])
+            guard innerBoxSize >= 8, offset + innerBoxSize <= bytes.count else { break }
+            
+            let innerBoxType = String(bytes: [bytes[offset+4], bytes[offset+5], bytes[offset+6], bytes[offset+7]], encoding: .isoLatin1) ?? ""
+            
+            if innerBoxType == "data" {
+                guard innerBoxSize >= 16 else { return nil }
+                let valueStart = offset + 16
+                guard valueStart + 1 < bytes.count else { return nil }
+                // Parse 16-bit big-endian integer
+                let genreCode = (Int(bytes[valueStart]) << 8) | Int(bytes[valueStart + 1])
+                return genreCode - 1 // ID3 genres are 0-indexed, M4A stores 1-indexed
             }
             
             offset += innerBoxSize
@@ -517,7 +623,7 @@ final class MetadataExtractor {
                 case "DISCNUMBER", "DISC", "PARTNUMBER", "PART": result["disk"] = value
                 case "COPYRIGHT": result["copyright"] = value
                 case "ORGANIZATION", "LABEL", "PUBLISHER": result["label"] = value
-                case "GENRE": result["genre"] = value
+                case "GENRE": result["genre"] = normalizeGenre(value)
                 default: break
                 }
             }
