@@ -288,6 +288,7 @@ final class MetadataExtractor {
                 case "TPOS": result["disk"] = value
                 case "TCOP": result["copyright"] = value
                 case "TPUB": result["label"] = value
+                case "TCON": result["genre"] = value
                 default: break
                 }
             }
@@ -394,6 +395,8 @@ final class MetadataExtractor {
         case "©crg": return "disk"
         case "cprt": return "copyright"
         case "©pub": return "label"
+        case "©gen": return "genre"
+        case "gnre": return "genre"
         default: return nil
         }
     }
@@ -514,6 +517,7 @@ final class MetadataExtractor {
                 case "DISCNUMBER", "DISC", "PARTNUMBER", "PART": result["disk"] = value
                 case "COPYRIGHT": result["copyright"] = value
                 case "ORGANIZATION", "LABEL", "PUBLISHER": result["label"] = value
+                case "GENRE": result["genre"] = value
                 default: break
                 }
             }

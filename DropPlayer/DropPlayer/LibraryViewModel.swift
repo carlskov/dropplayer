@@ -554,6 +554,9 @@ final class LibraryViewModel: ObservableObject {
                 if let label = metadata["label"], !label.isEmpty {
                     album.label = label
                 }
+                if let genre = metadata["genre"], !genre.isEmpty {
+                    album.genre = genre
+                }
                 albumMetadataApplied = true
             }
         }

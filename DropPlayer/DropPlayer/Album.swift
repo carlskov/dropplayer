@@ -32,6 +32,7 @@ struct Album: Identifiable, Hashable, Codable {
     var tagsLoaded: Bool = false
     var copyright: String? = nil
     var label: String? = nil
+    var genre: String? = nil
 
     var displayTitle: String {
         title.isEmpty ? folderName : title

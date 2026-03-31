@@ -12,10 +12,39 @@ struct AlbumListView: View {
     @EnvironmentObject var nowPlaying: NowPlayingCoordinator
 
     private var filteredAlbums: [Album] {
-        guard !searchText.isEmpty else { return library.albums }
-        return library.albums.filter {
+        let base = searchText.isEmpty ? library.albums : library.albums.filter {
             $0.displayTitle.localizedCaseInsensitiveContains(searchText) ||
             $0.displayArtist.localizedCaseInsensitiveContains(searchText)
+        }
+        return sortAlbums(base)
+    }
+
+    private func sortAlbums(_ albums: [Album]) -> [Album] {
+        switch settings.albumSortOption {
+        case .title:
+            return albums.sorted { $0.displayTitle.localizedCaseInsensitiveCompare($1.displayTitle) == .orderedAscending }
+        case .artist:
+            return albums.sorted { $0.displayArtist.localizedCaseInsensitiveCompare($1.displayArtist) == .orderedAscending }
+        case .year:
+            return albums.sorted { album1, album2 in
+                let year1 = album1.year.flatMap { Int($0) } ?? 0
+                let year2 = album2.year.flatMap { Int($0) } ?? 0
+                if year1 != year2 {
+                    return year1 > year2
+                }
+                return album1.displayTitle.localizedCaseInsensitiveCompare(album2.displayTitle) == .orderedAscending
+            }
+        case .location:
+            return albums.sorted { $0.folderPath.localizedCaseInsensitiveCompare($1.folderPath) == .orderedAscending }
+        case .genre:
+            return albums.sorted {
+                let genreA = $0.genre ?? ""
+                let genreB = $1.genre ?? ""
+                if genreA == genreB {
+                    return $0.displayTitle.localizedCaseInsensitiveCompare($1.displayTitle) == .orderedAscending
+                }
+                return genreA.localizedCaseInsensitiveCompare(genreB) == .orderedAscending
+            }
         }
     }
 
@@ -53,6 +82,26 @@ struct AlbumListView: View {
                         columnsPerRow = columnsPerRow == 2 ? 3 : 2
                     } label: {
                         Image(systemName: columnsPerRow == 2 ? "square.grid.3x3" : "square.grid.2x2")
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Section("Sort By") {
+                            ForEach(AlbumSortOption.allCases, id: \.self) { option in
+                                Button {
+                                    settings.albumSortOption = option
+                                } label: {
+                                    HStack {
+                                        Text(option.rawValue)
+                                        if settings.albumSortOption == option {
+                                            Image(systemName: "checkmark")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
