@@ -98,7 +98,11 @@ struct AlbumDetailView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 if let year = album.year {
-                    Text([year, album.label].compactMap { $0 }.joined(separator: " · "))
+                    Text([year, album.label, album.genre].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else if let genre = album.genre, !genre.isEmpty {
+                    Text(genre)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
