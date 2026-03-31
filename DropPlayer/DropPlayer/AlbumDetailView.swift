@@ -102,7 +102,7 @@ struct AlbumDetailView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 } else if let genre = album.genre, !genre.isEmpty {
-                    Text(genre)
+                    Text(genre) 
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }

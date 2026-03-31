@@ -476,7 +476,12 @@ final class MetadataExtractor {
         case "disk": return "disk"
         case "©crg": return "disk"
         case "cprt": return "copyright"
+        case "©lab": return "label"
+        case "©prd": return "label"
         case "©pub": return "label"
+        case "lab": return "label"
+        case "ldes": return "label"
+        case "aSOl": return "labelSort"
         case "©gen": return "genre"
         case "gnre": return "genre"
         default: return nil
