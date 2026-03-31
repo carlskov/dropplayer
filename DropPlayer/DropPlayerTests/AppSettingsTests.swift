@@ -76,4 +76,30 @@ final class AppSettingsTests: XCTestCase {
         let settings = AppSettings()
         XCTAssertEqual(settings.musicFolderPaths, ["/Jazz"])
     }
+
+    func testInitialAlbumSortOptionIsTitle() {
+        let settings = AppSettings()
+        XCTAssertEqual(settings.albumSortOption, .title)
+    }
+
+    func testAlbumSortOptionPersistsToUserDefaults() {
+        let settings = AppSettings()
+        settings.albumSortOption = .genre
+        XCTAssertEqual(UserDefaults.standard.string(forKey: "albumSortOption"), "Genre")
+    }
+
+    func testAlbumSortOptionReadsFromUserDefaults() {
+        UserDefaults.standard.set("Artist", forKey: "albumSortOption")
+        let settings = AppSettings()
+        XCTAssertEqual(settings.albumSortOption, .artist)
+    }
+
+    func testAlbumSortOptionAllCasesExist() {
+        XCTAssertEqual(AlbumSortOption.allCases.count, 5)
+        XCTAssertTrue(AlbumSortOption.allCases.contains(.title))
+        XCTAssertTrue(AlbumSortOption.allCases.contains(.artist))
+        XCTAssertTrue(AlbumSortOption.allCases.contains(.year))
+        XCTAssertTrue(AlbumSortOption.allCases.contains(.location))
+        XCTAssertTrue(AlbumSortOption.allCases.contains(.genre))
+    }
 }

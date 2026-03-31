@@ -1,15 +1,26 @@
 import XCTest
 @testable import DropPlayer
 
+@MainActor
 final class NowPlayingCoordinatorTests: XCTestCase {
 
+    private var coordinator: NowPlayingCoordinator!
+
+    override func setUp() {
+        super.setUp()
+        coordinator = NowPlayingCoordinator.shared
+    }
+
+    override func tearDown() {
+        coordinator = nil
+        super.tearDown()
+    }
+
     func testIsPresentedDefaultsToFalse() {
-        let coordinator = NowPlayingCoordinator()
         XCTAssertFalse(coordinator.isPresented)
     }
 
     func testIsPresentedCanBeToggled() {
-        let coordinator = NowPlayingCoordinator()
         coordinator.isPresented = true
         XCTAssertTrue(coordinator.isPresented)
         coordinator.isPresented = false

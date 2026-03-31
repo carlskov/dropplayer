@@ -91,4 +91,49 @@ final class AlbumTests: XCTestCase {
         XCTAssertEqual(album.tracks.first?.id, "/album/02.mp3")
         XCTAssertEqual(album.tracks.last?.id, "/album/01.mp3")
     }
+
+    func testAlbumWithGenre() {
+        let album = Album(
+            id: "/music/album",
+            folderPath: "/music/album",
+            folderName: "Album",
+            title: "Album Title",
+            artist: "Artist",
+            year: nil,
+            tracks: [],
+            artworkDropboxPath: nil,
+            genre: "Rock"
+        )
+        XCTAssertEqual(album.genre, "Rock")
+    }
+
+    func testAlbumWithYearAndGenre() {
+        let album = Album(
+            id: "/music/album",
+            folderPath: "/music/album",
+            folderName: "Album",
+            title: "Album Title",
+            artist: "Artist",
+            year: "2024",
+            tracks: [],
+            artworkDropboxPath: nil,
+            genre: "Jazz"
+        )
+        XCTAssertEqual(album.year, "2024")
+        XCTAssertEqual(album.genre, "Jazz")
+    }
+
+    func testAlbumGenreIsNilByDefault() {
+        let album = Album(
+            id: "/music/album",
+            folderPath: "/music/album",
+            folderName: "Album",
+            title: "Album Title",
+            artist: "Artist",
+            year: nil,
+            tracks: [],
+            artworkDropboxPath: nil
+        )
+        XCTAssertNil(album.genre)
+    }
 }

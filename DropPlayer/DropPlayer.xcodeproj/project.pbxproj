@@ -28,6 +28,12 @@
 		B019 /* MetadataExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020 /* MetadataExtractor.swift */; };
 		B020 /* LibraryFoldersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A021 /* LibraryFoldersView.swift */; };
 		FFB81D4D2F75A4E900ABA63F /* SwiftyDropbox in Frameworks */ = {isa = PBXBuildFile; productRef = PKGDEP1 /* SwiftyDropbox */; };
+		BT001 /* AlbumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA001 /* AlbumTests.swift */; };
+		BT002 /* TrackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA002 /* TrackTests.swift */; };
+		BT003 /* NowPlayingCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA003 /* NowPlayingCoordinatorTests.swift */; };
+		BT004 /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA004 /* AppSettingsTests.swift */; };
+		BT005 /* PlayerEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA005 /* PlayerEngineTests.swift */; };
+		BT006 /* AlbumSortingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA006 /* AlbumSortingTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -67,6 +73,7 @@
 		FA003 /* NowPlayingCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingCoordinatorTests.swift; sourceTree = "<group>"; };
 		FA004 /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
 		FA005 /* PlayerEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerEngineTests.swift; sourceTree = "<group>"; };
+		FA006 /* AlbumSortingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumSortingTests.swift; sourceTree = "<group>"; };
 		PROD /* DropPlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DropPlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		TESTPROD /* DropPlayerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DropPlayerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -154,6 +161,7 @@
 				FA003 /* NowPlayingCoordinatorTests.swift */,
 				FA004 /* AppSettingsTests.swift */,
 				FA005 /* PlayerEngineTests.swift */,
+				FA006 /* AlbumSortingTests.swift */,
 			);
 			path = DropPlayerTests;
 			sourceTree = "<group>";
@@ -295,6 +303,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BT001 /* AlbumTests.swift in Sources */,
+				BT002 /* TrackTests.swift in Sources */,
+				BT003 /* NowPlayingCoordinatorTests.swift in Sources */,
+				BT004 /* AppSettingsTests.swift in Sources */,
+				BT005 /* PlayerEngineTests.swift in Sources */,
+				BT006 /* AlbumSortingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
