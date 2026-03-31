@@ -17,6 +17,41 @@ final class AlbumSortingTests: XCTestCase {
         )
     }
 
+    private func extractYear(from dateString: String?) -> Int? {
+        guard let dateString = dateString else { return nil }
+        
+        if let year = Int(dateString), year > 1000 && year < 10000 {
+            return year
+        }
+        
+        let patterns = [
+            "(\\d{4})[-\\/]\\d{2}[-\\/]\\d{2}",
+            "(\\d{4})[-\\/]\\d{2}",
+            "(\\d{4})"
+        ]
+        
+        for pattern in patterns {
+            if let regex = try? NSRegularExpression(pattern: pattern),
+               let match = regex.firstMatch(in: dateString, range: NSRange(dateString.startIndex..., in: dateString)),
+               let range = Range(match.range(at: 1), in: dateString) {
+                return Int(dateString[range])
+            }
+        }
+        
+        return nil
+    }
+
+    private func sortByYear(_ albums: [Album]) -> [Album] {
+        albums.sorted { album1, album2 in
+            let year1 = extractYear(from: album1.year) ?? 0
+            let year2 = extractYear(from: album2.year) ?? 0
+            if year1 != year2 {
+                return year1 > year2
+            }
+            return album1.displayTitle.localizedCaseInsensitiveCompare(album2.displayTitle) == .orderedAscending
+        }
+    }
+
     // MARK: - Title Sorting
 
     func testSortByTitleAlphabetical() {
@@ -86,14 +121,7 @@ final class AlbumSortingTests: XCTestCase {
             makeAlbum(id: "3", title: "Album", artist: "Artist", year: "2019")
         ]
 
-        let sorted = albums.sorted { album1, album2 in
-            let year1 = album1.year.flatMap { Int($0) } ?? 0
-            let year2 = album2.year.flatMap { Int($0) } ?? 0
-            if year1 != year2 {
-                return year1 > year2
-            }
-            return album1.displayTitle.localizedCaseInsensitiveCompare(album2.displayTitle) == .orderedAscending
-        }
+        let sorted = sortByYear(albums)
 
         XCTAssertEqual(sorted.map { $0.year }, ["2023", "2020", "2019"])
     }
@@ -104,14 +132,7 @@ final class AlbumSortingTests: XCTestCase {
             makeAlbum(id: "2", title: "Apple", artist: "Artist", year: "2020")
         ]
 
-        let sorted = albums.sorted { album1, album2 in
-            let year1 = album1.year.flatMap { Int($0) } ?? 0
-            let year2 = album2.year.flatMap { Int($0) } ?? 0
-            if year1 != year2 {
-                return year1 > year2
-            }
-            return album1.displayTitle.localizedCaseInsensitiveCompare(album2.displayTitle) == .orderedAscending
-        }
+        let sorted = sortByYear(albums)
 
         XCTAssertEqual(sorted.map { $0.title }, ["Apple", "Zebra"])
     }
@@ -123,18 +144,47 @@ final class AlbumSortingTests: XCTestCase {
             makeAlbum(id: "3", title: "Album", artist: "Artist", year: "2023")
         ]
 
-        let sorted = albums.sorted { album1, album2 in
-            let year1 = album1.year.flatMap { Int($0) } ?? 0
-            let year2 = album2.year.flatMap { Int($0) } ?? 0
-            if year1 != year2 {
-                return year1 > year2
-            }
-            return album1.displayTitle.localizedCaseInsensitiveCompare(album2.displayTitle) == .orderedAscending
-        }
+        let sorted = sortByYear(albums)
 
         XCTAssertEqual(sorted[0].year, "2023")
         XCTAssertEqual(sorted[1].year, "2020")
         XCTAssertNil(sorted[2].year)
+    }
+
+    func testSortByYearWithISODate() {
+        let albums = [
+            makeAlbum(id: "1", title: "Album", artist: "Artist", year: "2020-05-15"),
+            makeAlbum(id: "2", title: "Album", artist: "Artist", year: "2023-01-01"),
+            makeAlbum(id: "3", title: "Album", artist: "Artist", year: "2019-12-31")
+        ]
+
+        let sorted = sortByYear(albums)
+
+        XCTAssertEqual(sorted.map { $0.year }, ["2023-01-01", "2020-05-15", "2019-12-31"])
+    }
+
+    func testSortByYearWithDateAndTime() {
+        let albums = [
+            makeAlbum(id: "1", title: "Album", artist: "Artist", year: "2020/03/15"),
+            makeAlbum(id: "2", title: "Album", artist: "Artist", year: "2023/01/01"),
+            makeAlbum(id: "3", title: "Album", artist: "Artist", year: "2019/12/31")
+        ]
+
+        let sorted = sortByYear(albums)
+
+        XCTAssertEqual(sorted.map { $0.year }, ["2023/01/01", "2020/03/15", "2019/12/31"])
+    }
+
+    func testSortByYearWithMixedFormats() {
+        let albums = [
+            makeAlbum(id: "1", title: "Album", artist: "Artist", year: "2020"),
+            makeAlbum(id: "2", title: "Album", artist: "Artist", year: "2023-06-15"),
+            makeAlbum(id: "3", title: "Album", artist: "Artist", year: "2019/08/20")
+        ]
+
+        let sorted = sortByYear(albums)
+
+        XCTAssertEqual(sorted.map { $0.year }, ["2023-06-15", "2020", "2019/08/20"])
     }
 
     // MARK: - Location Sorting

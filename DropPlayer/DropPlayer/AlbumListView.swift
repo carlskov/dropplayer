@@ -27,8 +27,8 @@ struct AlbumListView: View {
             return albums.sorted { $0.displayArtist.localizedCaseInsensitiveCompare($1.displayArtist) == .orderedAscending }
         case .year:
             return albums.sorted { album1, album2 in
-                let year1 = album1.year.flatMap { Int($0) } ?? 0
-                let year2 = album2.year.flatMap { Int($0) } ?? 0
+                let year1 = extractYear(from: album1.year) ?? 0
+                let year2 = extractYear(from: album2.year) ?? 0
                 if year1 != year2 {
                     return year1 > year2
                 }
@@ -46,6 +46,30 @@ struct AlbumListView: View {
                 return genreA.localizedCaseInsensitiveCompare(genreB) == .orderedAscending
             }
         }
+    }
+
+    private func extractYear(from dateString: String?) -> Int? {
+        guard let dateString = dateString else { return nil }
+        
+        if let year = Int(dateString), year > 1000 && year < 10000 {
+            return year
+        }
+        
+        let patterns = [
+            "(\\d{4})[-\\/]\\d{2}[-\\/]\\d{2}",
+            "(\\d{4})[-\\/]\\d{2}",
+            "(\\d{4})"
+        ]
+        
+        for pattern in patterns {
+            if let regex = try? NSRegularExpression(pattern: pattern),
+               let match = regex.firstMatch(in: dateString, range: NSRange(dateString.startIndex..., in: dateString)),
+               let range = Range(match.range(at: 1), in: dateString) {
+                return Int(dateString[range])
+            }
+        }
+        
+        return nil
     }
 
     var body: some View {
