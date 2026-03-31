@@ -41,4 +41,32 @@ struct Album: Identifiable, Hashable, Codable {
     var displayArtist: String {
         artist.isEmpty ? "Unknown Artist" : artist
     }
+
+    init(id: String, folderPath: String, folderName: String, title: String, artist: String, year: String? = nil, discNumber: Int? = nil, tracks: [Track] = [], artworkDropboxPath: String? = nil, tagsLoaded: Bool = false, copyright: String? = nil, label: String? = nil, genre: String? = nil) {
+        self.id = id
+        self.folderPath = folderPath
+        self.folderName = folderName
+        self.title = title
+        self.artist = artist
+        self.year = year
+        self.discNumber = discNumber
+        self.tracks = tracks.sorted { t1, t2 in
+            let disc1 = t1.discNumber ?? 1
+            let disc2 = t2.discNumber ?? 1
+            if disc1 != disc2 {
+                return disc1 < disc2
+            }
+            let track1 = t1.trackNumber ?? 0
+            let track2 = t2.trackNumber ?? 0
+            if track1 != track2 {
+                return track1 < track2
+            }
+            return t1.id < t2.id
+        }
+        self.artworkDropboxPath = artworkDropboxPath
+        self.tagsLoaded = tagsLoaded
+        self.copyright = copyright
+        self.label = label
+        self.genre = genre
+    }
 }

@@ -249,11 +249,19 @@ final class AlbumSortingTests: XCTestCase {
             makeAlbum(id: "3", title: "Album", artist: "Artist", genre: "Jazz")
         ]
 
-        let sorted = albums.sorted {
-            let genreA = $0.genre ?? ""
-            let genreB = $1.genre ?? ""
+        let sorted = albums.sorted { album1, album2 in
+            let hasGenreA = album1.genre != nil
+            let hasGenreB = album2.genre != nil
+            
+            if hasGenreA != hasGenreB {
+                return hasGenreA
+            }
+            
+            let genreA = album1.genre ?? ""
+            let genreB = album2.genre ?? ""
+            
             if genreA == genreB {
-                return $0.displayTitle.localizedCaseInsensitiveCompare($1.displayTitle) == .orderedAscending
+                return album1.displayTitle.localizedCaseInsensitiveCompare(album2.displayTitle) == .orderedAscending
             }
             return genreA.localizedCaseInsensitiveCompare(genreB) == .orderedAscending
         }

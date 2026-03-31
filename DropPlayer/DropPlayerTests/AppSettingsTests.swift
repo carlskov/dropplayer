@@ -5,18 +5,21 @@ final class AppSettingsTests: XCTestCase {
     private let authKey = "isAuthenticated"
     private let folderPathsKey = "musicFolderPaths"
     private let legacyFolderKey = "musicFolderPath"
+    private let albumSortKey = "albumSortOption"
 
     override func setUp() {
         super.setUp()
         UserDefaults.standard.removeObject(forKey: authKey)
         UserDefaults.standard.removeObject(forKey: folderPathsKey)
         UserDefaults.standard.removeObject(forKey: legacyFolderKey)
+        UserDefaults.standard.removeObject(forKey: albumSortKey)
     }
 
     override func tearDown() {
         UserDefaults.standard.removeObject(forKey: authKey)
         UserDefaults.standard.removeObject(forKey: folderPathsKey)
         UserDefaults.standard.removeObject(forKey: legacyFolderKey)
+        UserDefaults.standard.removeObject(forKey: albumSortKey)
         super.tearDown()
     }
 

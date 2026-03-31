@@ -92,6 +92,7 @@ final class PlayerEngine: NSObject, ObservableObject {
         currentTrack = track
         currentArtwork = nil
         isPlaying = false
+        isBuffering = true
         errorMessage = nil
         currentTime = 0
         duration = 0
