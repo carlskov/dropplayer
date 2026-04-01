@@ -145,10 +145,11 @@ struct AlbumDetailView: View {
                     Label("Shuffle", systemImage: "shuffle")
                         .font(.body.bold())
                         .frame(maxWidth: .infinity)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.secondaryButtonTextColor)
                 }
-                .buttonStyle(.bordered)
-                .tint(Theme.accentColor)
+                .buttonStyle(.borderedProminent)
+                
+                .tint(Theme.darkAccentColor)
                 .controlSize(.large)
                 .disabled(sortedTracks.isEmpty)
             }
