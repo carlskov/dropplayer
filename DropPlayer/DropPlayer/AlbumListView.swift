@@ -95,7 +95,6 @@ struct AlbumListView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .navigationTitle("Library")
-            .searchable(text: $searchText, prompt: "Search albums or artists")
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     if library.isTagScanning {
@@ -182,19 +181,34 @@ struct AlbumListView: View {
 
     private var albumGrid: some View {
         ScrollView {
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: columnsPerRow),
-                spacing: 12
-            ) {
-                ForEach(filteredAlbums) { album in
-                    NavigationLink(value: album) {
-                        AlbumCardView(album: album)
-                    }
-                    .buttonStyle(.plain)
+            VStack(spacing: 0) {
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                    TextField("Search albums or artists", text: $searchText)
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(Color(.systemGray6))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
+                .padding(.bottom, 12)
+
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: columnsPerRow),
+                    spacing: 12
+                ) {
+                    ForEach(filteredAlbums) { album in
+                        NavigationLink(value: album) {
+                            AlbumCardView(album: album)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 80)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
         }
     }
 

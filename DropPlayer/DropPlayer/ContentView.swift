@@ -27,20 +27,14 @@ struct MainTabView: View {
     @EnvironmentObject var nowPlaying: NowPlayingCoordinator
 
     var body: some View {
-        TabView {
-            AlbumListView()
-                .tabItem {
-                    Label("Library", systemImage: "music.note.list")
+        AlbumListView()
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if player.currentTrack != nil {
+                    MiniPlayerView()
                 }
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if player.currentTrack != nil {
-                MiniPlayerView()
             }
-        }
-        .ignoresSafeArea(.keyboard)
-        .fullScreenCover(isPresented: $nowPlaying.isPresented) {
-            NowPlayingView()
-        }
+            .fullScreenCover(isPresented: $nowPlaying.isPresented) {
+                NowPlayingView()
+            }
     }
 }
