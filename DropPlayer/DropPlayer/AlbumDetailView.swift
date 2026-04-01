@@ -83,10 +83,11 @@ struct AlbumDetailView: View {
     private var header: some View {
         VStack(spacing: 16) {
             AlbumArtView(image: artwork, size: .flexible)
-                .containerRelativeFrame(.horizontal) { w, _ in min(w * 0.82, 400) }
-                .cornerRadius(12)
+                .cornerRadius(16)
+                .clipped()
+                .padding(.horizontal, 16)
                 .shadow(radius: 10, y: 4)
-                .padding(.top, 12)
+                //.padding(.top, 12)
                 .padding(.bottom, 4)
 
             VStack(spacing: 4) {
