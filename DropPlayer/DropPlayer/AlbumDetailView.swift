@@ -147,9 +147,8 @@ struct AlbumDetailView: View {
                         .frame(maxWidth: .infinity)
                         .foregroundStyle(Theme.secondaryButtonTextColor)
                 }
-                .buttonStyle(.borderedProminent)
-                
-                .tint(Theme.darkAccentColor)
+                .buttonStyle(.bordered)
+                .tint(Theme.accentColor)
                 .controlSize(.large)
                 .disabled(sortedTracks.isEmpty)
             }
