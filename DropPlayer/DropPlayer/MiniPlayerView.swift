@@ -59,16 +59,18 @@ struct MiniPlayerView: View {
         } label: {
                     Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
                         .font(.title2)
-                        .foregroundStyle(Theme.accentColor)
+                        .foregroundColor(.primary)
                 }
+                .buttonStyle(.plain)
 
                 Button {
                     player.skipForward()
                 } label: {
                     Image(systemName: "forward.fill")
                         .font(.title2)
-                        .foregroundStyle(Theme.accentColor)
+                        .foregroundColor(.primary)
                 }
+                .buttonStyle(.plain)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
