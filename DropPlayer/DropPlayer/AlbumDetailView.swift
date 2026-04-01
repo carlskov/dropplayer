@@ -56,10 +56,10 @@ struct AlbumDetailView: View {
                 player.updateArtwork(artwork)
             }
         }
-        .sheet(isPresented: $isFullscreenArtwork) {
+        .fullScreenCover(isPresented: $isFullscreenArtwork) {
             ZoomableImageView(image: artwork)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.hidden)
+                .ignoresSafeArea()
+                .background(Color.black)
         }
     }
 
@@ -274,8 +274,9 @@ struct ZoomableImageView: View {
 
     var body: some View {
         ZStack {
-            Color.clear
-                .contentShape(Rectangle())
+            Color.black
+                .opacity(0.85)
+                .ignoresSafeArea()
                 .onTapGesture {
                     dismiss()
                 }
