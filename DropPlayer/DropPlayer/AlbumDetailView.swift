@@ -326,7 +326,7 @@ struct ZoomableImageView: View {
                             }
                         }
                     }
-                    .onTapGesture(count: 1) {
+                    .onTapGesture {
                         dismiss()
                     }
             } else {
