@@ -274,7 +274,12 @@ struct ZoomableImageView: View {
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Color.black
+                .opacity(0.85)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    dismiss()
+                }
 
             if let image {
                 Image(uiImage: image)
