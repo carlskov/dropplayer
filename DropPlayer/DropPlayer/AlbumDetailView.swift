@@ -8,6 +8,7 @@ struct AlbumDetailView: View {
     @EnvironmentObject var player: PlayerEngine
     @EnvironmentObject var nowPlaying: NowPlayingCoordinator
     @State private var artwork: UIImage?
+    @State private var isFullscreenArtwork = false
 
     private func playTrack(_ track: Track) {
         player.play(track: track, in: sortedTracks, album: album)
@@ -55,6 +56,11 @@ struct AlbumDetailView: View {
                 player.updateArtwork(artwork)
             }
         }
+        .fullScreenCover(isPresented: $isFullscreenArtwork) {
+            ZoomableImageView(image: artwork)
+                .ignoresSafeArea()
+                .background(Color.black)
+        }
     }
 
     private var isMultiDisc: Bool {
@@ -82,13 +88,17 @@ struct AlbumDetailView: View {
 
     private var header: some View {
         VStack(spacing: 16) {
-            AlbumArtView(image: artwork, size: .flexible)
-                .cornerRadius(16)
-                .clipped()
-                .padding(.horizontal, 16)
-                .shadow(radius: 10, y: 4)
-                //.padding(.top, 12)
-                .padding(.bottom, 4)
+            Button {
+                isFullscreenArtwork = true
+            } label: {
+                AlbumArtView(image: artwork, size: .flexible)
+                    .cornerRadius(16)
+                    .clipped()
+                    .shadow(radius: 10, y: 4)
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 4)
 
             VStack(spacing: 4) {
                 Text(album.displayTitle)
@@ -249,5 +259,84 @@ struct DiscHeaderView: View {
         .padding(.horizontal, 16)
         .padding(.top, 16)
         .padding(.bottom, 4)
+    }
+}
+
+// MARK: - Zoomable Image View
+
+struct ZoomableImageView: View {
+    let image: UIImage?
+    @Environment(\.dismiss) private var dismiss
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+    @State private var offset: CGSize = .zero
+    @State private var lastOffset: CGSize = .zero
+
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .scaleEffect(scale)
+                    .offset(offset)
+                    .gesture(
+                        MagnificationGesture()
+                            .onChanged { value in
+                                scale = lastScale * value
+                            }
+                            .onEnded { _ in
+                                lastScale = scale
+                                if scale < 1.0 {
+                                    withAnimation(.spring()) {
+                                        scale = 1.0
+                                        lastScale = 1.0
+                                        offset = .zero
+                                        lastOffset = .zero
+                                    }
+                                }
+                            }
+                    )
+                    .simultaneousGesture(
+                        DragGesture()
+                            .onChanged { value in
+                                if scale > 1.0 {
+                                    offset = CGSize(
+                                        width: lastOffset.width + value.translation.width,
+                                        height: lastOffset.height + value.translation.height
+                                    )
+                                }
+                            }
+                            .onEnded { _ in
+                                lastOffset = offset
+                            }
+                    )
+                    .onTapGesture(count: 2) {
+                        withAnimation(.spring()) {
+                            if scale > 1.0 {
+                                scale = 1.0
+                                lastScale = 1.0
+                                offset = .zero
+                                lastOffset = .zero
+                            } else {
+                                scale = 2.0
+                                lastScale = 2.0
+                            }
+                        }
+                    }
+                    .onTapGesture(count: 1) {
+                        dismiss()
+                    }
+            } else {
+                Image(systemName: "music.note")
+                    .font(.system(size: 48))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .onTapGesture {
+                        dismiss()
+                    }
+            }
+        }
     }
 }
