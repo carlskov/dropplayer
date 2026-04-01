@@ -22,8 +22,9 @@ struct NowPlayingView: View {
                     } label: {
                         Image(systemName: "chevron.down")
                             .font(.title2)
-                            .foregroundStyle(.primary)
+                            .foregroundColor(.primary)
                     }
+                    .buttonStyle(.plain)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                     Text("Now Playing")

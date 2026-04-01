@@ -59,7 +59,7 @@ struct MiniPlayerView: View {
         } label: {
                     Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
                         .font(.title2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.accentColor)
                 }
 
                 Button {
@@ -67,7 +67,7 @@ struct MiniPlayerView: View {
                 } label: {
                     Image(systemName: "forward.fill")
                         .font(.title2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.accentColor)
                 }
             }
             .padding(.horizontal, 16)
