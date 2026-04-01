@@ -1,7 +1,9 @@
 import SwiftUI
 
 struct Theme {
-    static var accentColor: Color = Color(.darkGray)
+    static var accentColor: Color {
+        Color(red: 0.308, green: 0.208, blue: 0.308)
+    }
 }
 
 private struct AccentColorKey: EnvironmentKey {
