@@ -38,12 +38,18 @@ struct MiniPlayerView: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         } else {
-                            let artist = player.currentTrack?.artist
-                                ?? library.albums.first(where: { $0.tracks.contains(where: { $0.id == player.currentTrack?.id }) })?.displayArtist
+                            let currentAlbum = library.albums.first(where: { $0.tracks.contains(where: { $0.id == player.currentTrack?.id }) })
+                            let artist = player.currentTrack?.artist ?? currentAlbum?.displayArtist
                             if let artist {
                                 Text(artist)
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+                            if let albumTitle = currentAlbum?.displayTitle {
+                                Text(albumTitle)
+                                    .font(.caption)
+                                    .foregroundStyle(.tertiary)
                                     .lineLimit(1)
                             }
                         }
