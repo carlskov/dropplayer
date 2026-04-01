@@ -13,7 +13,7 @@ struct SetupView: View {
 
             Image(systemName: "music.note.house.fill")
                 .font(.system(size: 80))
-                .foregroundStyle(.blue.gradient)
+                .foregroundStyle(Theme.accentColor.gradient)
 
             VStack(spacing: 8) {
                 Text("DropPlayer")
@@ -41,7 +41,7 @@ struct SetupView: View {
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(.blue)
+                .background(Theme.accentColor)
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
             }

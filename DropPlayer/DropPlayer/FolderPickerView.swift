@@ -71,7 +71,7 @@ struct FolderPickerView: View {
                     } label: {
                         HStack {
                             Image(systemName: "folder.fill")
-                                .foregroundStyle(.blue)
+                                .foregroundStyle(Theme.accentColor)
                             Text(folder.name)
                                 .foregroundStyle(.primary)
                             Spacer()

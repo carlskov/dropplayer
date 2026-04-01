@@ -129,9 +129,9 @@ struct AlbumDetailView: View {
                     Label("Play", systemImage: "play.fill")
                         .font(.body.bold())
                         .frame(maxWidth: .infinity)
-                        // .padding(.vertical, 4)
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(Theme.accentColor)
                 .controlSize(.large)
                 .disabled(sortedTracks.isEmpty)
 
@@ -145,9 +145,9 @@ struct AlbumDetailView: View {
                     Label("Shuffle", systemImage: "shuffle")
                         .font(.body.bold())
                         .frame(maxWidth: .infinity)
-                        // .padding(.vertical, 4)
                 }
                 .buttonStyle(.bordered)
+                .tint(Theme.accentColor)
                 .controlSize(.large)
                 .disabled(sortedTracks.isEmpty)
             }
@@ -201,7 +201,7 @@ struct TrackRowView: View {
                 if isPlaying {
                     Image(systemName: "waveform")
                         .symbolEffect(.variableColor.iterative)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(Theme.accentColor)
                 } else {
                     Text("\(track.trackNumber ?? index)")
                         .font(.caption)
@@ -213,7 +213,7 @@ struct TrackRowView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(track.displayTitle)
                     .font(isPlaying ? .body.bold() : .body)
-                    .foregroundStyle(isPlaying ? .blue : .primary)
+                    .foregroundStyle(isPlaying ? Theme.accentColor : .primary)
                     .lineLimit(1)
                 if let artist = track.artist, !artist.isEmpty {
                     Text(artist)

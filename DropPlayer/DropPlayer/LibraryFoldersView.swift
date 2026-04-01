@@ -14,7 +14,7 @@ struct LibraryFoldersView: View {
                 ForEach(settings.musicFolderPaths, id: \.self) { path in
                     HStack {
                         Image(systemName: "folder.fill")
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(Theme.accentColor)
                         Text(path)
                             .font(.body)
                     }
