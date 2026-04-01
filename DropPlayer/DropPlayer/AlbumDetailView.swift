@@ -203,7 +203,7 @@ struct TrackRowView: View {
                 if isPlaying {
                     Image(systemName: "waveform")
                         .symbolEffect(.variableColor.iterative)
-                        .foregroundStyle(Theme.accentColor)
+                        .foregroundStyle(Theme.nowPlayingAccentColor)
                 } else {
                     Text("\(track.trackNumber ?? index)")
                         .font(.caption)
@@ -215,7 +215,7 @@ struct TrackRowView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(track.displayTitle)
                     .font(isPlaying ? .body.bold() : .body)
-                    .foregroundStyle(isPlaying ? Theme.accentColor : .primary)
+                    .foregroundStyle(isPlaying ? Theme.nowPlayingAccentColor : .primary)
                     .lineLimit(1)
                 if let artist = track.artist, !artist.isEmpty {
                     Text(artist)
