@@ -95,6 +95,7 @@ struct AlbumDetailView: View {
                     .cornerRadius(16)
                     .clipped()
                     .shadow(radius: 10, y: 4)
+                    .scaleEffect(0.95)
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 16)
