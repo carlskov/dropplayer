@@ -145,6 +145,7 @@ struct AlbumDetailView: View {
                     Label("Shuffle", systemImage: "shuffle")
                         .font(.body.bold())
                         .frame(maxWidth: .infinity)
+                        .foregroundStyle(.white)
                 }
                 .buttonStyle(.bordered)
                 .tint(Theme.accentColor)
