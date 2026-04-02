@@ -130,13 +130,13 @@ struct NowPlayingView: View {
                     .padding(.top,2)
                     .multilineTextAlignment(.center)
                     .onTapGesture { goToAlbum() }
-                if let year = currentAlbum?.year {
-                    Text(year)
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                        .multilineTextAlignment(.center)
-                }
+                // if let year = currentAlbum?.year {
+                //     Text(year)
+                //         .font(.caption)
+                //         .foregroundStyle(.tertiary)
+                //         .lineLimit(1)
+                //         .multilineTextAlignment(.center)
+                // }
                 Text(trackPositionInfo)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
