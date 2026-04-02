@@ -99,7 +99,7 @@ struct AlbumDetailView: View {
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 16)
-            .padding(.bottom, 4)
+            // .padding(.bottom, 4)
 
             VStack(spacing: 4) {
                 Text(album.displayTitle)
@@ -154,7 +154,7 @@ struct AlbumDetailView: View {
                 .disabled(sortedTracks.isEmpty)
             }
             .padding(.horizontal)
-            .padding(.top, 4)
+            // .padding(.top, 4)
             .padding(.bottom, 20)
         }
         .padding(.bottom, 4)

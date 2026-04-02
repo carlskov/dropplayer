@@ -34,9 +34,11 @@ struct NowPlayingView: View {
                 .padding(.top, 16)
 
                 AlbumArtView(image: player.currentArtwork, size: .flexible)
-                    .containerRelativeFrame(.horizontal) { w, _ in min(w * 0.82, 400) }
+                    // .containerRelativeFrame(.horizontal) { w, _ in min(w * 0.95, 400) }
+                    .containerRelativeFrame(.horizontal) { w, _ in w - 48 }
                     .cornerRadius(16)
                     .shadow(radius: 24, y: 12)
+                    // .padding(.horizontal, 16)
                     .padding(.top, 48)
                     .scaleEffect(player.isPlaying ? 1.0 : 0.88)
                     .animation(.spring(response: 0.4, dampingFraction: 0.6), value: player.isPlaying)
