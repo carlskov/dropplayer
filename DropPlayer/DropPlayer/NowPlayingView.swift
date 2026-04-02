@@ -114,10 +114,12 @@ struct NowPlayingView: View {
     private var trackInfoSection: some View {
         HStack {
             VStack(alignment: .center, spacing: 4) {
-                Text(trackTitle ?? player.currentTrack?.displayTitle ?? "—")
-                    .font(.title2.bold())
-                    .lineLimit(1)
-                    .multilineTextAlignment(.center)
+                MarqueeText(
+                    text: trackTitle ?? player.currentTrack?.displayTitle ?? "—",
+                    font: .title2.bold(),
+                    lineHeight: UIFont.preferredFont(forTextStyle: .title2).lineHeight
+                )
+                .frame(maxWidth: .infinity)
                 Text(trackArtist ?? currentAlbum?.displayArtist ?? "—")
                     .font(.title3)
                     .foregroundStyle(.secondary)
@@ -334,6 +336,83 @@ private struct AudioRouteView: View {
             return "tv"
         default:
             return "speaker.wave.2.fill"
+        }
+    }
+}
+
+// MARK: - Marquee Text
+
+private struct MarqueeText: View {
+    let text: String
+    let font: Font
+    let lineHeight: CGFloat
+
+    @State private var containerWidth: CGFloat = 0
+    @State private var textWidth: CGFloat = 0
+    @State private var offset: CGFloat = 0
+
+    private var needsScroll: Bool { textWidth > containerWidth }
+
+    // Pause at start, scroll across, then loop
+    private static let pauseDuration: Double = 2.0
+    private static let pixelsPerSecond: Double = 40.0
+
+    var body: some View {
+        GeometryReader { geo in
+            let cw = geo.size.width
+            ZStack(alignment: .leading) {
+                Text(text)
+                    .font(font)
+                    .lineLimit(1)
+                    .fixedSize()
+                    .offset(x: needsScroll ? offset : (cw - textWidth) / 2)
+                    .background(
+                        GeometryReader { inner in
+                            Color.clear
+                                .onAppear {
+                                    textWidth = inner.size.width
+                                    containerWidth = cw
+                                    startAnimation(containerWidth: cw, textWidth: inner.size.width)
+                                }
+                                .onChange(of: text) { _, _ in
+                                    offset = 0
+                                    textWidth = inner.size.width
+                                    containerWidth = cw
+                                    startAnimation(containerWidth: cw, textWidth: inner.size.width)
+                                }
+                        }
+                    )
+            }
+            .frame(width: cw, alignment: .leading)
+            .clipped()
+            .onChange(of: cw) { _, newWidth in
+                containerWidth = newWidth
+            }
+        }
+        .frame(height: lineHeight)
+    }
+
+    private func startAnimation(containerWidth: CGFloat, textWidth: CGFloat) {
+        guard textWidth > containerWidth else { return }
+        let scrollDistance = textWidth - containerWidth
+        let duration = scrollDistance / Self.pixelsPerSecond
+
+        // Scroll forward
+        withAnimation(.linear(duration: 0)) { offset = 0 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.pauseDuration) {
+            guard textWidth > containerWidth else { return }
+            withAnimation(.linear(duration: duration)) { offset = -scrollDistance }
+
+            // Scroll back
+            DispatchQueue.main.asyncAfter(deadline: .now() + duration + Self.pauseDuration) {
+                guard textWidth > containerWidth else { return }
+                withAnimation(.linear(duration: duration)) { offset = 0 }
+
+                // Loop
+                DispatchQueue.main.asyncAfter(deadline: .now() + duration + Self.pauseDuration) {
+                    startAnimation(containerWidth: containerWidth, textWidth: textWidth)
+                }
+            }
         }
     }
 }
