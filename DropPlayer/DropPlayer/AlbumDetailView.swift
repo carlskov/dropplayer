@@ -44,7 +44,7 @@ struct AlbumDetailView: View {
                 labelFooter
                     .padding(.horizontal, 16)
                     .padding(.top, 0)
-                    .padding(.bottom, 24)
+                    .padding(.bottom, 128)
             }
         }
         .navigationTitle(album.displayTitle)
