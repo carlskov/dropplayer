@@ -1,6 +1,4 @@
 import SwiftUI
-import AVFoundation
-import MediaPlayer
 
 struct NowPlayingView: View {
     @EnvironmentObject var player: PlayerEngine
@@ -56,10 +54,6 @@ struct NowPlayingView: View {
 
                 transportControls
                     .padding(.top, 24)
-
-                VolumeBarView()
-                    .padding(.horizontal, 24)
-                    .padding(.top, 32)
 
                 if let error = player.errorMessage {
                     Text(error)
@@ -132,6 +126,13 @@ struct NowPlayingView: View {
                     .padding(.top,2)
                     .multilineTextAlignment(.center)
                     .onTapGesture { goToAlbum() }
+                if let year = currentAlbum?.year {
+                    Text(year)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                        .multilineTextAlignment(.center)
+                }
                 Text(trackPositionInfo)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
@@ -265,95 +266,6 @@ private struct SeekBarView: View {
             }
             .font(.caption2)
             .foregroundStyle(.secondary)
-        }
-    }
-}
-
-// MARK: - Volume Bar
-
-private final class VolumeObserver: ObservableObject {
-    @Published var volume: Float = AVAudioSession.sharedInstance().outputVolume
-    private var observation: NSKeyValueObservation?
-
-    init() {
-        try? AVAudioSession.sharedInstance().setActive(true)
-        observation = AVAudioSession.sharedInstance().observe(
-            \.outputVolume,
-            options: [.new]
-        ) { [weak self] session, _ in
-            DispatchQueue.main.async {
-                self?.volume = session.outputVolume
-            }
-        }
-    }
-}
-
-private struct VolumeBarView: View {
-    @StateObject private var observer = VolumeObserver()
-    @State private var isDragging = false
-    @State private var dragVolume: Float = 0
-
-    private let session = AVAudioSession.sharedInstance()
-
-    private var displayVolume: Float {
-        isDragging ? dragVolume : observer.volume
-    }
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "speaker.fill")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            GeometryReader { geo in
-                let width = geo.size.width
-                let trackHeight: CGFloat = isDragging ? 4 : 2
-
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color.primary.opacity(0.15))
-                        .frame(height: trackHeight)
-
-                    Capsule()
-                        .fill(Color.primary)
-                        .frame(width: max(0, CGFloat(displayVolume) * width), height: trackHeight)
-                }
-                .frame(maxHeight: .infinity, alignment: .center)
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            if !isDragging {
-                                isDragging = true
-                                dragVolume = observer.volume
-                            }
-                            dragVolume = Float(min(max(Double(value.location.x / width), 0), 1))
-                        }
-                        .onEnded { value in
-                            let v = Float(min(max(Double(value.location.x / width), 0), 1))
-                            dragVolume = v
-                            MPVolumeView.setVolume(v)
-                            isDragging = false
-                        }
-                )
-                .animation(.easeInOut(duration: 0.15), value: isDragging)
-            }
-            .frame(height: 20)
-
-            Image(systemName: "speaker.wave.3.fill")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-    }
-}
-
-private extension MPVolumeView {
-    static func setVolume(_ volume: Float) {
-        // MPVolumeView is the only public API for setting system volume programmatically.
-        let view = MPVolumeView(frame: .zero)
-        guard let slider = view.subviews.first(where: { $0 is UISlider }) as? UISlider else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-            slider.value = volume
         }
     }
 }
