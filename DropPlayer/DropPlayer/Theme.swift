@@ -47,7 +47,7 @@ struct Theme {
             //         .fill(accentColor.opacity(0.15))
             // )
             .overlay(
-                RoundedRectangle( style: .continuous)
+                RoundedRectangle(cornerRadius: 100, style: .continuous)
                     .stroke(accentColor, lineWidth: 1)
             )
             .scaleEffect(configuration.isPressed ? 0.96 : 1.0)

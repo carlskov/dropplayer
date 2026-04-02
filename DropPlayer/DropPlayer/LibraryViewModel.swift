@@ -19,6 +19,13 @@ final class LibraryViewModel: ObservableObject {
     private let service = DropboxBrowserService.shared
     private var artworkCache: [String: UIImage] = [:]
     private let cacheKey = "CachedAlbums"
+
+    private let artworkDiskCacheDirectory: URL = {
+        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        let dir = caches.appendingPathComponent("AlbumArtwork", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }()
     private let metadataExtractor = MetadataExtractor(service: DropboxBrowserService.shared)
 
     private let audioExtensions: Set<String> = ["mp3", "flac", "aac", "m4a", "ogg", "wav", "aiff", "aif", "alac", "opus"]
@@ -79,24 +86,59 @@ final class LibraryViewModel: ObservableObject {
         if let artPath = album.artworkDropboxPath {
             let fileCacheKey = "file:\(artPath)"
             if let cached = artworkCache[fileCacheKey] { return cached }
+            if let diskImage = loadArtworkFromDisk(key: fileCacheKey) {
+                artworkCache[fileCacheKey] = diskImage
+                return diskImage
+            }
             if let data = try? await service.downloadData(path: artPath),
                let image = UIImage(data: data) {
                 artworkCache[fileCacheKey] = image
+                saveArtworkToDisk(key: fileCacheKey, image: image)
                 return image
             }
         }
         let embeddedCacheKey = "embedded:\(album.id)"
         if let cached = artworkCache[embeddedCacheKey] { return cached }
+        if let diskImage = loadArtworkFromDisk(key: embeddedCacheKey) {
+            artworkCache[embeddedCacheKey] = diskImage
+            return diskImage
+        }
         if let firstTrack = album.tracks.first,
            let artworkData = await metadataExtractor.extractArtwork(from: firstTrack.dropboxPath),
            let image = UIImage(data: artworkData) {
             artworkCache[embeddedCacheKey] = image
+            saveArtworkToDisk(key: embeddedCacheKey, image: image)
             return image
         }
         return nil
     }
 
     // MARK: - Caching
+
+    private func artworkDiskCacheFileName(for key: String) -> String {
+        var hasher = Hasher()
+        hasher.combine(key)
+        let hashValue = UInt(bitPattern: hasher.finalize())
+        return "\(hashValue).jpg"
+    }
+
+    private func loadArtworkFromDisk(key: String) -> UIImage? {
+        let url = artworkDiskCacheDirectory.appendingPathComponent(artworkDiskCacheFileName(for: key))
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return UIImage(data: data)
+    }
+
+    private func saveArtworkToDisk(key: String, image: UIImage) {
+        let url = artworkDiskCacheDirectory.appendingPathComponent(artworkDiskCacheFileName(for: key))
+        if let data = image.jpegData(compressionQuality: 0.85) {
+            try? data.write(to: url, options: .atomic)
+        }
+    }
+
+    private func removeArtworkFromDisk(key: String) {
+        let url = artworkDiskCacheDirectory.appendingPathComponent(artworkDiskCacheFileName(for: key))
+        try? FileManager.default.removeItem(at: url)
+    }
 
     private func loadCachedAlbums() {
         guard let data = UserDefaults.standard.data(forKey: cacheKey),
@@ -467,6 +509,8 @@ final class LibraryViewModel: ObservableObject {
         let artPath = updatedAlbum.artworkDropboxPath ?? "embedded:\(updatedAlbum.id)"
         artworkCache.removeValue(forKey: "file:\(artPath)")
         artworkCache.removeValue(forKey: "embedded:\(updatedAlbum.id)")
+        removeArtworkFromDisk(key: "file:\(artPath)")
+        removeArtworkFromDisk(key: "embedded:\(updatedAlbum.id)")
 
         // Re-scan folder for audio files
         await rescanFolderContents(for: &updatedAlbum)
@@ -478,14 +522,16 @@ final class LibraryViewModel: ObservableObject {
             if let data = try? await service.downloadData(path: artworkPath),
                let image = UIImage(data: data) {
                 artworkCache[fileCacheKey] = image
+                saveArtworkToDisk(key: fileCacheKey, image: image)
             }
         }
 
         // Scan for embedded artwork from first track
         if let firstTrack = updatedAlbum.tracks.first,
            let artworkData = await metadataExtractor.extractArtwork(from: firstTrack.dropboxPath),
-           UIImage(data: artworkData) != nil {
-            artworkCache["embedded:\(updatedAlbum.id)"] = UIImage(data: artworkData)
+           let image = UIImage(data: artworkData) {
+            artworkCache["embedded:\(updatedAlbum.id)"] = image
+            saveArtworkToDisk(key: "embedded:\(updatedAlbum.id)", image: image)
         }
 
         await scanTagsForAlbum(album: &updatedAlbum)
