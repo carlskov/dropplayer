@@ -116,10 +116,13 @@ final class LibraryViewModel: ObservableObject {
     // MARK: - Caching
 
     private func artworkDiskCacheFileName(for key: String) -> String {
-        var hasher = Hasher()
-        hasher.combine(key)
-        let hashValue = UInt(bitPattern: hasher.finalize())
-        return "\(hashValue).jpg"
+        // Base64-encode the key so the filename is stable across launches.
+        // (Swift's Hasher uses a random per-process seed and cannot be used here.)
+        let encoded = Data(key.utf8).base64EncodedString()
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "=", with: "")
+        return "\(encoded).jpg"
     }
 
     private func loadArtworkFromDisk(key: String) -> UIImage? {
