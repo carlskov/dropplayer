@@ -39,17 +39,17 @@ struct Theme {
             .foregroundStyle(
                 colorScheme == .light ? accentColor : Theme.secondaryButtonTextColor
             )
-            .padding(.vertical, 14)
+            .padding(.vertical, 16)
             .padding(.horizontal, 12)
-            // .background(
-            //     // Use .continuous for system-matching curves
-            //     RoundedRectangle(cornerRadius: 16, style: .continuous) 
-            //         .fill(accentColor.opacity(0.15))
-            // )
-            .overlay(
-                RoundedRectangle(cornerRadius: 100, style: .continuous)
-                    .stroke(accentColor, lineWidth: 1)
+            .background(
+                // Use .continuous for system-matching curves
+                RoundedRectangle(cornerRadius: 100, style: .continuous) 
+                    .fill(accentColor.opacity( colorScheme == .light ? 0.20 : 0.45))
             )
+            // .overlay(
+            //     RoundedRectangle(cornerRadius: 100, style: .continuous)
+            //         .stroke(accentColor, lineWidth: 1)
+            // )
             .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
             .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
