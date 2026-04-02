@@ -146,24 +146,12 @@ struct NowPlayingView: View {
     }
 
     private var seekBarSection: some View {
-        VStack(spacing: 4) {
-            Slider(
-                value: Binding(
-                    get: { player.currentTime },
-                    set: { player.seek(to: $0) }
-                ),
-                in: 0...(max(player.duration, 1))
-            )
-            .tint(.primary)
-
-            HStack {
-                Text(formatTime(player.currentTime))
-                Spacer()
-                Text(formatTime(player.duration))
-            }
-            .font(.caption2)
-            .foregroundStyle(.secondary)
-        }
+        SeekBarView(
+            currentTime: player.currentTime,
+            duration: player.duration,
+            onSeek: { player.seek(to: $0) },
+            formatTime: formatTime
+        )
     }
 
     private var transportControls: some View {
@@ -172,7 +160,7 @@ struct NowPlayingView: View {
                 player.skipBack()
             } label: {
                 Image(systemName: "backward.fill")
-                    .font(.system(size: 32))
+                    .font(.system(size: 24))
             }
 
             Button {
@@ -195,7 +183,7 @@ struct NowPlayingView: View {
                 player.skipForward()
             } label: {
                 Image(systemName: "forward.fill")
-                    .font(.system(size: 32))
+                    .font(.system(size: 24))
             }
         }
         .foregroundStyle(.primary)
@@ -207,5 +195,70 @@ struct NowPlayingView: View {
         let m = total / 60
         let s = total % 60
         return String(format: "%d:%02d", m, s)
+    }
+}
+
+// MARK: - Seek Bar
+
+private struct SeekBarView: View {
+    let currentTime: Double
+    let duration: Double
+    let onSeek: (Double) -> Void
+    let formatTime: (Double) -> String
+
+    @State private var isDragging = false
+    @State private var dragProgress: Double = 0
+
+    private var progress: Double {
+        guard duration > 0 else { return 0 }
+        return isDragging ? dragProgress : min(currentTime / duration, 1)
+    }
+
+    private var displayTime: Double {
+        isDragging ? dragProgress * duration : currentTime
+    }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            GeometryReader { geo in
+                let width = geo.size.width
+                let trackHeight: CGFloat = isDragging ? 6 : 4
+
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color.primary.opacity(0.15))
+                        .frame(height: trackHeight)
+
+                    Capsule()
+                        .fill(Color.primary)
+                        .frame(width: max(0, CGFloat(progress) * width), height: trackHeight)
+                }
+                .frame(maxHeight: .infinity, alignment: .center)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            if !isDragging { isDragging = true }
+                            dragProgress = min(max(Double(value.location.x / width), 0), 1)
+                        }
+                        .onEnded { value in
+                            let p = min(max(Double(value.location.x / width), 0), 1)
+                            dragProgress = p
+                            onSeek(p * duration)
+                            isDragging = false
+                        }
+                )
+                .animation(.easeInOut(duration: 0.15), value: isDragging)
+            }
+            .frame(height: 20)
+
+            HStack {
+                Text(formatTime(displayTime))
+                Spacer()
+                Text(formatTime(duration))
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+        }
     }
 }
