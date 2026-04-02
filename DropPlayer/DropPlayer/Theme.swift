@@ -22,6 +22,43 @@ struct Theme {
     static var secondaryButtonTextColor: Color {
         Color(red: 0.837, green: 0.764, blue: 0.844)
     }
+
+
+    // MARK: - Button Styles
+    
+    /// A bordered button style with adaptive background colors for light/dark mode.
+    /// Background is slightly darker in light mode and slightly lighter in dark mode.
+    struct AdaptiveBorderedButtonStyle: ButtonStyle {
+    @Environment(\.colorScheme) var colorScheme
+    let accentColor: Color
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.body.bold())
+            .frame(maxWidth: .infinity)
+            .foregroundStyle(
+                colorScheme == .light ? accentColor : Theme.secondaryButtonTextColor
+            )
+            .padding(.vertical, 14)
+            .padding(.horizontal, 12)
+            // .background(
+            //     // Use .continuous for system-matching curves
+            //     RoundedRectangle(cornerRadius: 16, style: .continuous) 
+            //         .fill(accentColor.opacity(0.15))
+            // )
+            .overlay(
+                RoundedRectangle( style: .continuous)
+                    .stroke(accentColor, lineWidth: 1)
+            )
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
+    }
+}
+    
+    /// Factory method for creating the adaptive bordered button style.
+    static func adaptiveBorderedButtonStyle(accentColor: Color = Theme.accentColor) -> some ButtonStyle {
+        AdaptiveBorderedButtonStyle(accentColor: accentColor)
+    }
 }
 
 private struct AccentColorKey: EnvironmentKey {

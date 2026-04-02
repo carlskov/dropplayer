@@ -7,6 +7,7 @@ struct AlbumDetailView: View {
     @EnvironmentObject var library: LibraryViewModel
     @EnvironmentObject var player: PlayerEngine
     @EnvironmentObject var nowPlaying: NowPlayingCoordinator
+    @Environment(\.colorScheme) var colorScheme
     @State private var artwork: UIImage?
     @State private var isFullscreenArtwork = false
 
@@ -146,9 +147,12 @@ struct AlbumDetailView: View {
                     Label("Shuffle", systemImage: "shuffle")
                         .font(.body.bold())
                         .frame(maxWidth: .infinity)
-                        .foregroundStyle(Theme.secondaryButtonTextColor)
+                        .foregroundStyle(
+                            colorScheme == .light ? Theme.accentColor : Theme.secondaryButtonTextColor
+                        )
                 }
-                .buttonStyle(.bordered)
+                //.buttonStyle(.bordered)
+                .buttonStyle(Theme.adaptiveBorderedButtonStyle())
                 .tint(Theme.accentColor)
                 .controlSize(.large)
                 .disabled(sortedTracks.isEmpty)
