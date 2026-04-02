@@ -131,8 +131,12 @@ struct AlbumDetailView: View {
                     Label("Play", systemImage: "play.fill")
                         .font(.body.bold())
                         .frame(maxWidth: .infinity)
+                        .foregroundStyle(
+                            colorScheme == .light ? Theme.accentColor : Theme.secondaryButtonTextColor
+                        )
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(Theme.adaptiveBorderedButtonStyle())
+                .background(Color.clear)
                 .tint(Theme.accentColor)
                 .controlSize(.large)
                 .disabled(sortedTracks.isEmpty)
