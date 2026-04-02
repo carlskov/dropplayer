@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 struct NowPlayingView: View {
     @EnvironmentObject var player: PlayerEngine
@@ -54,6 +55,9 @@ struct NowPlayingView: View {
 
                 transportControls
                     .padding(.top, 24)
+
+                AudioRouteView()
+                    .padding(.top, 64)
 
                 if let error = player.errorMessage {
                     Text(error)
@@ -266,6 +270,70 @@ private struct SeekBarView: View {
             }
             .font(.caption2)
             .foregroundStyle(.secondary)
+        }
+    }
+}
+
+// MARK: - Audio Route
+
+private final class AudioRouteObserver: ObservableObject {
+    @Published var portName: String = ""
+    @Published var portType: AVAudioSession.Port = .builtInSpeaker
+
+    private var observation: NSObjectProtocol?
+
+    init() {
+        update()
+        observation = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in self?.update() }
+    }
+
+    deinit {
+        if let observation { NotificationCenter.default.removeObserver(observation) }
+    }
+
+    private func update() {
+        let output = AVAudioSession.sharedInstance().currentRoute.outputs.first
+        portName = output?.portName ?? ""
+        portType = output?.portType ?? .builtInSpeaker
+    }
+}
+
+private struct AudioRouteView: View {
+    @StateObject private var route = AudioRouteObserver()
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: iconName(for: route.portType))
+                .font(.caption)
+            Text(route.portName)
+                .font(.caption)
+                .lineLimit(1)
+        }
+        .foregroundStyle(.secondary)
+    }
+
+    private func iconName(for port: AVAudioSession.Port) -> String {
+        switch port {
+        case .bluetoothA2DP, .bluetoothLE, .bluetoothHFP:
+            return "hifispeaker.fill"
+        case .airPlay:
+            return "airplayaudio"
+        case .headphones:
+            return "headphones"
+        case .builtInSpeaker:
+            return "iphone.gen3"
+        case .builtInReceiver:
+            return "iphone.gen3"
+        case .carAudio:
+            return "car.fill"
+        case .HDMI, .displayPort:
+            return "tv"
+        default:
+            return "speaker.wave.2.fill"
         }
     }
 }
