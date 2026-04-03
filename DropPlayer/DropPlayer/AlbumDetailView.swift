@@ -274,81 +274,104 @@ struct DiscHeaderView: View {
 struct ZoomableImageView: View {
     let image: UIImage?
     @Environment(\.dismiss) private var dismiss
-    @State private var scale: CGFloat = 1.0
-    @State private var lastScale: CGFloat = 1.0
-    @State private var offset: CGSize = .zero
-    @State private var lastOffset: CGSize = .zero
 
     var body: some View {
-        ZStack {
-            Color.black
-                .opacity(0.85)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    dismiss()
-                }
+        ZoomScrollView(image: image, onDismiss: { dismiss() })
+            .ignoresSafeArea()
+    }
+}
 
-            if let image {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .scaleEffect(scale)
-                    .offset(offset)
-                    .gesture(
-                        MagnificationGesture()
-                            .onChanged { value in
-                                scale = lastScale * value
-                            }
-                            .onEnded { _ in
-                                lastScale = scale
-                                if scale < 1.0 {
-                                    withAnimation(.spring()) {
-                                        scale = 1.0
-                                        lastScale = 1.0
-                                        offset = .zero
-                                        lastOffset = .zero
-                                    }
-                                }
-                            }
-                    )
-                    .simultaneousGesture(
-                        DragGesture()
-                            .onChanged { value in
-                                if scale > 1.0 {
-                                    offset = CGSize(
-                                        width: lastOffset.width + value.translation.width,
-                                        height: lastOffset.height + value.translation.height
-                                    )
-                                }
-                            }
-                            .onEnded { _ in
-                                lastOffset = offset
-                            }
-                    )
-                    .onTapGesture(count: 2) {
-                        withAnimation(.spring()) {
-                            if scale > 1.0 {
-                                scale = 1.0
-                                lastScale = 1.0
-                                offset = .zero
-                                lastOffset = .zero
-                            } else {
-                                scale = 2.0
-                                lastScale = 2.0
-                            }
-                        }
-                    }
-                    .onTapGesture {
-                        dismiss()
-                    }
+private struct ZoomScrollView: UIViewRepresentable {
+    let image: UIImage?
+    let onDismiss: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onDismiss: onDismiss)
+    }
+
+    func makeUIView(context: Context) -> UIScrollView {
+        let scrollView = UIScrollView()
+        scrollView.delegate = context.coordinator
+        scrollView.minimumZoomScale = 1.0
+        scrollView.maximumZoomScale = 5.0
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.showsHorizontalScrollIndicator = false
+        scrollView.backgroundColor = UIColor.black
+        scrollView.bouncesZoom = true
+
+        let imageView = UIImageView(image: image)
+        imageView.contentMode = .scaleAspectFit
+        imageView.frame = scrollView.bounds
+        imageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        context.coordinator.imageView = imageView
+        scrollView.addSubview(imageView)
+
+        let doubleTap = UITapGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleDoubleTap(_:))
+        )
+        doubleTap.numberOfTapsRequired = 2
+        scrollView.addGestureRecognizer(doubleTap)
+
+        let singleTap = UITapGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleSingleTap)
+        )
+        singleTap.numberOfTapsRequired = 1
+        singleTap.require(toFail: doubleTap)
+        scrollView.addGestureRecognizer(singleTap)
+
+        return scrollView
+    }
+
+    func updateUIView(_ scrollView: UIScrollView, context: Context) {
+        context.coordinator.imageView?.image = image
+    }
+
+    class Coordinator: NSObject, UIScrollViewDelegate {
+        weak var imageView: UIImageView?
+        let onDismiss: () -> Void
+
+        init(onDismiss: @escaping () -> Void) {
+            self.onDismiss = onDismiss
+        }
+
+        func viewForZooming(in scrollView: UIScrollView) -> UIView? {
+            imageView
+        }
+
+        func scrollViewDidZoom(_ scrollView: UIScrollView) {
+            guard let imageView = imageView else { return }
+            let offsetX = max((scrollView.bounds.width - imageView.frame.width) / 2, 0)
+            let offsetY = max((scrollView.bounds.height - imageView.frame.height) / 2, 0)
+            imageView.center = CGPoint(
+                x: scrollView.contentSize.width / 2 + offsetX,
+                y: scrollView.contentSize.height / 2 + offsetY
+            )
+        }
+
+        @objc func handleDoubleTap(_ gesture: UITapGestureRecognizer) {
+            guard let scrollView = gesture.view as? UIScrollView else { return }
+            if scrollView.zoomScale > 1.0 {
+                scrollView.setZoomScale(1.0, animated: true)
             } else {
-                Image(systemName: "music.note")
-                    .font(.system(size: 48))
-                    .foregroundStyle(.white.opacity(0.5))
-                    .onTapGesture {
-                        dismiss()
-                    }
+                let location = gesture.location(in: imageView)
+                let size = CGSize(
+                    width: scrollView.bounds.width / 2.0,
+                    height: scrollView.bounds.height / 2.0
+                )
+                let rect = CGRect(
+                    x: location.x - size.width / 2,
+                    y: location.y - size.height / 2,
+                    width: size.width,
+                    height: size.height
+                )
+                scrollView.zoom(to: rect, animated: true)
             }
+        }
+
+        @objc func handleSingleTap() {
+            onDismiss()
         }
     }
 }
