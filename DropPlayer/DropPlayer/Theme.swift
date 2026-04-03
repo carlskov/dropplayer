@@ -30,7 +30,8 @@ struct Theme {
         Color(UIColor { traits in
             traits.userInterfaceStyle == .dark
                 ? UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1)   // lighterAccentColor
-                : UIColor(red: 0.408, green: 0.308, blue: 0.408, alpha: 1) // accentColor
+                // : UIColor(red: 0.408, green: 0.308, blue: 0.408, alpha: 1) // accentColor
+                : UIColor(red: 0.208, green: 0.108, blue: 0.20, alpha: 1)
         })
     }   
 
