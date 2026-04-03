@@ -2,7 +2,16 @@ import SwiftUI
 
 struct Theme {
     static var accentColor: Color {
-        Color(red: 0.308, green: 0.208, blue: 0.308)
+        // Color(red: 0.308, green: 0.208, blue: 0.308)
+        // Color(red: 0.408, green: 0.308, blue: 0.408)
+        Color(red: 0.208, green: 0.108, blue: 0.208)
+    }
+
+    static var lighterAccentColor: Color {
+        // Color(red: 0.686, green: 0.322, blue: 0.871)
+        Color(red: 0.9, green: 0.9, blue: 0.9)
+        // Color(red: 0.871, green: 0.686, blue: 0.322)
+        // Color(red: 0.871, green: 0.686, blue: 0)
     }
 
     /// A darker shade of `accentColor` for secondary filled buttons.
@@ -14,7 +23,15 @@ struct Theme {
     static var nowPlayingAccentColor: Color {
         // Color(red: 0.6, green: 0.4, blue: 0.6)
         // Color(red: 0.5, green: 0.3, blue: 0.5)
-        Color(red: 0.6, green: 0.4, blue: 0.6)
+        // Color(red: 0.6, green: 0.4, blue: 0.6)
+        // Color(red: 0.871, green: 0.686, blue: 0)
+        // Color(red: 0.686, green: 0.322, blue: 0.871)
+        // Color(red: 0.408, green: 0.308, blue: 0.408)
+        Color(UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1)   // lighterAccentColor
+                : UIColor(red: 0.408, green: 0.308, blue: 0.408, alpha: 1) // accentColor
+        })
     }   
 
     /// White tinted with 20% of the app's purple, for text on secondary filled buttons.

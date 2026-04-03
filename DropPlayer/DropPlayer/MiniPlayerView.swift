@@ -5,6 +5,7 @@ struct MiniPlayerView: View {
     @EnvironmentObject var player: PlayerEngine
     @EnvironmentObject var library: LibraryViewModel
     @EnvironmentObject var nowPlaying: NowPlayingCoordinator
+    @Environment(\.colorScheme) var colorScheme
     @State private var artwork: UIImage?
 
     var body: some View {
@@ -80,7 +81,7 @@ struct MiniPlayerView: View {
                             Rectangle()
                                 .fill(Color.gray.opacity(0.3))
                             Rectangle()
-                                .fill(Theme.accentColor)
+                                .fill(colorScheme == .light ? Theme.accentColor : Theme.lighterAccentColor)
                                 .frame(width: geo.size.width * CGFloat(player.currentTime / player.duration))
                         }
                     }
