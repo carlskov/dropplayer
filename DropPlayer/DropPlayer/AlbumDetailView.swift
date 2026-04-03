@@ -289,15 +289,23 @@ private struct ZoomScrollView: UIViewRepresentable {
         Coordinator(onDismiss: onDismiss)
     }
 
-    func makeUIView(context: Context) -> UIScrollView {
+    func makeUIView(context: Context) -> UIView {
+        let container = UIView()
+        container.backgroundColor = .black
+        context.coordinator.container = container
+
         let scrollView = UIScrollView()
         scrollView.delegate = context.coordinator
         scrollView.minimumZoomScale = 1.0
         scrollView.maximumZoomScale = 5.0
         scrollView.showsVerticalScrollIndicator = false
         scrollView.showsHorizontalScrollIndicator = false
-        scrollView.backgroundColor = UIColor.black
+        scrollView.backgroundColor = .clear
         scrollView.bouncesZoom = true
+        scrollView.frame = container.bounds
+        scrollView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        context.coordinator.scrollView = scrollView
+        container.addSubview(scrollView)
 
         let imageView = UIImageView(image: image)
         imageView.contentMode = .scaleAspectFit
@@ -321,15 +329,26 @@ private struct ZoomScrollView: UIViewRepresentable {
         singleTap.require(toFail: doubleTap)
         scrollView.addGestureRecognizer(singleTap)
 
-        return scrollView
+        let dismissPan = UIPanGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleDismissPan(_:))
+        )
+        dismissPan.delegate = context.coordinator
+        container.addGestureRecognizer(dismissPan)
+        context.coordinator.dismissPan = dismissPan
+
+        return container
     }
 
-    func updateUIView(_ scrollView: UIScrollView, context: Context) {
+    func updateUIView(_ view: UIView, context: Context) {
         context.coordinator.imageView?.image = image
     }
 
-    class Coordinator: NSObject, UIScrollViewDelegate {
+    class Coordinator: NSObject, UIScrollViewDelegate, UIGestureRecognizerDelegate {
+        weak var container: UIView?
+        weak var scrollView: UIScrollView?
         weak var imageView: UIImageView?
+        weak var dismissPan: UIPanGestureRecognizer?
         let onDismiss: () -> Void
 
         init(onDismiss: @escaping () -> Void) {
@@ -350,8 +369,26 @@ private struct ZoomScrollView: UIViewRepresentable {
             )
         }
 
+        // Allow the dismiss pan to run at the same time as the scroll view's pan
+        func gestureRecognizer(
+            _ gestureRecognizer: UIGestureRecognizer,
+            shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer
+        ) -> Bool {
+            gestureRecognizer === dismissPan
+        }
+
+        // Only begin the dismiss pan when not zoomed in and gesture is primarily downward
+        func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+            guard gestureRecognizer === dismissPan,
+                  let pan = gestureRecognizer as? UIPanGestureRecognizer,
+                  let scrollView = scrollView else { return true }
+            guard scrollView.zoomScale == 1.0 else { return false }
+            let v = pan.velocity(in: container)
+            return v.y > abs(v.x)
+        }
+
         @objc func handleDoubleTap(_ gesture: UITapGestureRecognizer) {
-            guard let scrollView = gesture.view as? UIScrollView else { return }
+            guard let scrollView = scrollView else { return }
             if scrollView.zoomScale > 1.0 {
                 scrollView.setZoomScale(1.0, animated: true)
             } else {
@@ -372,6 +409,44 @@ private struct ZoomScrollView: UIViewRepresentable {
 
         @objc func handleSingleTap() {
             onDismiss()
+        }
+
+        @objc func handleDismissPan(_ gesture: UIPanGestureRecognizer) {
+            guard let container = container else { return }
+            let translation = gesture.translation(in: container)
+            let ty = max(0, translation.y)
+
+            switch gesture.state {
+            case .began:
+                scrollView?.isScrollEnabled = false
+
+            case .changed:
+                container.transform = CGAffineTransform(translationX: 0, y: ty)
+                container.alpha = 1 - min(ty / 300, 0.5)
+
+            case .ended, .cancelled:
+                scrollView?.isScrollEnabled = true
+                let velocity = gesture.velocity(in: container)
+                if ty > 120 || velocity.y > 600 {
+                    UIView.animate(withDuration: 0.25, animations: {
+                        container.transform = CGAffineTransform(
+                            translationX: 0, y: container.bounds.height + ty
+                        )
+                        container.alpha = 0
+                    }) { _ in self.onDismiss() }
+                } else {
+                    UIView.animate(
+                        withDuration: 0.35, delay: 0,
+                        usingSpringWithDamping: 0.75, initialSpringVelocity: 0
+                    ) {
+                        container.transform = .identity
+                        container.alpha = 1
+                    }
+                }
+
+            default:
+                break
+            }
         }
     }
 }
