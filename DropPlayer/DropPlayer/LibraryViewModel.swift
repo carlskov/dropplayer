@@ -231,26 +231,50 @@ final class LibraryViewModel: ObservableObject {
     }
 
     private func rescanFolderContents(for album: inout Album) async {
-        do {
-            let entries = try await service.listFolder(path: album.folderPath)
-            let audioFiles = entries.compactMap { $0 as? Files.FileMetadata }
-                .filter { isAudioFile($0.name) }
-
-            if !audioFiles.isEmpty {
-                let existingTracks = Dictionary(uniqueKeysWithValues: album.tracks.map { ($0.id, $0) })
-
-                album.tracks = audioFiles
-                    .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-                    .map { file -> Track in
-                        let path = file.pathLower ?? file.name
-                        if let existingTrack = existingTracks[path] {
-                            return existingTrack
-                        }
-                        return makeTrack(from: file, albumArtist: album.artist)
-                    }
+        // Build a mapping from parent folder → disc number using existing tracks.
+        // For merged multi-disc albums each disc lives in a different subfolder.
+        var folderToDisc: [String: Int] = [:]
+        for track in album.tracks {
+            let parentFolder = (track.dropboxPath as NSString).deletingLastPathComponent
+            if folderToDisc[parentFolder] == nil {
+                folderToDisc[parentFolder] = track.discNumber ?? 1
             }
-        } catch {
-            // Keep existing tracks on error
+        }
+        if folderToDisc.isEmpty {
+            folderToDisc[album.folderPath] = 1
+        }
+
+        let sortedDiscFolders = folderToDisc.sorted { $0.value < $1.value }
+        let isMultiDisc = sortedDiscFolders.count > 1
+        let existingTracks = Dictionary(uniqueKeysWithValues: album.tracks.map { ($0.id, $0) })
+        var allNewTracks: [Track] = []
+
+        for (folderPath, discNum) in sortedDiscFolders {
+            do {
+                let entries = try await service.listFolder(path: folderPath)
+                let audioFiles = entries.compactMap { $0 as? Files.FileMetadata }
+                    .filter { isAudioFile($0.name) }
+                    .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+
+                for file in audioFiles {
+                    let path = file.pathLower ?? file.name
+                    var track = existingTracks[path] ?? makeTrack(from: file, albumArtist: album.artist)
+                    if isMultiDisc {
+                        track.discNumber = discNum
+                    }
+                    allNewTracks.append(track)
+                }
+            } catch {
+                // Keep existing tracks for this disc folder on error
+                let existingForDisc = album.tracks.filter {
+                    ($0.dropboxPath as NSString).deletingLastPathComponent == folderPath
+                }
+                allNewTracks.append(contentsOf: existingForDisc)
+            }
+        }
+
+        if !allNewTracks.isEmpty {
+            album.tracks = allNewTracks
         }
     }
 
