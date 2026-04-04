@@ -171,6 +171,14 @@ final class LibraryViewModel: ObservableObject {
 
         if !audioFiles.isEmpty {
             let folderName = lastPathComponent(path)
+            var directArtwork = preferredArtworkPath(from: imageFiles)
+            if directArtwork == nil,
+               let coversFolder = subFolders.first(where: { $0.name.lowercased() == "covers" }),
+               let coversEntries = try? await service.listFolder(path: coversFolder.pathLower ?? "\(path)/Covers") {
+                let coversImages = coversEntries.compactMap { $0 as? Files.FileMetadata }
+                    .filter { isArtworkFile($0.name) }
+                directArtwork = preferredArtworkPath(from: coversImages)
+            }
             var album = Album(
                 id: path,
                 folderPath: path,
@@ -179,7 +187,7 @@ final class LibraryViewModel: ObservableObject {
                 artist: "",
                 year: nil,
                 tracks: [],
-                artworkDropboxPath: preferredArtworkPath(from: imageFiles)
+                artworkDropboxPath: directArtwork
             )
 
             parseAlbumMetadata(into: &album, folderName: folderName)
@@ -283,7 +291,21 @@ final class LibraryViewModel: ObservableObject {
             let entries = try await service.listFolder(path: path)
             let imageFiles = entries.compactMap { $0 as? Files.FileMetadata }
                 .filter { isArtworkFile($0.name) }
-            return preferredArtworkPath(from: imageFiles)
+            if let found = preferredArtworkPath(from: imageFiles) {
+                return found
+            }
+            // Check "Covers" subfolder
+            if let coversFolder = entries.compactMap({ $0 as? Files.FolderMetadata })
+                .first(where: { $0.name.lowercased() == "covers" }) {
+                let coversPath = coversFolder.pathLower ?? "\(path)/Covers"
+                let coversEntries = try await service.listFolder(path: coversPath)
+                let coversImages = coversEntries.compactMap { $0 as? Files.FileMetadata }
+                    .filter { isArtworkFile($0.name) }
+                if let found = preferredArtworkPath(from: coversImages) {
+                    return found
+                }
+            }
+            return nil
         } catch {
             return nil
         }
@@ -542,8 +564,18 @@ final class LibraryViewModel: ObservableObject {
         // Re-scan folder for audio files
         await rescanFolderContents(for: &updatedAlbum)
 
-        // Scan for artwork files in folder
-        if let artworkPath = await findArtworkInFolder(path: updatedAlbum.folderPath) {
+        // Scan for artwork files in folder (and Covers subfolder)
+        // For multi-disc albums, also check the top-level containing folder
+        var foundArtworkPath = await findArtworkInFolder(path: updatedAlbum.folderPath)
+        if foundArtworkPath == nil {
+            let discFolders = Set(updatedAlbum.tracks.map { ($0.dropboxPath as NSString).deletingLastPathComponent })
+            let isMultiDisc = discFolders.count > 1 || discFolders.first.map({ $0 != updatedAlbum.folderPath }) == true
+            if isMultiDisc {
+                let parentFolder = (updatedAlbum.folderPath as NSString).deletingLastPathComponent
+                foundArtworkPath = await findArtworkInFolder(path: parentFolder)
+            }
+        }
+        if let artworkPath = foundArtworkPath {
             updatedAlbum.artworkDropboxPath = artworkPath
             let fileCacheKey = "file:\(artworkPath)"
             if let data = try? await service.downloadData(path: artworkPath),
