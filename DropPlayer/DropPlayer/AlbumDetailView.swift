@@ -131,12 +131,12 @@ struct AlbumDetailView: View {
                     Label("Play", systemImage: "play.fill")
                         .font(.body.bold())
                         .frame(maxWidth: .infinity)
-                        .foregroundColor(colorScheme == .light ? Theme.accentColor : Theme.lighterAccentColor)
+                        .foregroundColor(colorScheme == .light ? Theme.darkAccentColor : Theme.lighterAccentColor)
                 }
                 // .buttonStyle(Theme.adaptiveBorderedButtonStyle())
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.bordered)
                 // .background(Color.clear)
-                .tint(colorScheme == .light ? Theme.lighterAccentColor : Theme.accentColor)
+                //.tint(colorScheme == .light ? Theme.lighterAccentColor : Theme.accentColor)
                 .controlSize(.large)
                 .disabled(sortedTracks.isEmpty)
 
@@ -150,11 +150,12 @@ struct AlbumDetailView: View {
                     Label("Shuffle", systemImage: "shuffle")
                         .font(.body.bold())
                         .frame(maxWidth: .infinity)
-                        .foregroundColor(colorScheme == .light ? Theme.accentColor : Theme.lighterAccentColor)
+                        // .foregroundColor(colorScheme == .light ? Theme.accentColor : Theme.lighterAccentColor)
+                        .foregroundColor(colorScheme == .light ? Theme.darkAccentColor : Theme.lighterAccentColor)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.bordered)
                 // .buttonStyle(Theme.adaptiveBorderedButtonStyle())
-                .tint(colorScheme == .light ? Theme.lighterAccentColor : Theme.accentColor)
+                //.tint(colorScheme == .light ? Theme.lighterAccentColor : Theme.accentColor)
                 .controlSize(.large)
                 .disabled(sortedTracks.isEmpty)
             }

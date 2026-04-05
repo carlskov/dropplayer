@@ -4,7 +4,12 @@ struct Theme {
     static var accentColor: Color {
         // Color(red: 0.308, green: 0.208, blue: 0.308)
         // Color(red: 0.408, green: 0.308, blue: 0.408)
-        Color(red: 0.208, green: 0.108, blue: 0.208)
+        
+        // Color(red: 0.208, green: 0.108, blue: 0.208)
+        //Color(red: 0.108, green: 0.108, blue: 0.208)
+        Color(red: 0.308, green: 0.308, blue: 0.871)
+
+
     }
 
     static var lighterAccentColor: Color {
@@ -17,7 +22,7 @@ struct Theme {
     /// A darker shade of `accentColor` for secondary filled buttons.
     static var darkAccentColor: Color {
         // Color(red: 0.15, green: 0.08, blue: 0.15)
-        Color(red: 0.10, green: 0.03, blue: 0.10)
+        Color(red: 0.1, green: 0.1, blue: 0.1)
     }
 
     static var nowPlayingAccentColor: Color {
@@ -29,9 +34,11 @@ struct Theme {
         // Color(red: 0.408, green: 0.308, blue: 0.408)
         Color(UIColor { traits in
             traits.userInterfaceStyle == .dark
-                ? UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1)   // lighterAccentColor
+                // ? UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1)   // lighterAccentColor
+                ? UIColor(red: 0.322, green: 0.322, blue: 0.871, alpha: 1)   // accentColor
                 // : UIColor(red: 0.408, green: 0.308, blue: 0.408, alpha: 1) // accentColor
-                : UIColor(red: 0.208, green: 0.108, blue: 0.20, alpha: 1)
+                // : UIColor(red: 0.208, green: 0.108, blue: 0.20, alpha: 1)
+                : UIColor(red: 0.322, green: 0.322, blue: 0.871, alpha: 1)  // accentColor
         })
     }   
 
