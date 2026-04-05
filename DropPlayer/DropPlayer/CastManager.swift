@@ -29,6 +29,7 @@ final class CastManager: NSObject, ObservableObject {
     private var trackCancellable: AnyCancellable?
     private weak var playerEngine: PlayerEngine?
     private weak var libraryViewModel: LibraryViewModel?
+    private let proxy = AudioTranscodeProxy()
 
     // MARK: - Init
 
@@ -41,11 +42,13 @@ final class CastManager: NSObject, ObservableObject {
                 }
             }
         GCKCastContext.sharedInstance().sessionManager.add(self)
+        proxy.start()
     }
 
     deinit {
         castStateObservation?.invalidate()
         progressTimer?.invalidate()
+        proxy.stop()
     }
 
     // MARK: - Setup
@@ -98,13 +101,53 @@ final class CastManager: NSObject, ObservableObject {
     func loadTrack(_ track: Track, startTime: Double = 0, album: Album?, artwork: UIImage?) async {
         do {
             let url = try await DropboxBrowserService.shared.temporaryLink(for: track.dropboxPath)
-            sendToReceiver(url: url, track: track, startTime: startTime, album: album, artwork: artwork)
+            let ext = URL(fileURLWithPath: track.fileName).pathExtension.lowercased()
+            if ext == "aiff" || ext == "aif" {
+                await castAIFF(dropboxURL: url, track: track, startTime: startTime, album: album, artwork: artwork)
+            } else {
+                sendToReceiver(url: url, track: track, startTime: startTime, album: album, artwork: artwork, streamType: .buffered)
+            }
         } catch {
             print("[CastManager] Failed to get temporary link: \(error)")
         }
     }
 
-    private func sendToReceiver(url: URL, track: Track, startTime: Double, album: Album?, artwork: UIImage?) {
+    /// Registers the AIFF URL with the on-device transcoding proxy and tells Cast
+    /// to connect to it as a live audio/aac stream. No full download required.
+    private func castAIFF(dropboxURL: URL, track: Track, startTime: Double, album: Album?, artwork: UIImage?) async {
+        if proxy.port == 0 {
+            try? await Task.sleep(nanoseconds: 200_000_000)
+        }
+        guard let ip = localIPAddress(), proxy.port != 0 else {
+            print("[CastManager] Proxy not ready")
+            return
+        }
+        proxy.serveTranscoded(from: dropboxURL)
+        guard let castURL = URL(string: "http://\(ip):\(proxy.port)/stream.aac") else { return }
+        sendToReceiver(url: castURL, track: track, startTime: 0, album: album, artwork: artwork, streamType: .live)
+    }
+
+    private func localIPAddress() -> String? {
+        var address: String?
+        var ifaddr: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&ifaddr) == 0 else { return nil }
+        defer { freeifaddrs(ifaddr) }
+        var ptr = ifaddr
+        while ptr != nil {
+            defer { ptr = ptr?.pointee.ifa_next }
+            let ifa = ptr!.pointee
+            guard ifa.ifa_addr.pointee.sa_family == UInt8(AF_INET) else { continue }
+            let name = String(cString: ifa.ifa_name)
+            guard name == "en0" else { continue }
+            var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+            getnameinfo(ifa.ifa_addr, socklen_t(ifa.ifa_addr.pointee.sa_len),
+                        &hostname, socklen_t(hostname.count), nil, 0, NI_NUMERICHOST)
+            address = String(cString: hostname)
+        }
+        return address
+    }
+
+    private func sendToReceiver(url: URL, track: Track, startTime: Double, album: Album?, artwork: UIImage?, streamType: GCKMediaStreamType) {
         guard let client = remoteMediaClient else { return }
 
         let metadata = GCKMediaMetadata(metadataType: .musicTrack)
@@ -117,10 +160,10 @@ final class CastManager: NSObject, ObservableObject {
         }
 
         let infoBuilder = GCKMediaInformationBuilder(contentURL: url)
-        infoBuilder.streamType = .buffered
-        infoBuilder.contentType = mimeType(for: track.fileName)
+        infoBuilder.streamType = streamType
+        infoBuilder.contentType = streamType == .live ? "audio/aac" : mimeType(for: track.fileName)
         infoBuilder.metadata = metadata
-        if let dur = track.durationSeconds {
+        if streamType != .live, let dur = track.durationSeconds {
             infoBuilder.streamDuration = dur
         }
 

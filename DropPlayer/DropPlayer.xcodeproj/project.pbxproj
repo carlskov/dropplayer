@@ -30,6 +30,8 @@
 		B020 /* LibraryFoldersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A021 /* LibraryFoldersView.swift */; };
 		B021 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A022 /* Theme.swift */; };
 		B022 /* CastManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A023 /* CastManager.swift */; };
+		B023 /* LocalAudioServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A024 /* LocalAudioServer.swift */; };
+		B024 /* AudioTranscodeProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A025 /* AudioTranscodeProxy.swift */; };
 		BT001 /* AlbumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA001 /* AlbumTests.swift */; };
 		BT002 /* TrackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA002 /* TrackTests.swift */; };
 		BT003 /* NowPlayingCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA003 /* NowPlayingCoordinatorTests.swift */; };
@@ -76,6 +78,8 @@
 		A021 /* LibraryFoldersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryFoldersView.swift; sourceTree = "<group>"; };
 		A022 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		A023 /* CastManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManager.swift; sourceTree = "<group>"; };
+		A024 /* LocalAudioServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAudioServer.swift; sourceTree = "<group>"; };
+		A025 /* AudioTranscodeProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioTranscodeProxy.swift; sourceTree = "<group>"; };
 		FA001 /* AlbumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumTests.swift; sourceTree = "<group>"; };
 		FA002 /* TrackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackTests.swift; sourceTree = "<group>"; };
 		FA003 /* NowPlayingCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingCoordinatorTests.swift; sourceTree = "<group>"; };
@@ -208,6 +212,8 @@
 				A015 /* MiniPlayerView.swift */,
 				A022 /* Theme.swift */,
 				A023 /* CastManager.swift */,
+				A024 /* LocalAudioServer.swift */,
+				A025 /* AudioTranscodeProxy.swift */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -373,6 +379,8 @@
 				B019 /* MetadataExtractor.swift in Sources */,
 				B021 /* Theme.swift in Sources */,
 				B022 /* CastManager.swift in Sources */,
+				B023 /* LocalAudioServer.swift in Sources */,
+				B024 /* AudioTranscodeProxy.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
