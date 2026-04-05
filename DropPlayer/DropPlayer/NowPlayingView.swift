@@ -95,32 +95,12 @@ struct NowPlayingView: View {
                 trackTitle = fetchedMeta.title
                 player.updateArtwork(fetchedArt)
                 player.updateAlbum(album)
-                // If already casting, send the new track to the Cast device.
+                // Reload cast with full artwork once metadata is fetched.
                 if cast.isConnected {
-                    await cast.loadTrack(track, startTime: 0, album: album, artwork: fetchedArt)
+                    await cast.loadTrack(track, startTime: cast.castCurrentTime, album: album, artwork: fetchedArt)
                 }
             } else {
                 currentAlbum = nil
-            }
-        }
-        .onChange(of: cast.isConnected) { _, isNowConnected in
-            if isNowConnected {
-                // Pause local playback and hand off to the Cast device.
-                player.isCasting = true
-                player.pauseForCasting()
-                if let track = player.currentTrack {
-                    Task {
-                        await cast.loadTrack(
-                            track,
-                            startTime: player.currentTime,
-                            album: currentAlbum,
-                            artwork: player.currentArtwork
-                        )
-                    }
-                }
-            } else {
-                // Cast session ended; re-enable local playback.
-                player.isCasting = false
             }
         }
     }

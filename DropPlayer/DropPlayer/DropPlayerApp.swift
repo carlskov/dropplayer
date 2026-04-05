@@ -28,6 +28,9 @@ struct DropPlayerApp: App {
                 .environmentObject(library)
                 .environmentObject(player)
                 .environmentObject(cast)
+                .task {
+                    cast.setup(player: player, library: library)
+                }
                 .onOpenURL { url in
                     // Handle OAuth redirect after Dropbox login
                     let oauthCompletion: DropboxOAuthCompletion = { result in

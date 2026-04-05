@@ -5,8 +5,20 @@ struct MiniPlayerView: View {
     @EnvironmentObject var player: PlayerEngine
     @EnvironmentObject var library: LibraryViewModel
     @EnvironmentObject var nowPlaying: NowPlayingCoordinator
-    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var cast: CastManager
+    @Environment(\..colorScheme) var colorScheme
     @State private var artwork: UIImage?
+
+    private var effectivePlaying: Bool {
+        cast.isConnected ? cast.isCastPlaying : player.isPlaying
+    }
+
+    private var effectiveProgress: Double {
+        let time = cast.isConnected ? cast.castCurrentTime : player.currentTime
+        let dur  = cast.isConnected ? cast.castDuration   : player.duration
+        guard dur > 0 else { return 0 }
+        return time / dur
+    }
 
     var body: some View {
         Button {
@@ -53,13 +65,17 @@ struct MiniPlayerView: View {
                     Spacer()
 
             Button {
-                player.togglePlayPause()
-                if let track = player.currentTrack,
-                   let album = library.albums.first(where: { $0.tracks.contains(where: { $0.id == track.id }) }) {
-                    Task { _ = await library.loadArtwork(for: album) }
+                if cast.isConnected {
+                    cast.togglePlayPause()
+                } else {
+                    player.togglePlayPause()
+                    if let track = player.currentTrack,
+                       let album = library.albums.first(where: { $0.tracks.contains(where: { $0.id == track.id }) }) {
+                        Task { _ = await library.loadArtwork(for: album) }
+                    }
                 }
             } label: {
-                        Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
+                        Image(systemName: effectivePlaying ? "pause.fill" : "play.fill")
                             .font(.title2)
                             .foregroundColor(.primary)
                     }
@@ -75,14 +91,14 @@ struct MiniPlayerView: View {
                     .buttonStyle(.plain)
                 }
                 
-                if player.duration > 0 {
+                if (cast.isConnected ? cast.castDuration : player.duration) > 0 {
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
                             Rectangle()
                                 .fill(Color.gray.opacity(0.3))
                             Rectangle()
                                 .fill(colorScheme == .light ? Theme.accentColor : Theme.lighterAccentColor)
-                                .frame(width: geo.size.width * CGFloat(player.currentTime / player.duration))
+                                .frame(width: geo.size.width * CGFloat(effectiveProgress))
                         }
                     }
                     .frame(height: 2)

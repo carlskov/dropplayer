@@ -2,6 +2,7 @@ import Foundation
 import GoogleCast
 import UIKit
 import SwiftUI
+import Combine
 
 // MARK: - CastManager
 
@@ -25,6 +26,9 @@ final class CastManager: NSObject, ObservableObject {
 
     private var castStateObservation: NSKeyValueObservation?
     private var progressTimer: Timer?
+    private var trackCancellable: AnyCancellable?
+    private weak var playerEngine: PlayerEngine?
+    private weak var libraryViewModel: LibraryViewModel?
 
     // MARK: - Init
 
@@ -42,6 +46,44 @@ final class CastManager: NSObject, ObservableObject {
     deinit {
         castStateObservation?.invalidate()
         progressTimer?.invalidate()
+    }
+
+    // MARK: - Setup
+
+    /// Call once at app startup to wire CastManager to the player and library.
+    func setup(player: PlayerEngine, library: LibraryViewModel) {
+        playerEngine = player
+        libraryViewModel = library
+
+        // React whenever the current track changes (covers play-from-any-view).
+        trackCancellable = player.$currentTrack
+            .receive(on: RunLoop.main)
+            .sink { [weak self] track in
+                self?.handleTrackChange(track)
+            }
+    }
+
+    private func handleTrackChange(_ track: Track?) {
+        guard isConnected, let track,
+              let player = playerEngine, let library = libraryViewModel else { return }
+        let album = library.albums.first(where: { $0.tracks.contains(where: { $0.id == track.id }) })
+        Task { [weak self, weak player] in
+            guard let self, let player else { return }
+            await self.loadTrack(track, startTime: 0, album: album, artwork: player.currentArtwork)
+        }
+    }
+
+    private func handleCurrentTrackOnConnect() {
+        guard let player = playerEngine, let track = player.currentTrack,
+              let library = libraryViewModel else { return }
+        player.isCasting = true
+        player.pauseForCasting()
+        let album = library.albums.first(where: { $0.tracks.contains(where: { $0.id == track.id }) })
+        let startTime = player.currentTime
+        Task { [weak self, weak player] in
+            guard let self, let player else { return }
+            await self.loadTrack(track, startTime: startTime, album: album, artwork: player.currentArtwork)
+        }
     }
 
     // MARK: - Computed helpers
@@ -155,6 +197,7 @@ extension CastManager: GCKSessionManagerListener {
         Task { @MainActor [weak self] in
             self?.isConnected = true
             self?.startProgressTimer()
+            self?.handleCurrentTrackOnConnect()
         }
     }
 
@@ -163,6 +206,7 @@ extension CastManager: GCKSessionManagerListener {
         Task { @MainActor [weak self] in
             self?.isConnected = true
             self?.startProgressTimer()
+            self?.handleCurrentTrackOnConnect()
         }
     }
 
@@ -173,6 +217,7 @@ extension CastManager: GCKSessionManagerListener {
             self?.isConnected = false
             self?.isCastPlaying = false
             self?.stopProgressTimer()
+            self?.playerEngine?.isCasting = false
         }
     }
 
@@ -182,6 +227,7 @@ extension CastManager: GCKSessionManagerListener {
         Task { @MainActor [weak self] in
             self?.isConnected = false
             self?.stopProgressTimer()
+            self?.playerEngine?.isCasting = false
         }
     }
 }
