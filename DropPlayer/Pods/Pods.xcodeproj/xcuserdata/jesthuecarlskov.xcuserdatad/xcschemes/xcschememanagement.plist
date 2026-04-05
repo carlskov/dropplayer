@@ -9,6 +9,11 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
+		<key>Pods-DropPlayerTests.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
 		<key>google-cast-sdk-dynamic-xcframework.xcscheme</key>
 		<dict>
 			<key>isShown</key>

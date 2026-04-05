@@ -3,6 +3,7 @@ import GoogleCast
 import UIKit
 import SwiftUI
 import Combine
+import AVFoundation
 
 // MARK: - CastManager
 
@@ -30,6 +31,14 @@ final class CastManager: NSObject, ObservableObject {
     private weak var playerEngine: PlayerEngine?
     private weak var libraryViewModel: LibraryViewModel?
     private let proxy = AudioTranscodeProxy()
+    private let bufferedServer = LocalAudioServer()
+    private var transcodeTask: Task<Void, Never>?
+    private var currentTranscodedURL: URL?
+    // AIFF live-stream context — used for Range-based seeking during Phase 1.
+    private var currentAIFFDropboxURL: URL?
+    private var currentAIFFTrack: Track?
+    private var currentAIFFAlbum: Album?
+    private var currentAIFFArtwork: UIImage?
 
     // MARK: - Init
 
@@ -43,12 +52,16 @@ final class CastManager: NSObject, ObservableObject {
             }
         GCKCastContext.sharedInstance().sessionManager.add(self)
         proxy.start()
+        bufferedServer.start()
     }
 
     deinit {
         castStateObservation?.invalidate()
         progressTimer?.invalidate()
+        transcodeTask?.cancel()
         proxy.stop()
+        bufferedServer.stop()
+        if let url = currentTranscodedURL { try? FileManager.default.removeItem(at: url) }
     }
 
     // MARK: - Setup
@@ -99,12 +112,15 @@ final class CastManager: NSObject, ObservableObject {
 
     /// Fetches a fresh Dropbox temporary link and loads it onto the Cast device.
     func loadTrack(_ track: Track, startTime: Double = 0, album: Album?, artwork: UIImage?) async {
+        // Cancel any in-progress background transcode for a previous track.
+        transcodeTask?.cancel()
         do {
             let url = try await DropboxBrowserService.shared.temporaryLink(for: track.dropboxPath)
             let ext = URL(fileURLWithPath: track.fileName).pathExtension.lowercased()
             if ext == "aiff" || ext == "aif" {
                 await castAIFF(dropboxURL: url, track: track, startTime: startTime, album: album, artwork: artwork)
             } else {
+                currentAIFFDropboxURL = nil
                 sendToReceiver(url: url, track: track, startTime: startTime, album: album, artwork: artwork, streamType: .buffered)
             }
         } catch {
@@ -112,19 +128,79 @@ final class CastManager: NSObject, ObservableObject {
         }
     }
 
-    /// Registers the AIFF URL with the on-device transcoding proxy and tells Cast
-    /// to connect to it as a live audio/aac stream. No full download required.
+    /// Phase 1: Start a live transcoding stream immediately so Cast plays within seconds.
+    /// Phase 2: In the background, download the full file and transcode to a seekable M4A,
+    ///          then swap Cast to the buffered version preserving the current playback position.
     private func castAIFF(dropboxURL: URL, track: Track, startTime: Double, album: Album?, artwork: UIImage?) async {
-        if proxy.port == 0 {
-            try? await Task.sleep(nanoseconds: 200_000_000)
-        }
-        guard let ip = localIPAddress(), proxy.port != 0 else {
-            print("[CastManager] Proxy not ready")
+        // Cancel any previous background transcode.
+        transcodeTask?.cancel()
+        if let old = currentTranscodedURL { try? FileManager.default.removeItem(at: old); currentTranscodedURL = nil }
+
+        // Store context for seek-triggered stream restarts.
+        currentAIFFDropboxURL = dropboxURL
+        currentAIFFTrack      = track
+        currentAIFFAlbum      = album
+        currentAIFFArtwork    = artwork
+
+        guard let ip = localIPAddress() else {
+            print("[CastManager] No local IP")
             return
         }
+        if proxy.port == 0 || bufferedServer.port == 0 {
+            try? await Task.sleep(nanoseconds: 200_000_000)
+        }
+
+        // ── Phase 1: start live stream ──
         proxy.serveTranscoded(from: dropboxURL)
-        guard let castURL = URL(string: "http://\(ip):\(proxy.port)/stream.aac") else { return }
-        sendToReceiver(url: castURL, track: track, startTime: 0, album: album, artwork: artwork, streamType: .live)
+        guard let liveURL = URL(string: "http://\(ip):\(proxy.port)/stream.aac") else { return }
+        sendToReceiver(url: liveURL, track: track, startTime: 0, album: album, artwork: artwork, streamType: .live)
+
+        // ── Phase 2: transcode in background, then swap to buffered ──
+        transcodeTask = Task { [weak self] in
+            guard let self else { return }
+            let downloadTemp = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString).appendingPathExtension("aif")
+            let exportURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString).appendingPathExtension("m4a")
+
+            do {
+                let (tmp, _) = try await URLSession.shared.download(from: dropboxURL)
+                try FileManager.default.moveItem(at: tmp, to: downloadTemp)
+            } catch {
+                print("[CastManager] AIFF background download failed: \(error.localizedDescription)")
+                try? FileManager.default.removeItem(at: downloadTemp)
+                return
+            }
+            defer { try? FileManager.default.removeItem(at: downloadTemp) }
+
+            let asset = AVURLAsset(url: downloadTemp, options: [
+                "AVURLAssetTypeIdentifierKey": "public.aiff-audio",
+                AVURLAssetPreferPreciseDurationAndTimingKey: true
+            ])
+            guard let session = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) else { return }
+            session.outputURL = exportURL
+            session.outputFileType = .m4a
+            await session.export()
+
+            guard !Task.isCancelled, session.status == .completed else {
+                try? FileManager.default.removeItem(at: exportURL)
+                return
+            }
+
+            await MainActor.run { [weak self] in
+                guard let self, self.isConnected else {
+                    try? FileManager.default.removeItem(at: exportURL)
+                    return
+                }
+                self.currentTranscodedURL = exportURL
+                self.bufferedServer.serve(fileAt: exportURL, mimeType: "audio/mp4")
+                guard let bufferedURL = URL(string: "http://\(ip):\(self.bufferedServer.port)/track.m4a") else { return }
+                // Preserve current playback position when swapping streams.
+                let resumeAt = self.castCurrentTime
+                self.sendToReceiver(url: bufferedURL, track: track, startTime: resumeAt,
+                                    album: album, artwork: artwork, streamType: .buffered)
+            }
+        }
     }
 
     private func localIPAddress() -> String? {
@@ -187,12 +263,30 @@ final class CastManager: NSObject, ObservableObject {
     }
 
     func seek(to time: Double) {
-        guard let client = remoteMediaClient else { return }
-        let options = GCKMediaSeekOptions()
-        options.interval = time
-        options.resumeState = isCastPlaying ? .play : .pause
-        client.seek(with: options)
-        castCurrentTime = time
+        // During Phase 1 (live AIFF stream, buffered M4A not yet ready) restart
+        // the proxy from the requested sample position using an HTTP Range request.
+        if let aiffURL = currentAIFFDropboxURL,
+           currentTranscodedURL == nil,
+           let info = proxy.cachedInfo,
+           let track = currentAIFFTrack,
+           let ip = localIPAddress() {
+            transcodeTask?.cancel()
+            let sampleOffset = Int(time * info.sampleRate)
+            proxy.serveTranscoded(from: aiffURL, startSample: sampleOffset)
+            // Append a cache-busting query param so Cast treats this as a new URL
+            // and opens a fresh connection to the proxy.
+            guard let liveURL = URL(string: "http://\(ip):\(proxy.port)/stream.aac?t=\(Int(time))") else { return }
+            sendToReceiver(url: liveURL, track: track, startTime: 0,
+                           album: currentAIFFAlbum, artwork: currentAIFFArtwork, streamType: .live)
+            castCurrentTime = time
+        } else {
+            guard let client = remoteMediaClient else { return }
+            let options = GCKMediaSeekOptions()
+            options.interval = time
+            options.resumeState = isCastPlaying ? .play : .pause
+            client.seek(with: options)
+            castCurrentTime = time
+        }
     }
 
     // MARK: - Progress polling

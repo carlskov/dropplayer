@@ -36,9 +36,11 @@ final class AudioTranscodeProxy {
     }
 
     /// Register the Dropbox URL to transcode for the next incoming connection.
-    func serveTranscoded(from url: URL) {
+    /// Pass `startSample > 0` to seek to that sample position using an HTTP Range request.
+    func serveTranscoded(from url: URL, startSample: Int = 0) {
         activeTask?.cancel()
         pendingURL = url
+        pendingStartSample = startSample
     }
 
     // MARK: - Private state
@@ -46,87 +48,106 @@ final class AudioTranscodeProxy {
     private var listener: NWListener?
     private let serverQueue = DispatchQueue(label: "com.dropplayer.proxy", qos: .userInitiated)
     private var pendingURL: URL?
+    private var pendingStartSample: Int = 0
     private var activeTask: Task<Void, Never>?
+    /// Cached format info from the last successful header parse — used for Range-based seeking.
+    private(set) var cachedInfo: AIFFInfo?
 
     private func accept(_ connection: NWConnection) {
         guard let url = pendingURL else { connection.cancel(); return }
+        let startSample = pendingStartSample
         connection.start(queue: serverQueue)
         // Drain the HTTP request before replying
         connection.receive(minimumIncompleteLength: 1, maximumLength: 8192) { [weak self] _, _, _, _ in
             guard let self else { connection.cancel(); return }
-            self.activeTask = Task { await self.transcode(from: url, into: connection) }
+            self.activeTask = Task { await self.transcode(from: url, startSample: startSample, into: connection) }
         }
     }
 
     // MARK: - Pipeline
 
-    private func transcode(from url: URL, into conn: NWConnection) async {
+    private func transcode(from url: URL, startSample: Int, into conn: NWConnection) async {
         do {
-            let (asyncBytes, _) = try await URLSession.shared.bytes(from: url)
-            let reader = ByteReader(asyncBytes)
+            let reader: ByteReader
+            let info: AIFFInfo
 
-            // 1. Parse AIFF/AIFC header
-            let info = try await parseAIFF(reader)
-
-            // 2. Build AVAudioConverter: raw PCM → AAC-LC
-            let srcFormat = AVAudioFormat(
-                commonFormat: .pcmFormatFloat32,
-                sampleRate: info.sampleRate,
-                channels: AVAudioChannelCount(info.channels),
-                interleaved: false
-            )!
-            // Cap output sample rate at 48 kHz (Chromecast max for AAC)
-            let dstRate = info.sampleRate > 48_000 ? 48_000.0 : info.sampleRate
-            guard let dstFormat = AVAudioFormat(settings: [
-                AVFormatIDKey: kAudioFormatMPEG4AAC,
-                AVSampleRateKey: dstRate,
-                AVNumberOfChannelsKey: info.channels,
-                AVEncoderBitRateKey: 320_000
-            ]), let converter = AVAudioConverter(from: srcFormat, to: dstFormat) else {
-                throw ProxyError.converterFailed
+            if startSample > 0, let cached = cachedInfo {
+                // Seek path: issue an HTTP Range request to jump straight to the right PCM offset.
+                let bps = (cached.bitsPerSample + 7) / 8
+                let byteSkip = cached.ssndDataOffset + startSample * cached.channels * bps
+                var req = URLRequest(url: url)
+                req.setValue("bytes=\(byteSkip)-", forHTTPHeaderField: "Range")
+                let (asyncBytes, _) = try await URLSession.shared.bytes(for: req)
+                reader = ByteReader(asyncBytes)
+                info = cached
+            } else {
+                // Normal path: stream from the beginning and parse the AIFF header.
+                let (asyncBytes, _) = try await URLSession.shared.bytes(from: url)
+                reader = ByteReader(asyncBytes)
+                info = try await parseAIFF(reader)
+                cachedInfo = info
             }
 
-            // 3. HTTP response headers — live stream, no Content-Length needed
+            // HTTP response headers — live stream, no Content-Length needed
             let hdr = "HTTP/1.1 200 OK\r\nContent-Type: audio/aac\r\nTransfer-Encoding: chunked\r\nCache-Control: no-cache\r\nConnection: close\r\n\r\n"
             try await sendData(hdr.data(using: .utf8)!, on: conn)
 
-            // 4. Stream PCM → AAC in ~4096-sample chunks
-            let bps   = (info.bitsPerSample + 7) / 8   // bytes per sample
-            let chunkSamples = 4096
-            let chunkBytes   = chunkSamples * info.channels * bps
-            var buf = [UInt8]()
-            buf.reserveCapacity(chunkBytes * 2)
-            var eof = false
-
-            while !eof {
-                while buf.count < chunkBytes {
-                    if let b = try await reader.nextByte() {
-                        buf.append(b)
-                    } else {
-                        eof = true; break
-                    }
-                }
-                let frames = buf.count / (bps * info.channels)
-                guard frames > 0 else { break }
-                let consume = frames * bps * info.channels
-                let slice = Array(buf.prefix(consume))
-                buf.removeFirst(consume)
-
-                let adts = encodeToADTS(rawBytes: slice, frames: frames,
-                                        info: info, converter: converter, dstFormat: dstFormat)
-                if !adts.isEmpty {
-                    let chunk = "\(String(adts.count, radix: 16))\r\n".data(using: .utf8)! +
-                                adts +
-                                "\r\n".data(using: .utf8)!
-                    try await sendData(chunk, on: conn)
-                }
-            }
-            // Terminate chunked body
-            try await sendData("0\r\n\r\n".data(using: .utf8)!, on: conn)
+            try await streamPCM(reader: reader, info: info, into: conn)
         } catch {
             print("[AudioTranscodeProxy] \(error)")
         }
         conn.cancel()
+    }
+
+    /// Encode raw PCM from `reader` to ADTS-wrapped AAC and stream it as chunked HTTP.
+    private func streamPCM(reader: ByteReader, info: AIFFInfo, into conn: NWConnection) async throws {
+        let srcFormat = AVAudioFormat(
+            commonFormat: .pcmFormatFloat32,
+            sampleRate: info.sampleRate,
+            channels: AVAudioChannelCount(info.channels),
+            interleaved: false
+        )!
+        let dstRate = info.sampleRate > 48_000 ? 48_000.0 : info.sampleRate
+        guard let dstFormat = AVAudioFormat(settings: [
+            AVFormatIDKey: kAudioFormatMPEG4AAC,
+            AVSampleRateKey: dstRate,
+            AVNumberOfChannelsKey: info.channels,
+            AVEncoderBitRateKey: 320_000
+        ]), let converter = AVAudioConverter(from: srcFormat, to: dstFormat) else {
+            throw ProxyError.converterFailed
+        }
+
+        let bps          = (info.bitsPerSample + 7) / 8
+        let chunkSamples = 4096
+        let chunkBytes   = chunkSamples * info.channels * bps
+        var buf = [UInt8]()
+        buf.reserveCapacity(chunkBytes * 2)
+        var eof = false
+
+        while !eof {
+            while buf.count < chunkBytes {
+                if let b = try await reader.nextByte() {
+                    buf.append(b)
+                } else {
+                    eof = true; break
+                }
+            }
+            let frames = buf.count / (bps * info.channels)
+            guard frames > 0 else { break }
+            let consume = frames * bps * info.channels
+            let slice = Array(buf.prefix(consume))
+            buf.removeFirst(consume)
+
+            let adts = encodeToADTS(rawBytes: slice, frames: frames,
+                                    info: info, converter: converter, dstFormat: dstFormat)
+            if !adts.isEmpty {
+                let chunk = "\(String(adts.count, radix: 16))\r\n".data(using: .utf8)! +
+                            adts +
+                            "\r\n".data(using: .utf8)!
+                try await sendData(chunk, on: conn)
+            }
+        }
+        try await sendData("0\r\n\r\n".data(using: .utf8)!, on: conn)
     }
 
     // MARK: - AAC encoder
@@ -181,6 +202,8 @@ final class AudioTranscodeProxy {
         let sampleRate: Double
         let bitsPerSample: Int
         let bigEndian: Bool
+        /// Absolute byte offset in the original file where PCM frames begin.
+        let ssndDataOffset: Int
     }
 
     private func parseAIFF(_ reader: ByteReader) async throws -> AIFFInfo {
@@ -212,10 +235,14 @@ final class AudioTranscodeProxy {
                 commFound = true
                 if size % 2 == 1 { _ = try await reader.read(1) }
             } else if label == "SSND" {
-                _ = try await reader.read(8)        // offset + blockSize fields
+                let ssndFields = try await reader.read(8)  // offset + blockSize fields
+                let ssndInternalOffset = Int(be32(Array(ssndFields[0..<4])))
                 guard commFound else { throw ProxyError.notAIFF }
+                // Skip any SSND-internal alignment bytes (almost always 0).
+                if ssndInternalOffset > 0 { _ = try await reader.read(ssndInternalOffset) }
                 return AIFFInfo(channels: min(channels, 2), sampleRate: sampleRate,
-                                bitsPerSample: bits, bigEndian: bigEndian)
+                                bitsPerSample: bits, bigEndian: bigEndian,
+                                ssndDataOffset: reader.bytesRead)
             } else {
                 let skip = size + (size % 2 == 1 ? 1 : 0)
                 if skip > 0 { _ = try await reader.read(skip) }
@@ -304,13 +331,16 @@ final class AudioTranscodeProxy {
 /// functions can advance the stream without inout parameter gymnastics.
 private final class ByteReader {
     private var iter: URLSession.AsyncBytes.AsyncIterator
+    private(set) var bytesRead: Int = 0
 
     init(_ bytes: URLSession.AsyncBytes) {
         iter = bytes.makeAsyncIterator()
     }
 
     func nextByte() async throws -> UInt8? {
-        try await iter.next()
+        let b = try await iter.next()
+        if b != nil { bytesRead += 1 }
+        return b
     }
 
     func read(_ count: Int) async throws -> [UInt8] {
@@ -321,6 +351,7 @@ private final class ByteReader {
                 throw AudioTranscodeProxy.ProxyError.unexpectedEOF
             }
             buf.append(b)
+            bytesRead += 1
         }
         return buf
     }

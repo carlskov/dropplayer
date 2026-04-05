@@ -3,6 +3,10 @@ use_frameworks!
 
 target 'DropPlayer' do
   pod 'google-cast-sdk-dynamic-xcframework', '~> 4.8'
+
+  target 'DropPlayerTests' do
+    inherit! :search_paths
+  end
 end
 
 post_install do |installer|

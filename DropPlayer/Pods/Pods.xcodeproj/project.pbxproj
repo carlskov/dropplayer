@@ -20,12 +20,22 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		1794DE432C5CD61EF12B4F9612E85106 /* Pods-DropPlayer-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = E7628E684FF6D5095641CE16EC441C9B /* Pods-DropPlayer-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1794DE432C5CD61EF12B4F9612E85106 /* Pods-DropPlayer-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = BE510F3225F21F6235D2337286693435 /* Pods-DropPlayer-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4CFBADF9EBC365822A720DB7A89FBCA7 /* Pods-DropPlayerTests-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = C88AFBA711F8ECE5AFE3FF55267CAA65 /* Pods-DropPlayerTests-dummy.m */; };
 		536788B521D8244BF7B58DCFAF213C49 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 384DDA2CB25005BD6479B5987C619DD4 /* Foundation.framework */; };
-		E8DCBFC291979AADA3BC8DAFC3E8F1EB /* Pods-DropPlayer-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = F4EE08CF5B2D18E2EED711A29882766B /* Pods-DropPlayer-dummy.m */; };
+		7157E18425E9F2143602D8E0A8F5434C /* Pods-DropPlayerTests-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 04DEABAF971027015E744E2D5F3740C6 /* Pods-DropPlayerTests-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		79FB00F35859B33C9150C6D2F5FBD13D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 384DDA2CB25005BD6479B5987C619DD4 /* Foundation.framework */; };
+		E8DCBFC291979AADA3BC8DAFC3E8F1EB /* Pods-DropPlayer-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = C424FDFD21F1B9D8EE522E03ACCB4B84 /* Pods-DropPlayer-dummy.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		53136622657284D5E8DB025FFBBF1DCF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 408F4D6C1A5F1F53AFB4BF6952E508AA;
+			remoteInfo = "Pods-DropPlayer";
+		};
 		8A55ED24EC7263CE0C422FFB6229C96A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
@@ -36,22 +46,31 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		043FAE219BF6DC848F9BF5393987B5CB /* Pods-DropPlayerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-DropPlayerTests.release.xcconfig"; sourceTree = "<group>"; };
+		04DEABAF971027015E744E2D5F3740C6 /* Pods-DropPlayerTests-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-DropPlayerTests-umbrella.h"; sourceTree = "<group>"; };
 		1DF496B097DE524F3C017B8ADFFB4982 /* google-cast-sdk-dynamic-xcframework-xcframeworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "google-cast-sdk-dynamic-xcframework-xcframeworks.sh"; sourceTree = "<group>"; };
-		20DF93F0E0934A161004F4E5CB429279 /* Pods-DropPlayer-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-DropPlayer-acknowledgements.markdown"; sourceTree = "<group>"; };
 		2FF0CD7ECCF35FDD4A247A20E97386E0 /* google-cast-sdk-dynamic-xcframework.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "google-cast-sdk-dynamic-xcframework.release.xcconfig"; sourceTree = "<group>"; };
-		3820549873C6F82AFD2016AC712BDC85 /* Pods-DropPlayer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-DropPlayer.release.xcconfig"; sourceTree = "<group>"; };
 		384DDA2CB25005BD6479B5987C619DD4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		399807E23A6C9D12F45C805BF1FE2CA1 /* Pods-DropPlayer.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-DropPlayer.debug.xcconfig"; sourceTree = "<group>"; };
 		3A61DECA8CAA11DC51849A7641672AD2 /* GoogleCast.xcframework */ = {isa = PBXFileReference; includeInIndex = 1; path = GoogleCast.xcframework; sourceTree = "<group>"; };
-		67991BB41507E8D3ADE2B5F77D2B5D65 /* Pods-DropPlayer.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-DropPlayer.modulemap"; sourceTree = "<group>"; };
-		7FFABDA9CE7D3E0B9F6079058B49356A /* Pods-DropPlayer-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-DropPlayer-frameworks.sh"; sourceTree = "<group>"; };
-		810906708E6B8E4354ADE1683EEE67A4 /* Pods-DropPlayer-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-DropPlayer-acknowledgements.plist"; sourceTree = "<group>"; };
+		44624677F82F5B31F177625CFD791EC5 /* Pods-DropPlayer-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-DropPlayer-Info.plist"; sourceTree = "<group>"; };
+		5A3205AA41367F7622A6618755AD4FBE /* Pods-DropPlayerTests-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-DropPlayerTests-acknowledgements.markdown"; sourceTree = "<group>"; };
+		6F4284D969A4B03A9F345EE48E755C71 /* Pods-DropPlayerTests */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = "Pods-DropPlayerTests"; path = Pods_DropPlayerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		83AC7C993D40E2F3CA88BD6E5276E5CE /* Pods-DropPlayer-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-DropPlayer-acknowledgements.plist"; sourceTree = "<group>"; };
 		83CB2A13B688F5B69EB9EB4DE6743F4D /* Pods-DropPlayer */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = "Pods-DropPlayer"; path = Pods_DropPlayer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		888EDCAE68FCAC04C33DB06B09102EE6 /* Pods-DropPlayer-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-DropPlayer-Info.plist"; sourceTree = "<group>"; };
-		8F60B8D052CDC499B5597574D9BA5F59 /* Pods-DropPlayer.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-DropPlayer.debug.xcconfig"; sourceTree = "<group>"; };
+		891737F83129E1E8EBC6BC473D0CF877 /* Pods-DropPlayer-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-DropPlayer-frameworks.sh"; sourceTree = "<group>"; };
 		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		AF9BFADA1C3E113F03A139CF19133DDA /* Pods-DropPlayerTests-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-DropPlayerTests-Info.plist"; sourceTree = "<group>"; };
+		B8886DA18BD8DA48DEF4F3C2A5230783 /* Pods-DropPlayerTests.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-DropPlayerTests.modulemap"; sourceTree = "<group>"; };
+		BE510F3225F21F6235D2337286693435 /* Pods-DropPlayer-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-DropPlayer-umbrella.h"; sourceTree = "<group>"; };
 		C25E89550AC46E8374AC0C5AFA902D48 /* google-cast-sdk-dynamic-xcframework.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "google-cast-sdk-dynamic-xcframework.debug.xcconfig"; sourceTree = "<group>"; };
-		E7628E684FF6D5095641CE16EC441C9B /* Pods-DropPlayer-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-DropPlayer-umbrella.h"; sourceTree = "<group>"; };
-		F4EE08CF5B2D18E2EED711A29882766B /* Pods-DropPlayer-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-DropPlayer-dummy.m"; sourceTree = "<group>"; };
+		C424FDFD21F1B9D8EE522E03ACCB4B84 /* Pods-DropPlayer-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-DropPlayer-dummy.m"; sourceTree = "<group>"; };
+		C88AFBA711F8ECE5AFE3FF55267CAA65 /* Pods-DropPlayerTests-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-DropPlayerTests-dummy.m"; sourceTree = "<group>"; };
+		C92DBF53C42BBD99B4019526976CA53D /* Pods-DropPlayer.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-DropPlayer.modulemap"; sourceTree = "<group>"; };
+		CBDB4C224F5D534EB2613070BA2FA1A1 /* Pods-DropPlayer-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-DropPlayer-acknowledgements.markdown"; sourceTree = "<group>"; };
+		FB592DEE81DE4826C1BFDB5FC7A31BB6 /* Pods-DropPlayerTests-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-DropPlayerTests-acknowledgements.plist"; sourceTree = "<group>"; };
+		FC7BA5FF47ED591C2E5A284E20DC9693 /* Pods-DropPlayerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-DropPlayerTests.debug.xcconfig"; sourceTree = "<group>"; };
+		FE722C85A3928624A697A81DABD763CC /* Pods-DropPlayer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-DropPlayer.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,17 +82,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		98C1F460187999D137009D73B385A815 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				79FB00F35859B33C9150C6D2F5FBD13D /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		2A9BA7B8213A31627C8CBD455C2A102C /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				83CB2A13B688F5B69EB9EB4DE6743F4D /* Pods-DropPlayer */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		45436E52303A0172853B582C66F277D1 /* google-cast-sdk-dynamic-xcframework */ = {
 			isa = PBXGroup;
 			children = (
@@ -84,20 +103,38 @@
 			path = "google-cast-sdk-dynamic-xcframework";
 			sourceTree = "<group>";
 		};
+		8111F1F6DD48E32A7A7216ED5D1E70BC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				83CB2A13B688F5B69EB9EB4DE6743F4D /* Pods-DropPlayer */,
+				6F4284D969A4B03A9F345EE48E755C71 /* Pods-DropPlayerTests */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		8135723AF9679A0ED35A7628BF862B0F /* Pods-DropPlayer */ = {
+			isa = PBXGroup;
+			children = (
+				C92DBF53C42BBD99B4019526976CA53D /* Pods-DropPlayer.modulemap */,
+				CBDB4C224F5D534EB2613070BA2FA1A1 /* Pods-DropPlayer-acknowledgements.markdown */,
+				83AC7C993D40E2F3CA88BD6E5276E5CE /* Pods-DropPlayer-acknowledgements.plist */,
+				C424FDFD21F1B9D8EE522E03ACCB4B84 /* Pods-DropPlayer-dummy.m */,
+				891737F83129E1E8EBC6BC473D0CF877 /* Pods-DropPlayer-frameworks.sh */,
+				44624677F82F5B31F177625CFD791EC5 /* Pods-DropPlayer-Info.plist */,
+				BE510F3225F21F6235D2337286693435 /* Pods-DropPlayer-umbrella.h */,
+				399807E23A6C9D12F45C805BF1FE2CA1 /* Pods-DropPlayer.debug.xcconfig */,
+				FE722C85A3928624A697A81DABD763CC /* Pods-DropPlayer.release.xcconfig */,
+			);
+			name = "Pods-DropPlayer";
+			path = "Target Support Files/Pods-DropPlayer";
+			sourceTree = "<group>";
+		};
 		A6FF170FAFC5C6228B55FDF0351B800E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				3A61DECA8CAA11DC51849A7641672AD2 /* GoogleCast.xcframework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		AA7D37AACFFBDFFCA86507115E8B27A3 /* Targets Support Files */ = {
-			isa = PBXGroup;
-			children = (
-				DE48E9C78EC16480E769E23DE709D499 /* Pods-DropPlayer */,
-			);
-			name = "Targets Support Files";
 			sourceTree = "<group>";
 		};
 		B6BAED12AF5E98217CEDBC7D08A91F8C /* Support Files */ = {
@@ -117,8 +154,8 @@
 				9D940727FF8FB9C785EB98E56350EF41 /* Podfile */,
 				D210D550F4EA176C3123ED886F8F87F5 /* Frameworks */,
 				D71B345510B4CA1141447CC5D4200469 /* Pods */,
-				2A9BA7B8213A31627C8CBD455C2A102C /* Products */,
-				AA7D37AACFFBDFFCA86507115E8B27A3 /* Targets Support Files */,
+				8111F1F6DD48E32A7A7216ED5D1E70BC /* Products */,
+				F1434E831A7D9B6AB4D163128F4F2607 /* Targets Support Files */,
 			);
 			sourceTree = "<group>";
 		};
@@ -138,29 +175,37 @@
 			name = Pods;
 			sourceTree = "<group>";
 		};
-		DE48E9C78EC16480E769E23DE709D499 /* Pods-DropPlayer */ = {
-			isa = PBXGroup;
-			children = (
-				67991BB41507E8D3ADE2B5F77D2B5D65 /* Pods-DropPlayer.modulemap */,
-				20DF93F0E0934A161004F4E5CB429279 /* Pods-DropPlayer-acknowledgements.markdown */,
-				810906708E6B8E4354ADE1683EEE67A4 /* Pods-DropPlayer-acknowledgements.plist */,
-				F4EE08CF5B2D18E2EED711A29882766B /* Pods-DropPlayer-dummy.m */,
-				7FFABDA9CE7D3E0B9F6079058B49356A /* Pods-DropPlayer-frameworks.sh */,
-				888EDCAE68FCAC04C33DB06B09102EE6 /* Pods-DropPlayer-Info.plist */,
-				E7628E684FF6D5095641CE16EC441C9B /* Pods-DropPlayer-umbrella.h */,
-				8F60B8D052CDC499B5597574D9BA5F59 /* Pods-DropPlayer.debug.xcconfig */,
-				3820549873C6F82AFD2016AC712BDC85 /* Pods-DropPlayer.release.xcconfig */,
-			);
-			name = "Pods-DropPlayer";
-			path = "Target Support Files/Pods-DropPlayer";
-			sourceTree = "<group>";
-		};
 		E4801F62A6B08CD9B5410329F1A18FDE /* iOS */ = {
 			isa = PBXGroup;
 			children = (
 				384DDA2CB25005BD6479B5987C619DD4 /* Foundation.framework */,
 			);
 			name = iOS;
+			sourceTree = "<group>";
+		};
+		E7278DE033D1A143D1C223F9C103C85F /* Pods-DropPlayerTests */ = {
+			isa = PBXGroup;
+			children = (
+				B8886DA18BD8DA48DEF4F3C2A5230783 /* Pods-DropPlayerTests.modulemap */,
+				5A3205AA41367F7622A6618755AD4FBE /* Pods-DropPlayerTests-acknowledgements.markdown */,
+				FB592DEE81DE4826C1BFDB5FC7A31BB6 /* Pods-DropPlayerTests-acknowledgements.plist */,
+				C88AFBA711F8ECE5AFE3FF55267CAA65 /* Pods-DropPlayerTests-dummy.m */,
+				AF9BFADA1C3E113F03A139CF19133DDA /* Pods-DropPlayerTests-Info.plist */,
+				04DEABAF971027015E744E2D5F3740C6 /* Pods-DropPlayerTests-umbrella.h */,
+				FC7BA5FF47ED591C2E5A284E20DC9693 /* Pods-DropPlayerTests.debug.xcconfig */,
+				043FAE219BF6DC848F9BF5393987B5CB /* Pods-DropPlayerTests.release.xcconfig */,
+			);
+			name = "Pods-DropPlayerTests";
+			path = "Target Support Files/Pods-DropPlayerTests";
+			sourceTree = "<group>";
+		};
+		F1434E831A7D9B6AB4D163128F4F2607 /* Targets Support Files */ = {
+			isa = PBXGroup;
+			children = (
+				8135723AF9679A0ED35A7628BF862B0F /* Pods-DropPlayer */,
+				E7278DE033D1A143D1C223F9C103C85F /* Pods-DropPlayerTests */,
+			);
+			name = "Targets Support Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -171,6 +216,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				1794DE432C5CD61EF12B4F9612E85106 /* Pods-DropPlayer-umbrella.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		958AB9805AF3F3260501E213213F1FAE /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7157E18425E9F2143602D8E0A8F5434C /* Pods-DropPlayerTests-umbrella.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -196,6 +249,25 @@
 			productReference = 83CB2A13B688F5B69EB9EB4DE6743F4D /* Pods-DropPlayer */;
 			productType = "com.apple.product-type.framework";
 		};
+		9C509A694E0E5BFD2CFDCA4E1F1ECDCB /* Pods-DropPlayerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5C61EBB06A333376679B65571E56F19C /* Build configuration list for PBXNativeTarget "Pods-DropPlayerTests" */;
+			buildPhases = (
+				958AB9805AF3F3260501E213213F1FAE /* Headers */,
+				871526463643EAA1011E0AB5D2FB49EA /* Sources */,
+				98C1F460187999D137009D73B385A815 /* Frameworks */,
+				32B611C3E0CD941625DB23F50AB924B8 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				228515E0DABF902136507DDB1047A633 /* PBXTargetDependency */,
+			);
+			name = "Pods-DropPlayerTests";
+			productName = Pods_DropPlayerTests;
+			productReference = 6F4284D969A4B03A9F345EE48E755C71 /* Pods-DropPlayerTests */;
+			productType = "com.apple.product-type.framework";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -216,18 +288,26 @@
 			mainGroup = CF1408CF629C7361332E53B88F7BD30C;
 			minimizedProjectReferenceProxies = 0;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 2A9BA7B8213A31627C8CBD455C2A102C /* Products */;
+			productRefGroup = 8111F1F6DD48E32A7A7216ED5D1E70BC /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				DFF01FC7827BC0F91B1D040D5E2EE88F /* google-cast-sdk-dynamic-xcframework */,
 				408F4D6C1A5F1F53AFB4BF6952E508AA /* Pods-DropPlayer */,
+				9C509A694E0E5BFD2CFDCA4E1F1ECDCB /* Pods-DropPlayerTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		0F32B709C30A06018917C56582BE34B3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		32B611C3E0CD941625DB23F50AB924B8 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -257,6 +337,14 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		871526463643EAA1011E0AB5D2FB49EA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4CFBADF9EBC365822A720DB7A89FBCA7 /* Pods-DropPlayerTests-dummy.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B200029C02723E5F70D4C082C814EBA8 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -268,6 +356,12 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		228515E0DABF902136507DDB1047A633 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "Pods-DropPlayer";
+			target = 408F4D6C1A5F1F53AFB4BF6952E508AA /* Pods-DropPlayer */;
+			targetProxy = 53136622657284D5E8DB025FFBBF1DCF /* PBXContainerItemProxy */;
+		};
 		6BEFEF1DEE92B4D04CEBAED18026C51E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "google-cast-sdk-dynamic-xcframework";
@@ -277,6 +371,46 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		23BF77E61E43CD43A945BB5DBABE0748 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 043FAE219BF6DC848F9BF5393987B5CB /* Pods-DropPlayerTests.release.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				INFOPLIST_FILE = "Target Support Files/Pods-DropPlayerTests/Pods-DropPlayerTests-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MODULEMAP_FILE = "Target Support Files/Pods-DropPlayerTests/Pods-DropPlayerTests.modulemap";
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOLFLAGS = "";
+				PODS_ROOT = "$(SRCROOT)";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
 		3BD9D5F0B581F7E7EEA42E61AB98D21D /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2FF0CD7ECCF35FDD4A247A20E97386E0 /* google-cast-sdk-dynamic-xcframework.release.xcconfig */;
@@ -298,7 +432,7 @@
 		};
 		58C03E4D15C44CDB84507AA75D4C9404 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 3820549873C6F82AFD2016AC712BDC85 /* Pods-DropPlayer.release.xcconfig */;
+			baseConfigurationReference = FE722C85A3928624A697A81DABD763CC /* Pods-DropPlayer.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -404,7 +538,7 @@
 		};
 		7B80524B0E13D3D941F43678948F95F1 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 8F60B8D052CDC499B5597574D9BA5F59 /* Pods-DropPlayer.debug.xcconfig */;
+			baseConfigurationReference = 399807E23A6C9D12F45C805BF1FE2CA1 /* Pods-DropPlayer.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -428,6 +562,45 @@
 				);
 				MACH_O_TYPE = staticlib;
 				MODULEMAP_FILE = "Target Support Files/Pods-DropPlayer/Pods-DropPlayer.modulemap";
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOLFLAGS = "";
+				PODS_ROOT = "$(SRCROOT)";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		C0FC15C99D57CC6E47BAB0746A34AF69 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = FC7BA5FF47ED591C2E5A284E20DC9693 /* Pods-DropPlayerTests.debug.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				INFOPLIST_FILE = "Target Support Files/Pods-DropPlayerTests/Pods-DropPlayerTests-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MODULEMAP_FILE = "Target Support Files/Pods-DropPlayerTests/Pods-DropPlayerTests.modulemap";
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOLFLAGS = "";
 				PODS_ROOT = "$(SRCROOT)";
@@ -538,6 +711,15 @@
 			buildConfigurations = (
 				6A5C026ED62BBFE3380CD257EEFAEB20 /* Debug */,
 				E873CA97BD124B21839AF13C9BE1CD18 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5C61EBB06A333376679B65571E56F19C /* Build configuration list for PBXNativeTarget "Pods-DropPlayerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0FC15C99D57CC6E47BAB0746A34AF69 /* Debug */,
+				23BF77E61E43CD43A945BB5DBABE0748 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
