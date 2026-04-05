@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		874E09DE3F9E432FF405A0D0 /* Pods_DropPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40774D1B6A3F88965CD2D2A0 /* Pods_DropPlayer.framework */; };
 		B001 /* DropPlayerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A001 /* DropPlayerApp.swift */; };
 		B002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002 /* ContentView.swift */; };
 		B003 /* DropboxAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003 /* DropboxAuthManager.swift */; };
@@ -28,13 +29,14 @@
 		B019 /* MetadataExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020 /* MetadataExtractor.swift */; };
 		B020 /* LibraryFoldersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A021 /* LibraryFoldersView.swift */; };
 		B021 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A022 /* Theme.swift */; };
-		FFB81D4D2F75A4E900ABA63F /* SwiftyDropbox in Frameworks */ = {isa = PBXBuildFile; productRef = PKGDEP1 /* SwiftyDropbox */; };
+		B022 /* CastManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A023 /* CastManager.swift */; };
 		BT001 /* AlbumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA001 /* AlbumTests.swift */; };
 		BT002 /* TrackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA002 /* TrackTests.swift */; };
 		BT003 /* NowPlayingCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA003 /* NowPlayingCoordinatorTests.swift */; };
 		BT004 /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA004 /* AppSettingsTests.swift */; };
 		BT005 /* PlayerEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA005 /* PlayerEngineTests.swift */; };
 		BT006 /* AlbumSortingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA006 /* AlbumSortingTests.swift */; };
+		FFB81D4D2F75A4E900ABA63F /* SwiftyDropbox in Frameworks */ = {isa = PBXBuildFile; productRef = PKGDEP1 /* SwiftyDropbox */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +50,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0F14931B7126EA202FF6EFA8 /* Pods-DropPlayer.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DropPlayer.debug.xcconfig"; path = "Target Support Files/Pods-DropPlayer/Pods-DropPlayer.debug.xcconfig"; sourceTree = "<group>"; };
+		40774D1B6A3F88965CD2D2A0 /* Pods_DropPlayer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_DropPlayer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		78954129A0DDF60A998C2B77 /* Pods-DropPlayer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DropPlayer.release.xcconfig"; path = "Target Support Files/Pods-DropPlayer/Pods-DropPlayer.release.xcconfig"; sourceTree = "<group>"; };
 		A001 /* DropPlayerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropPlayerApp.swift; sourceTree = "<group>"; };
 		A002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A003 /* DropboxAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropboxAuthManager.swift; sourceTree = "<group>"; };
@@ -70,6 +75,7 @@
 		A020 /* MetadataExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetadataExtractor.swift; sourceTree = "<group>"; };
 		A021 /* LibraryFoldersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryFoldersView.swift; sourceTree = "<group>"; };
 		A022 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		A023 /* CastManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManager.swift; sourceTree = "<group>"; };
 		FA001 /* AlbumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumTests.swift; sourceTree = "<group>"; };
 		FA002 /* TrackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackTests.swift; sourceTree = "<group>"; };
 		FA003 /* NowPlayingCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingCoordinatorTests.swift; sourceTree = "<group>"; };
@@ -86,12 +92,31 @@
 			buildActionMask = 2147483647;
 			files = (
 				FFB81D4D2F75A4E900ABA63F /* SwiftyDropbox in Frameworks */,
+				874E09DE3F9E432FF405A0D0 /* Pods_DropPlayer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5FD0559A042426461ABBD3AD /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				0F14931B7126EA202FF6EFA8 /* Pods-DropPlayer.debug.xcconfig */,
+				78954129A0DDF60A998C2B77 /* Pods-DropPlayer.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		7B807D4AFF9082FB5ACF92E0 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				40774D1B6A3F88965CD2D2A0 /* Pods_DropPlayer.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		DROPBOXGRP /* Dropbox */ = {
 			isa = PBXGroup;
 			children = (
@@ -136,6 +161,8 @@
 				SRCGRP /* DropPlayer */,
 				TESTGRP /* DropPlayerTests */,
 				PRODGRP /* Products */,
+				5FD0559A042426461ABBD3AD /* Pods */,
+				7B807D4AFF9082FB5ACF92E0 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -180,6 +207,7 @@
 				A014 /* AlbumArtView.swift */,
 				A015 /* MiniPlayerView.swift */,
 				A022 /* Theme.swift */,
+				A023 /* CastManager.swift */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -191,9 +219,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CFGLIST1 /* Build configuration list for PBXNativeTarget "DropPlayer" */;
 			buildPhases = (
+				777292831C5433E9F3FF892F /* [CP] Check Pods Manifest.lock */,
 				SRC1 /* Sources */,
 				FBP1 /* Frameworks */,
 				RES1 /* Resources */,
+				1EAC73C90EC597BA55591A78 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -275,6 +305,48 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		1EAC73C90EC597BA55591A78 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-DropPlayer/Pods-DropPlayer-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-DropPlayer/Pods-DropPlayer-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-DropPlayer/Pods-DropPlayer-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		777292831C5433E9F3FF892F /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-DropPlayer-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		SRC1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -300,6 +372,7 @@
 				B018 /* NowPlayingCoordinator.swift in Sources */,
 				B019 /* MetadataExtractor.swift in Sources */,
 				B021 /* Theme.swift in Sources */,
+				B022 /* CastManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -365,7 +438,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -429,7 +502,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -449,6 +522,7 @@
 		};
 		CFG3 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0F14931B7126EA202FF6EFA8 /* Pods-DropPlayer.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -480,6 +554,7 @@
 		};
 		CFG4 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 78954129A0DDF60A998C2B77 /* Pods-DropPlayer.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;

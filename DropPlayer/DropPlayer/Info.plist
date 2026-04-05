@@ -49,5 +49,12 @@
 		<string>dbapi-8-emm</string>
 		<string>dbapi-2</string>
 	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>DropPlayer uses your local network to discover Chromecast devices for audio streaming.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_googlecast._tcp</string>
+		<string>_CC1AD845._googlecast._tcp</string>
+	</array>
 </dict>
 </plist>

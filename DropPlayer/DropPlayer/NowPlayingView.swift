@@ -5,6 +5,7 @@ struct NowPlayingView: View {
     @EnvironmentObject var player: PlayerEngine
     @EnvironmentObject var library: LibraryViewModel
     @EnvironmentObject var nowPlaying: NowPlayingCoordinator
+    @EnvironmentObject var cast: CastManager
 
     @State private var currentAlbum: Album?
     @State private var trackArtist: String?
@@ -30,6 +31,10 @@ struct NowPlayingView: View {
 
                     Text("Now Playing")
                         .font(.headline)
+
+                    CastButtonView()
+                        .frame(width: 24, height: 24)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
@@ -41,8 +46,8 @@ struct NowPlayingView: View {
                     .shadow(radius: 24, y: 12)
                     // .padding(.horizontal, 16)
                     .padding(.top, 48)
-                    .scaleEffect(player.isPlaying ? 1.0 : 0.88)
-                    .animation(.spring(response: 0.4, dampingFraction: 0.6), value: player.isPlaying)
+                    .scaleEffect(effectivePlaying ? 1.0 : 0.88)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.6), value: effectivePlaying)
                     .onTapGesture { goToAlbum() }
 
                 trackInfoSection
@@ -90,8 +95,32 @@ struct NowPlayingView: View {
                 trackTitle = fetchedMeta.title
                 player.updateArtwork(fetchedArt)
                 player.updateAlbum(album)
+                // If already casting, send the new track to the Cast device.
+                if cast.isConnected {
+                    await cast.loadTrack(track, startTime: 0, album: album, artwork: fetchedArt)
+                }
             } else {
                 currentAlbum = nil
+            }
+        }
+        .onChange(of: cast.isConnected) { _, isNowConnected in
+            if isNowConnected {
+                // Pause local playback and hand off to the Cast device.
+                player.isCasting = true
+                player.pauseForCasting()
+                if let track = player.currentTrack {
+                    Task {
+                        await cast.loadTrack(
+                            track,
+                            startTime: player.currentTime,
+                            album: currentAlbum,
+                            artwork: player.currentArtwork
+                        )
+                    }
+                }
+            } else {
+                // Cast session ended; re-enable local playback.
+                player.isCasting = false
             }
         }
     }
@@ -158,11 +187,17 @@ struct NowPlayingView: View {
         return "Track \(trackNumber)"
     }
 
+    private var effectivePlaying: Bool {
+        cast.isConnected ? cast.isCastPlaying : player.isPlaying
+    }
+
     private var seekBarSection: some View {
         SeekBarView(
-            currentTime: player.currentTime,
-            duration: player.duration,
-            onSeek: { player.seek(to: $0) },
+            currentTime: cast.isConnected ? cast.castCurrentTime : player.currentTime,
+            duration: cast.isConnected ? cast.castDuration : player.duration,
+            onSeek: { time in
+                if cast.isConnected { cast.seek(to: time) } else { player.seek(to: time) }
+            },
             formatTime: formatTime
         )
     }
@@ -177,16 +212,18 @@ struct NowPlayingView: View {
             }
 
             Button {
-                if !player.isBuffering {
+                if cast.isConnected {
+                    cast.togglePlayPause()
+                } else if !player.isBuffering {
                     player.togglePlayPause()
                 }
             } label: {
                 Group {
-                    if player.isBuffering {
+                    if player.isBuffering && !cast.isConnected {
                         ProgressView()
                             .scaleEffect(1.4)
                     } else {
-                        Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
+                        Image(systemName: effectivePlaying ? "pause.fill" : "play.fill")
                             .font(.system(size: 44))
                     }
                 }

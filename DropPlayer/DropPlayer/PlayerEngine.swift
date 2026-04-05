@@ -16,6 +16,8 @@ final class PlayerEngine: NSObject, ObservableObject {
     @Published var currentTime: Double = 0
     @Published var duration: Double = 0
     @Published var errorMessage: String?
+    /// When true, local audio playback is suppressed so the Cast device plays instead.
+    var isCasting: Bool = false
 
     // MARK: - Private
     private var player = AVPlayer()
@@ -62,15 +64,30 @@ final class PlayerEngine: NSObject, ObservableObject {
         updateNowPlayingInfo()
     }
 
+    func pauseForCasting() {
+        player.pause()
+        isPlaying = false
+    }
+
     func skipForward() {
         let next = currentIndex + 1
         guard next < queue.count else { return }
         currentIndex = next
-        loadAndPlay(track: queue[next])
+        if isCasting {
+            // Only advance the track pointer; Cast device will load the new track.
+            currentTrack = queue[next]
+        } else {
+            loadAndPlay(track: queue[next])
+        }
     }
 
     func skipBack() {
-        if currentTime > 3 {
+        if isCasting {
+            let prev = currentIndex - 1
+            guard prev >= 0 else { return }
+            currentIndex = prev
+            currentTrack = queue[prev]
+        } else if currentTime > 3 {
             seek(to: 0)
         } else {
             let prev = currentIndex - 1
@@ -121,8 +138,10 @@ final class PlayerEngine: NSObject, ObservableObject {
                 case .readyToPlay:
                     self.duration = item.duration.seconds.isFinite ? item.duration.seconds : 0
                     self.isBuffering = false
-                    self.player.play()
-                    self.isPlaying = true
+                    if !self.isCasting {
+                        self.player.play()
+                        self.isPlaying = true
+                    }
                     self.updateNowPlayingInfo()
                 case .failed:
                     self.isBuffering = false

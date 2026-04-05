@@ -1,0 +1,16 @@
+PODS:
+  - google-cast-sdk-dynamic-xcframework (4.8.3)
+
+DEPENDENCIES:
+  - google-cast-sdk-dynamic-xcframework (~> 4.8)
+
+SPEC REPOS:
+  trunk:
+    - google-cast-sdk-dynamic-xcframework
+
+SPEC CHECKSUMS:
+  google-cast-sdk-dynamic-xcframework: d4dd8d548462f2a4874515fee68c17805d44be42
+
+PODFILE CHECKSUM: 68c96a3e52d81092247d9b306fff8d54ced761da
+
+COCOAPODS: 1.16.2
