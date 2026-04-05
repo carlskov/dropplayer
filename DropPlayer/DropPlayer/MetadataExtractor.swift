@@ -106,9 +106,31 @@ final class MetadataExtractor {
             return extractM4AArtwork(bytes: bytes)
         case "flac":
             return extractFLACArtwork(bytes: bytes)
+        case "aiff", "aif":
+            return extractAIFFArtwork(bytes: bytes)
         default:
             return nil
         }
+    }
+
+    private func extractAIFFArtwork(bytes: [UInt8]) -> Data? {
+        guard bytes.count >= 12,
+              bytes[0] == 0x46, bytes[1] == 0x4F, bytes[2] == 0x52, bytes[3] == 0x4D else { return nil }
+        // Accept both AIFF and AIFC
+        let marker = String(bytes: [bytes[8], bytes[9], bytes[10], bytes[11]], encoding: .ascii) ?? ""
+        guard marker == "AIFF" || marker == "AIFC" else { return nil }
+
+        var offset = 12
+        while offset + 8 < bytes.count {
+            let chunkID = String(bytes: [bytes[offset], bytes[offset+1], bytes[offset+2], bytes[offset+3]], encoding: .ascii) ?? ""
+            let chunkSize = Int(bytes[offset+4]) << 24 | Int(bytes[offset+5]) << 16 | Int(bytes[offset+6]) << 8 | Int(bytes[offset+7])
+            if chunkID == "ID3 " && offset + 8 + chunkSize <= bytes.count {
+                return extractID3Artwork(bytes: Array(bytes[(offset + 8)..<(offset + 8 + chunkSize)]))
+            }
+            offset += 8 + max(chunkSize, 0)
+            if chunkSize % 2 == 1 { offset += 1 }
+        }
+        return nil
     }
 
     // MARK: - Artwork Extraction
@@ -708,8 +730,9 @@ final class MetadataExtractor {
         
         // Check FORM header
         guard bytes[0] == 0x46, bytes[1] == 0x4F, bytes[2] == 0x52, bytes[3] == 0x4D else { return result }
-        // Check AIFF format
-        guard bytes[8] == 0x41, bytes[9] == 0x49, bytes[10] == 0x46, bytes[11] == 0x46 else { return result }
+        // Accept both AIFF (standard) and AIFC (compressed / 24-bit variants)
+        let marker = String(bytes: [bytes[8], bytes[9], bytes[10], bytes[11]], encoding: .ascii) ?? ""
+        guard marker == "AIFF" || marker == "AIFC" else { return result }
         
         // Look for ID3 chunk (some AIFF files embed ID3)
         var offset = 12

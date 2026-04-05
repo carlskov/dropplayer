@@ -126,7 +126,13 @@ final class PlayerEngine: NSObject, ObservableObject {
     }
 
     private func startPlayback(url: URL, track: Track) async {
-        let item = AVPlayerItem(url: url)
+        var assetOptions: [String: Any] = [:]
+        if let typeID = utTypeIdentifier(for: track.fileName) {
+            assetOptions[AVURLAssetPreferPreciseDurationAndTimingKey] = true
+            assetOptions["AVURLAssetTypeIdentifierKey"] = typeID
+        }
+        let asset = AVURLAsset(url: url, options: assetOptions.isEmpty ? nil : assetOptions)
+        let item = AVPlayerItem(asset: asset)
         player.replaceCurrentItem(with: item)
 
         // Observe buffering / ready state
@@ -166,6 +172,18 @@ final class PlayerEngine: NSObject, ObservableObject {
     }
 
     // MARK: - Audio Session
+
+    private func utTypeIdentifier(for fileName: String) -> String? {
+        switch URL(fileURLWithPath: fileName).pathExtension.lowercased() {
+        case "aiff", "aif": return "public.aiff-audio"
+        case "wav":          return "com.microsoft.waveform-audio"
+        case "flac":         return "org.xiph.flac"
+        case "mp3":          return "public.mp3"
+        case "m4a":          return "com.apple.m4a-audio"
+        case "aac":          return "public.aac-audio"
+        default:             return nil
+        }
+    }
 
     private func configureAudioSession() {
         do {

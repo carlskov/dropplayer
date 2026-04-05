@@ -135,12 +135,13 @@ final class CastManager: NSObject, ObservableObject {
 
     private func mimeType(for fileName: String) -> String {
         switch URL(fileURLWithPath: fileName).pathExtension.lowercased() {
-        case "mp3":        return "audio/mpeg"
-        case "m4a", "aac": return "audio/mp4"
-        case "flac":       return "audio/flac"
-        case "wav":        return "audio/wav"
-        case "ogg":        return "audio/ogg"
-        default:           return "audio/mpeg"
+        case "mp3":              return "audio/mpeg"
+        case "m4a", "aac":      return "audio/mp4"
+        case "flac":             return "audio/flac"
+        case "wav":              return "audio/wav"
+        case "ogg":              return "audio/ogg"
+        case "aiff", "aif":     return "audio/aiff"
+        default:                 return "audio/mpeg"
         }
     }
 }
