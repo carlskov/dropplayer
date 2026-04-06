@@ -42,7 +42,7 @@ struct NowPlayingView: View {
                     .shadow(radius: 10, y: 4)
                     .scaleEffect(player.isPlaying ? 1.0 : 0.88)
                     .animation(.spring(response: 0.4, dampingFraction: 0.6), value: player.isPlaying)
-                    .padding(.top, 48)
+                    .padding(.top, 32)
                     .onTapGesture { goToAlbum() }
 
                 trackInfoSection
