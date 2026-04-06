@@ -181,7 +181,7 @@ struct NowPlayingView: View {
                     player.togglePlayPause()
                 }
             } label: {
-                Group {
+                ZStack {
                     if player.isBuffering {
                         ProgressView()
                             .scaleEffect(1.4)
@@ -190,6 +190,7 @@ struct NowPlayingView: View {
                             .font(.system(size: 44))
                     }
                 }
+                .frame(width: 60, height: 60)
             }
 
             Button {
