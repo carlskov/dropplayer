@@ -166,6 +166,12 @@ final class CastManager: NSObject, ObservableObject {
             do {
                 let (tmp, _) = try await URLSession.shared.download(from: dropboxURL)
                 try FileManager.default.moveItem(at: tmp, to: downloadTemp)
+            } catch is CancellationError {
+                try? FileManager.default.removeItem(at: downloadTemp)
+                return
+            } catch let urlError as URLError where urlError.code == .cancelled {
+                try? FileManager.default.removeItem(at: downloadTemp)
+                return
             } catch {
                 print("[CastManager] AIFF background download failed: \(error.localizedDescription)")
                 try? FileManager.default.removeItem(at: downloadTemp)
@@ -271,11 +277,14 @@ final class CastManager: NSObject, ObservableObject {
            let track = currentAIFFTrack,
            let ip = localIPAddress() {
             transcodeTask?.cancel()
-            let sampleOffset = Int(time * info.sampleRate)
+            let product = time * info.sampleRate
+            guard product.isFinite else { return }
+            let sampleOffset = Int(product)
             proxy.serveTranscoded(from: aiffURL, startSample: sampleOffset)
             // Append a cache-busting query param so Cast treats this as a new URL
             // and opens a fresh connection to the proxy.
-            guard let liveURL = URL(string: "http://\(ip):\(proxy.port)/stream.aac?t=\(Int(time))") else { return }
+            let tParam = time.isFinite ? Int(time) : 0
+            guard let liveURL = URL(string: "http://\(ip):\(proxy.port)/stream.aac?t=\(tParam)") else { return }
             sendToReceiver(url: liveURL, track: track, startTime: 0,
                            album: currentAIFFAlbum, artwork: currentAIFFArtwork, streamType: .live)
             castCurrentTime = time

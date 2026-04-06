@@ -39,6 +39,7 @@
 		BT005 /* PlayerEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA005 /* PlayerEngineTests.swift */; };
 		BT006 /* AlbumSortingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA006 /* AlbumSortingTests.swift */; };
 		BT007 /* AudioTranscodeProxyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA007 /* AudioTranscodeProxyTests.swift */; };
+		BT008 /* AIFFCastingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA008 /* AIFFCastingTests.swift */; };
 		E58F09B00A37651D92E0DB22 /* Pods_DropPlayerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAF1BF968A5810037D80244C /* Pods_DropPlayerTests.framework */; };
 		FFB81D4D2F75A4E900ABA63F /* SwiftyDropbox in Frameworks */ = {isa = PBXBuildFile; productRef = PKGDEP1 /* SwiftyDropbox */; };
 /* End PBXBuildFile section */
@@ -91,6 +92,7 @@
 		FA005 /* PlayerEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerEngineTests.swift; sourceTree = "<group>"; };
 		FA006 /* AlbumSortingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumSortingTests.swift; sourceTree = "<group>"; };
 		FA007 /* AudioTranscodeProxyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioTranscodeProxyTests.swift; sourceTree = "<group>"; };
+		FA008 /* AIFFCastingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIFFCastingTests.swift; sourceTree = "<group>"; };
 		FAF1BF968A5810037D80244C /* Pods_DropPlayerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_DropPlayerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		PROD /* DropPlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DropPlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		TESTPROD /* DropPlayerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DropPlayerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -213,6 +215,7 @@
 				FA005 /* PlayerEngineTests.swift */,
 				FA006 /* AlbumSortingTests.swift */,
 				FA007 /* AudioTranscodeProxyTests.swift */,
+				FA008 /* AIFFCastingTests.swift */,
 			);
 			path = DropPlayerTests;
 			sourceTree = "<group>";
@@ -437,6 +440,7 @@
 				BT005 /* PlayerEngineTests.swift in Sources */,
 				BT006 /* AlbumSortingTests.swift in Sources */,
 				BT007 /* AudioTranscodeProxyTests.swift in Sources */,
+				BT008 /* AIFFCastingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
