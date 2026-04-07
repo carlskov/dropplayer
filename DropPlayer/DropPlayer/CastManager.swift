@@ -40,6 +40,7 @@ final class CastManager: NSObject, ObservableObject {
     private var currentAIFFTrack: Track?
     private var currentAIFFAlbum: Album?
     private var currentAIFFArtwork: UIImage?
+    private var previousPlayerState: GCKMediaPlayerState = .unknown
 
     // MARK: - Init
 
@@ -115,6 +116,7 @@ final class CastManager: NSObject, ObservableObject {
     func loadTrack(_ track: Track, startTime: Double = 0, album: Album?, artwork: UIImage?) async {
         // Cancel any in-progress background transcode for a previous track.
         transcodeTask?.cancel()
+        previousPlayerState = .unknown
         do {
             let url = try await DropboxBrowserService.shared.temporaryLink(for: track.dropboxPath)
             let ext = URL(fileURLWithPath: track.fileName).pathExtension.lowercased()
@@ -315,9 +317,16 @@ final class CastManager: NSObject, ObservableObject {
 
     private func pollProgress() {
         guard let status = remoteMediaClient?.mediaStatus else { return }
+        let newState = status.playerState
         castCurrentTime = status.streamPosition
         castDuration = status.mediaInformation?.streamDuration ?? castDuration
-        isCastPlaying = status.playerState == .playing
+        isCastPlaying = newState == .playing
+
+        // Auto-advance to the next track when the Cast device finishes the current one.
+        if newState == .idle && status.idleReason == .finished && previousPlayerState == .playing {
+            playerEngine?.skipForward()
+        }
+        previousPlayerState = newState
     }
 
     // MARK: - Helpers
