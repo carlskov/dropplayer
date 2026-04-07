@@ -22,6 +22,7 @@ final class CastManager: NSObject, ObservableObject {
     @Published var isCastPlaying: Bool = false
     @Published var castCurrentTime: Double = 0
     @Published var castDuration: Double = 0
+    @Published var connectedDeviceName: String? = nil
 
     // MARK: - Private
 
@@ -340,8 +341,10 @@ extension CastManager: GCKSessionManagerListener {
 
     nonisolated func sessionManager(_ sessionManager: GCKSessionManager,
                                     didStart session: GCKCastSession) {
+        let name = session.device.friendlyName
         Task { @MainActor [weak self] in
             self?.isConnected = true
+            self?.connectedDeviceName = name
             self?.startProgressTimer()
             self?.handleCurrentTrackOnConnect()
         }
@@ -349,8 +352,10 @@ extension CastManager: GCKSessionManagerListener {
 
     nonisolated func sessionManager(_ sessionManager: GCKSessionManager,
                                     didResumeCastSession session: GCKCastSession) {
+        let name = session.device.friendlyName
         Task { @MainActor [weak self] in
             self?.isConnected = true
+            self?.connectedDeviceName = name
             self?.startProgressTimer()
             self?.handleCurrentTrackOnConnect()
         }
@@ -362,6 +367,7 @@ extension CastManager: GCKSessionManagerListener {
         Task { @MainActor [weak self] in
             self?.isConnected = false
             self?.isCastPlaying = false
+            self?.connectedDeviceName = nil
             self?.stopProgressTimer()
             self?.playerEngine?.isCasting = false
         }
@@ -372,6 +378,7 @@ extension CastManager: GCKSessionManagerListener {
                                     with reason: GCKConnectionSuspendReason) {
         Task { @MainActor [weak self] in
             self?.isConnected = false
+            self?.connectedDeviceName = nil
             self?.stopProgressTimer()
             self?.playerEngine?.isCasting = false
         }

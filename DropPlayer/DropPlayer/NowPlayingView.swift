@@ -325,14 +325,23 @@ private final class AudioRouteObserver: ObservableObject {
 
 private struct AudioRouteView: View {
     @StateObject private var route = AudioRouteObserver()
+    @EnvironmentObject var cast: CastManager
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: iconName(for: route.portType))
-                .font(.caption)
-            Text(route.portName)
-                .font(.caption)
-                .lineLimit(1)
+            if let deviceName = cast.connectedDeviceName {
+                Image(systemName: "dot.radiowaves.left.and.right")
+                    .font(.caption)
+                Text(deviceName)
+                    .font(.caption)
+                    .lineLimit(1)
+            } else {
+                Image(systemName: iconName(for: route.portType))
+                    .font(.caption)
+                Text(route.portName)
+                    .font(.caption)
+                    .lineLimit(1)
+            }
         }
         .foregroundStyle(.secondary)
     }
