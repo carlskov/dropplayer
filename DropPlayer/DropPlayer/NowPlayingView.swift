@@ -43,11 +43,11 @@ struct NowPlayingView: View {
                     // .containerRelativeFrame(.horizontal) { w, _ in min(w * 0.95, 400) }
                     .containerRelativeFrame(.horizontal) { w, _ in w - 48 }
                     .cornerRadius(16)
-                    .shadow(radius: 24, y: 12)
-                    // .padding(.horizontal, 16)
-                    .padding(.top, 48)
+                    .clipped()
+                    .shadow(radius: 10, y: 4)
                     .scaleEffect(effectivePlaying ? 1.0 : 0.88)
                     .animation(.spring(response: 0.4, dampingFraction: 0.6), value: effectivePlaying)
+                    .padding(.top, 32)
                     .onTapGesture { goToAlbum() }
 
                 trackInfoSection
@@ -62,7 +62,8 @@ struct NowPlayingView: View {
                     .padding(.top, 24)
 
                 AudioRouteView()
-                    .padding(.top, 64)
+                    // .padding(.top, 64)
+                    .padding(.top, 32)
 
                 if let error = player.errorMessage {
                     Text(error)
@@ -71,7 +72,7 @@ struct NowPlayingView: View {
                         .padding(.top, 16)
                 }
 
-                Spacer()
+                // Spacer()
             }
         }
         .gesture(
@@ -199,7 +200,7 @@ struct NowPlayingView: View {
                 }
             } label: {
                 Group {
-                    if player.isBuffering && !cast.isConnected {
+                    if player.isBuffering {
                         ProgressView()
                             .scaleEffect(1.4)
                     } else {
@@ -207,6 +208,7 @@ struct NowPlayingView: View {
                             .font(.system(size: 44))
                     }
                 }
+                .frame(width: 60, height: 60)
             }
 
             Button {
