@@ -43,21 +43,36 @@ struct MiniPlayerView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 6))
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(player.currentTrack?.displayTitle ?? "")
-                            .font(.subheadline.bold())
-                            .lineLimit(1)
-                        if player.isBuffering {
-                            Text("Buffering…")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        } else {
-                            let artist = player.currentTrack?.artist
-                                ?? library.albums.first(where: { $0.tracks.contains(where: { $0.id == player.currentTrack?.id }) })?.displayArtist
-                            if let artist {
-                                Text(artist)
-                                    .font(.subheadline)
+                        if cast.isConnected && player.currentTrack == nil {
+                            HStack(spacing: 4) {
+                                Image(systemName: "dot.radiowaves.left.and.right")
+                                    .font(.caption)
                                     .foregroundStyle(.secondary)
+                                Text(cast.connectedDeviceName ?? "Chromecast")
+                                    .font(.subheadline.bold())
                                     .lineLimit(1)
+                            }
+                            Text("Connected")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        } else {
+                            Text(player.currentTrack?.displayTitle ?? "")
+                                .font(.subheadline.bold())
+                                .lineLimit(1)
+                            if player.isBuffering {
+                                Text("Buffering…")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                let artist = player.currentTrack?.artist
+                                    ?? library.albums.first(where: { $0.tracks.contains(where: { $0.id == player.currentTrack?.id }) })?.displayArtist
+                                if let artist {
+                                    Text(artist)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
                             }
                         }
                     }

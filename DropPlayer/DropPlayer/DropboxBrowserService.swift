@@ -10,6 +10,15 @@ final class DropboxBrowserService {
         DropboxClientsManager.authorizedClient
     }
 
+    // MARK: - Temporary link cache
+
+    private struct CachedLink {
+        let url: URL
+        let expiry: Date
+    }
+    private var linkCache: [String: CachedLink] = [:]
+    private let linkTTL: TimeInterval = 3600 // Dropbox links are valid for 4 hours; cache for 1h
+
     // MARK: - Folder listing
 
     /// Returns all immediate child entries (files & folders) at ``path``.
@@ -78,10 +87,14 @@ final class DropboxBrowserService {
     // MARK: - Temporary streaming link
 
     /// Returns a short-lived HTTPS URL that can be used to stream a file.
+    /// Results are cached for 1 hour to avoid redundant API calls within the same session.
     func temporaryLink(for path: String) async throws -> URL {
+        if let cached = linkCache[path], cached.expiry > Date() {
+            return cached.url
+        }
         guard let client else { throw DropboxError.notAuthenticated }
 
-        return try await withCheckedThrowingContinuation { continuation in
+        let url = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
             client.files.getTemporaryLink(path: path).response { result, error in
                 if let error {
                     continuation.resume(throwing: DropboxError.api(error.description))
@@ -94,6 +107,13 @@ final class DropboxBrowserService {
                 continuation.resume(returning: url)
             }
         }
+        linkCache[path] = CachedLink(url: url, expiry: Date().addingTimeInterval(linkTTL))
+        return url
+    }
+
+    /// Invalidates the cached temporary link for a path (e.g. after a 401/403 error).
+    func invalidateCachedLink(for path: String) {
+        linkCache.removeValue(forKey: path)
     }
 
     // MARK: - Album art download

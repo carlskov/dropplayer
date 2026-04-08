@@ -86,22 +86,22 @@ struct NowPlayingView: View {
         .task(id: player.currentTrack?.id) {
             trackArtist = player.currentTrack?.artist
             trackTitle = player.currentTrack?.title
-            if let track = player.currentTrack,
-               let album = library.albums.first(where: { $0.tracks.contains(where: { $0.id == track.id }) }) {
-                currentAlbum = album
-                async let meta = library.loadTrackMetadata(for: track)
-                async let art = library.loadArtwork(for: album)
-                let (fetchedMeta, fetchedArt) = await (meta, art)
-                trackArtist = fetchedMeta.artist
-                trackTitle = fetchedMeta.title
-                player.updateArtwork(fetchedArt)
-                player.updateAlbum(album)
-                // Reload cast with full artwork once metadata is fetched.
-                if cast.isConnected {
-                    await cast.loadTrack(track, startTime: cast.castCurrentTime, album: album, artwork: fetchedArt)
-                }
-            } else {
-                currentAlbum = nil
+            guard let track = player.currentTrack,
+                  let album = library.albums.first(where: { $0.tracks.contains(where: { $0.id == track.id }) })
+            else { currentAlbum = nil; return }
+
+            currentAlbum = album
+
+            // Load artwork immediately — it's likely cached on disk.
+            let art = await library.loadArtwork(for: album)
+            player.updateArtwork(art)
+            player.updateAlbum(album)
+
+            // Fetch metadata separately so a slow network read doesn't delay the above.
+            Task {
+                let meta = await library.loadTrackMetadata(for: track)
+                trackArtist = meta.artist ?? trackArtist
+                trackTitle  = meta.title  ?? trackTitle
             }
         }
     }

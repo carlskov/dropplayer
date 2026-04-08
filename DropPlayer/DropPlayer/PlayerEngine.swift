@@ -23,6 +23,7 @@ final class PlayerEngine: NSObject, ObservableObject {
     private var player = AVPlayer()
     private var timeObserver: Any?
     private var itemStatusObservation: NSKeyValueObservation?
+    private var endOfTrackObserver: Any?
     private var cancellables = Set<AnyCancellable>()
     @Published var currentArtwork: UIImage?
     private var currentAlbum: Album?
@@ -114,6 +115,12 @@ final class PlayerEngine: NSObject, ObservableObject {
         currentTime = 0
         duration = 0
 
+        // When casting, CastManager handles loading the track; local AVPlayer is not used.
+        guard !isCasting else {
+            isBuffering = false
+            return
+        }
+
         Task {
             do {
                 let url = try await DropboxBrowserService.shared.temporaryLink(for: track.dropboxPath)
@@ -128,8 +135,14 @@ final class PlayerEngine: NSObject, ObservableObject {
     private func startPlayback(url: URL, track: Track) async {
         var assetOptions: [String: Any] = [:]
         if let typeID = utTypeIdentifier(for: track.fileName) {
-            assetOptions[AVURLAssetPreferPreciseDurationAndTimingKey] = true
             assetOptions["AVURLAssetTypeIdentifierKey"] = typeID
+        }
+        // Only request precise duration/timing for AIFF — for other network-streamed formats
+        // this forces AVPlayer to buffer a large portion of the file before firing .readyToPlay,
+        // which significantly delays playback start.
+        let ext = URL(fileURLWithPath: track.fileName).pathExtension.lowercased()
+        if ext == "aiff" || ext == "aif" {
+            assetOptions[AVURLAssetPreferPreciseDurationAndTimingKey] = true
         }
         let asset = AVURLAsset(url: url, options: assetOptions.isEmpty ? nil : assetOptions)
         let item = AVPlayerItem(asset: asset)
@@ -149,6 +162,7 @@ final class PlayerEngine: NSObject, ObservableObject {
                         self.isPlaying = true
                     }
                     self.updateNowPlayingInfo()
+                    self.prefetchNextTrackURL()
                 case .failed:
                     self.isBuffering = false
                     self.errorMessage = item.error?.localizedDescription ?? "Playback failed"
@@ -158,20 +172,29 @@ final class PlayerEngine: NSObject, ObservableObject {
             }
         }
 
-        // Auto-advance
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(itemDidFinish),
-            name: .AVPlayerItemDidPlayToEndTime,
-            object: item
-        )
-    }
-
-    @objc private func itemDidFinish() {
-        skipForward()
+        // Auto-advance — remove any previous observer first to avoid accumulation.
+        if let old = endOfTrackObserver {
+            NotificationCenter.default.removeObserver(old)
+        }
+        endOfTrackObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: item,
+            queue: .main
+        ) { [weak self] _ in
+            self?.skipForward()
+        }
     }
 
     // MARK: - Audio Session
+
+    private func prefetchNextTrackURL() {
+        let next = currentIndex + 1
+        guard next < queue.count else { return }
+        let nextPath = queue[next].dropboxPath
+        Task {
+            _ = try? await DropboxBrowserService.shared.temporaryLink(for: nextPath)
+        }
+    }
 
     private func utTypeIdentifier(for fileName: String) -> String? {
         switch URL(fileURLWithPath: fileName).pathExtension.lowercased() {

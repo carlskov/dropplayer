@@ -25,11 +25,12 @@ struct ContentView: View {
 struct MainTabView: View {
     @EnvironmentObject var player: PlayerEngine
     @EnvironmentObject var nowPlaying: NowPlayingCoordinator
+    @EnvironmentObject var cast: CastManager
 
     var body: some View {
         AlbumListView()
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if player.currentTrack != nil {
+                if player.currentTrack != nil || cast.isConnected {
                     MiniPlayerView()
                 }
             }

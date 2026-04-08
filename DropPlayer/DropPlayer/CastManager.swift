@@ -41,6 +41,9 @@ final class CastManager: NSObject, ObservableObject {
     private var currentAIFFAlbum: Album?
     private var currentAIFFArtwork: UIImage?
     private var previousPlayerState: GCKMediaPlayerState = .unknown
+    /// Suppresses the $currentTrack sink while we're restoring state from Cast to avoid a reload loop.
+    private var isSyncingFromCast = false
+    private var albumsSyncCancellable: AnyCancellable?
 
     // MARK: - Init
 
@@ -82,7 +85,7 @@ final class CastManager: NSObject, ObservableObject {
     }
 
     private func handleTrackChange(_ track: Track?) {
-        guard isConnected, let track,
+        guard isConnected, !isSyncingFromCast, let track,
               let player = playerEngine, let library = libraryViewModel else { return }
         let album = library.albums.first(where: { $0.tracks.contains(where: { $0.id == track.id }) })
         Task { [weak self, weak player] in
@@ -92,16 +95,59 @@ final class CastManager: NSObject, ObservableObject {
     }
 
     private func handleCurrentTrackOnConnect() {
-        guard let player = playerEngine, let track = player.currentTrack,
-              let library = libraryViewModel else { return }
+        guard let player = playerEngine, let library = libraryViewModel else { return }
         player.isCasting = true
-        player.pauseForCasting()
-        let album = library.albums.first(where: { $0.tracks.contains(where: { $0.id == track.id }) })
-        let startTime = player.currentTime
-        Task { [weak self, weak player] in
-            guard let self, let player else { return }
-            await self.loadTrack(track, startTime: startTime, album: album, artwork: player.currentArtwork)
+
+        if let track = player.currentTrack {
+            // Local player has a track in progress — hand it off to the receiver.
+            player.pauseForCasting()
+            let album = library.albums.first(where: { $0.tracks.contains(where: { $0.id == track.id }) })
+            let startTime = player.currentTime
+            Task { [weak self, weak player] in
+                guard let self, let player else { return }
+                await self.loadTrack(track, startTime: startTime, album: album, artwork: player.currentArtwork)
+            }
+        } else {
+            // No local track (e.g. fresh app launch resuming an existing session).
+            // Try to restore the current track from what the Cast device reports.
+            if !syncTrackFromCastStatus(player: player, library: library) && library.albums.isEmpty {
+                // Albums not yet loaded from cache — retry once they arrive.
+                albumsSyncCancellable = library.$albums
+                    .filter { !$0.isEmpty }
+                    .first()
+                    .receive(on: RunLoop.main)
+                    .sink { [weak self] _ in
+                        guard let self,
+                              let player = self.playerEngine,
+                              let library = self.libraryViewModel else { return }
+                        self.syncTrackFromCastStatus(player: player, library: library)
+                        self.albumsSyncCancellable = nil
+                    }
+            }
         }
+    }
+
+    /// Reads the current Cast media status and finds the matching track in the library.
+    /// Sets `player.currentTrack`, `queue`, and `currentIndex` without triggering a reload.
+    /// Returns `true` if a match was found.
+    @discardableResult
+    private func syncTrackFromCastStatus(player: PlayerEngine, library: LibraryViewModel) -> Bool {
+        guard let metadata = remoteMediaClient?.mediaStatus?.mediaInformation?.metadata,
+              let title = metadata.string(forKey: kGCKMetadataKeyTitle),
+              !library.albums.isEmpty else { return false }
+        let albumTitle = metadata.string(forKey: kGCKMetadataKeyAlbumTitle)
+        for album in library.albums {
+            if let albumTitle, album.displayTitle != albumTitle { continue }
+            if let track = album.tracks.first(where: { $0.displayTitle == title }) {
+                isSyncingFromCast = true
+                player.currentTrack = track
+                player.queue = album.tracks
+                player.currentIndex = album.tracks.firstIndex(where: { $0.id == track.id }) ?? 0
+                isSyncingFromCast = false
+                return true
+            }
+        }
+        return false
     }
 
     // MARK: - Computed helpers
@@ -377,6 +423,7 @@ extension CastManager: GCKSessionManagerListener {
             self?.isConnected = false
             self?.isCastPlaying = false
             self?.connectedDeviceName = nil
+            self?.albumsSyncCancellable = nil
             self?.stopProgressTimer()
             self?.playerEngine?.isCasting = false
         }
@@ -388,6 +435,7 @@ extension CastManager: GCKSessionManagerListener {
         Task { @MainActor [weak self] in
             self?.isConnected = false
             self?.connectedDeviceName = nil
+            self?.albumsSyncCancellable = nil
             self?.stopProgressTimer()
             self?.playerEngine?.isCasting = false
         }
