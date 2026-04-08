@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import AVKit
 
 struct NowPlayingView: View {
     @EnvironmentObject var player: PlayerEngine
@@ -323,27 +324,58 @@ private final class AudioRouteObserver: ObservableObject {
     }
 }
 
+/// UIViewRepresentable wrapping AVRoutePickerView.
+/// The view is rendered at the exact size of its SwiftUI frame; tapping anywhere on it
+/// opens the system audio-route picker popover natively, with correct anchor position.
+private struct RoutePickerButton: UIViewRepresentable {
+    func makeUIView(context: Context) -> AVRoutePickerView {
+        let picker = AVRoutePickerView()
+        // Hide the default system button chrome — we draw our own label on top in SwiftUI.
+        picker.tintColor = .clear
+        picker.activeTintColor = .clear
+        picker.backgroundColor = .clear
+        return picker
+    }
+
+    func updateUIView(_ uiView: AVRoutePickerView, context: Context) {}
+}
+
 private struct AudioRouteView: View {
     @StateObject private var route = AudioRouteObserver()
     @EnvironmentObject var cast: CastManager
 
     var body: some View {
-        HStack(spacing: 6) {
-            if let deviceName = cast.connectedDeviceName {
+        if let deviceName = cast.connectedDeviceName {
+            // Cast is active — static label, not tappable for local route switching
+            HStack(spacing: 6) {
                 Image(systemName: "dot.radiowaves.left.and.right")
                     .font(.caption)
                 Text(deviceName)
                     .font(.caption)
                     .lineLimit(1)
-            } else {
+            }
+            .foregroundStyle(.secondary)
+        } else {
+            // Local playback — the invisible AVRoutePickerView sits underneath;
+            // the visible pill is just decoration and lets touches pass through.
+            HStack(spacing: 6) {
                 Image(systemName: iconName(for: route.portType))
                     .font(.caption)
                 Text(route.portName)
                     .font(.caption)
                     .lineLimit(1)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 9, weight: .semibold))
+                    .opacity(0.6)
             }
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(.primary.opacity(0.07), in: Capsule())
+            .overlay(
+                RoutePickerButton()   // full-size transparent hit area on top
+            )
         }
-        .foregroundStyle(.secondary)
     }
 
     private func iconName(for port: AVAudioSession.Port) -> String {
