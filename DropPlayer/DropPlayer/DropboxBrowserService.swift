@@ -2,7 +2,7 @@ import Foundation
 import SwiftyDropbox
 
 /// Wraps all Dropbox API calls: folder listing, metadata and temporary link fetching.
-final class DropboxBrowserService {
+actor DropboxBrowserService {
     static let shared = DropboxBrowserService()
     private init() {}
 

@@ -146,6 +146,10 @@ final class PlayerEngine: NSObject, ObservableObject {
         }
         let asset = AVURLAsset(url: url, options: assetOptions.isEmpty ? nil : assetOptions)
         let item = AVPlayerItem(asset: asset)
+        // Don't stall waiting for a larger buffer on CDN-backed URLs — start as soon as possible.
+        player.automaticallyWaitsToMinimizeStalling = false
+        // Don't pause at end of item; the AVPlayerItemDidPlayToEndTime observer handles advancing.
+        player.actionAtItemEnd = .none
         player.replaceCurrentItem(with: item)
 
         // Observe buffering / ready state
@@ -181,7 +185,9 @@ final class PlayerEngine: NSObject, ObservableObject {
             object: item,
             queue: .main
         ) { [weak self] _ in
-            self?.skipForward()
+            Task { @MainActor [weak self] in
+                self?.skipForward()
+            }
         }
     }
 
