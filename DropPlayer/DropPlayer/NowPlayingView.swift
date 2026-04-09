@@ -177,6 +177,7 @@ struct NowPlayingView: View {
         SeekBarView(
             currentTime: cast.isConnected ? cast.castCurrentTime : player.currentTime,
             duration: cast.isConnected ? cast.castDuration : player.duration,
+            bufferedTime: cast.isConnected ? cast.castDuration : player.bufferedTime,
             onSeek: { time in
                 if cast.isConnected { cast.seek(to: time) } else { player.seek(to: time) }
             },
@@ -236,6 +237,7 @@ struct NowPlayingView: View {
 private struct SeekBarView: View {
     let currentTime: Double
     let duration: Double
+    let bufferedTime: Double
     let onSeek: (Double) -> Void
     let formatTime: (Double) -> String
 
@@ -245,6 +247,11 @@ private struct SeekBarView: View {
     private var progress: Double {
         guard duration > 0 else { return 0 }
         return isDragging ? dragProgress : min(currentTime / duration, 1)
+    }
+
+    private var bufferedProgress: Double {
+        guard duration > 0 else { return 0 }
+        return min(bufferedTime / duration, 1)
     }
 
     private var displayTime: Double {
@@ -258,10 +265,19 @@ private struct SeekBarView: View {
                 let trackHeight: CGFloat = isDragging ? 6 : 4
 
                 ZStack(alignment: .leading) {
+                    // Background track
                     Capsule()
                         .fill(Color.primary.opacity(0.15))
                         .frame(height: trackHeight)
 
+                    // Buffered range (lighter color)
+                    if bufferedProgress > progress {
+                        Capsule()
+                            .fill(Color.primary.opacity(0.3))
+                            .frame(width: max(0, CGFloat(bufferedProgress) * width), height: trackHeight)
+                    }
+
+                    // Played range (solid color)
                     Capsule()
                         .fill(Color.primary)
                         .frame(width: max(0, CGFloat(progress) * width), height: trackHeight)

@@ -26,6 +26,7 @@
 | `isBuffering` | `Bool` | True while the player item status is loading |
 | `currentTime` | `Double` | Current playback position in seconds |
 | `duration` | `Double` | Duration of the current track in seconds |
+| `bufferedTime` | `Double` | Furthest buffered position in seconds (for seek bar UI) |
 | `errorMessage` | `String?` | Set if playback fails |
 | `currentArtwork` | `UIImage?` | Artwork displayed in lock screen info |
 | `isCasting` | `Bool` | When `true`, local `AVPlayer.play()` is suppressed |
@@ -52,16 +53,20 @@
 1. Creates `AVURLAsset` with appropriate per-format options (see below).
 2. Creates `AVPlayerItem` from the asset.
 3. Replaces the current `AVPlayer` item.
-4. Adds KVO observer on `AVPlayerItem.status`; when `.readyToPlay`:
+4. **Adaptive buffering**: Sets `automaticallyWaitsToMinimizeStalling` based on format:
+   - Lossless formats (FLAC, ALAC, WAV, AIFF): `true` for smoother playback
+   - Lossy formats (MP3, AAC, M4A, OGG): `false` for quicker start
+5. Adds KVO observer on `AVPlayerItem.status`; when `.readyToPlay`:
    - Calls `player.play()` (unless `isCasting`).
    - Updates `MPNowPlayingInfoCenter`.
-   - Calls `prefetchNextTrackURL()` to warm the link cache for the next queued track.
-5. Registers `AVPlayerItem.didPlayToEndTimeNotification` observer for automatic advance.
-6. Starts a periodic time observer (0.5 s interval) to update `currentTime`.
+   - Calls `prefetchNextTrackURLs()` to warm the link cache for the next 3 tracks.
+6. Registers `AVPlayerItem.didPlayToEndTimeNotification` observer for automatic advance.
+7. Starts a periodic time observer (0.5 s interval) to update `currentTime`.
+8. **Buffered range observation**: Observes `loadedTimeRanges` and updates `bufferedTime` for seek bar UI.
 
-### `prefetchNextTrackURL()`
+### `prefetchNextTrackURLs()`
 
-Called when the current item reaches `.readyToPlay`. Fires a background `Task` that calls `DropboxBrowserService.shared.temporaryLink(for:)` for `queue[currentIndex + 1]`. The result is silently discarded; the side-effect is that the URL is stored in `DropboxBrowserService`'s 1-hour link cache. When auto-advance fires at end of track, `loadAndPlay` finds the URL already cached and hands it to `AVPlayer` immediately, eliminating the API round-trip gap between tracks.
+Called when the current item reaches `.readyToPlay`. Fires background `Task`s that call `DropboxBrowserService.shared.temporaryLink(for:)` for the next 3 tracks in the queue (`queue[currentIndex + 1]`, `currentIndex + 2`, `currentIndex + 3`). The results are silently discarded; the side-effect is that the URLs are stored in `DropboxBrowserService`'s 1-hour link cache. This multi-track prefetching ensures smooth transitions even when users skip ahead multiple tracks.
 
 ---
 

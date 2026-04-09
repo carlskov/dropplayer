@@ -15,6 +15,7 @@ final class PlayerEngine: NSObject, ObservableObject {
     @Published var isBuffering = false
     @Published var currentTime: Double = 0
     @Published var duration: Double = 0
+    @Published var bufferedTime: Double = 0
     @Published var errorMessage: String?
     /// When true, local audio playback is suppressed so the Cast device plays instead.
     var isCasting: Bool = false
@@ -23,6 +24,7 @@ final class PlayerEngine: NSObject, ObservableObject {
     private var player = AVPlayer()
     private var timeObserver: Any?
     private var itemStatusObservation: NSKeyValueObservation?
+    private var itemTimeRangeObservation: NSKeyValueObservation?
     private var endOfTrackObserver: Any?
     private var cancellables = Set<AnyCancellable>()
     @Published var currentArtwork: UIImage?
@@ -146,8 +148,16 @@ final class PlayerEngine: NSObject, ObservableObject {
         }
         let asset = AVURLAsset(url: url, options: assetOptions.isEmpty ? nil : assetOptions)
         let item = AVPlayerItem(asset: asset)
-        // Don't stall waiting for a larger buffer on CDN-backed URLs — start as soon as possible.
-        player.automaticallyWaitsToMinimizeStalling = false
+        
+        // Adaptive buffering based on format and network conditions
+        // For lossless formats, allow slightly more buffering to prevent stutter
+        if ext == "flac" || ext == "alac" || ext == "wav" || ext == "aiff" || ext == "aif" {
+            // Lossless formats: balance between quick start and smooth playback
+            player.automaticallyWaitsToMinimizeStalling = true
+        } else {
+            // Lossy formats: prioritize quick start
+            player.automaticallyWaitsToMinimizeStalling = false
+        }
         // Don't pause at end of item; the AVPlayerItemDidPlayToEndTime observer handles advancing.
         player.actionAtItemEnd = .none
         player.replaceCurrentItem(with: item)
@@ -166,7 +176,7 @@ final class PlayerEngine: NSObject, ObservableObject {
                         self.isPlaying = true
                     }
                     self.updateNowPlayingInfo()
-                    self.prefetchNextTrackURL()
+                    self.prefetchNextTrackURLs()
                 case .failed:
                     self.isBuffering = false
                     self.errorMessage = item.error?.localizedDescription ?? "Playback failed"
@@ -189,16 +199,36 @@ final class PlayerEngine: NSObject, ObservableObject {
                 self?.skipForward()
             }
         }
+
+        // Observe buffered time ranges for seek bar UI
+        let timeRangeObserver = item.observe(\AVPlayerItem.loadedTimeRanges, 
+            options: [.new]
+        ) { [weak self] item, _ in
+            Task { @MainActor [weak self] in
+                guard let self, let timeRanges = item.loadedTimeRanges.first else { return }
+                let timeRange = timeRanges.timeRangeValue
+                if timeRange.duration.isNumeric {
+                    self.bufferedTime = timeRange.start.seconds + timeRange.duration.seconds
+                }
+            }
+        }
+        
+        // Store observer to keep it alive
+        itemTimeRangeObservation?.invalidate()
+        itemTimeRangeObservation = timeRangeObserver
     }
 
     // MARK: - Audio Session
 
-    private func prefetchNextTrackURL() {
-        let next = currentIndex + 1
-        guard next < queue.count else { return }
-        let nextPath = queue[next].dropboxPath
-        Task {
-            _ = try? await DropboxBrowserService.shared.temporaryLink(for: nextPath)
+    private func prefetchNextTrackURLs() {
+        // Prefetch URLs for the next 3 tracks to eliminate gaps between tracks
+        for i in 1...3 {
+            let nextIndex = currentIndex + i
+            guard nextIndex < queue.count else { break }
+            let nextPath = queue[nextIndex].dropboxPath
+            Task {
+                _ = try? await DropboxBrowserService.shared.temporaryLink(for: nextPath)
+            }
         }
     }
 
