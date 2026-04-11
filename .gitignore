@@ -1,0 +1,36 @@
+# Xcode
+*.pbproj.user
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+DerivedData/
+
+# Swift Package Manager
+.Package.resolved
+*.xcodeproj/xcshareddata/swiftpm/
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Build
+build/
+*.build/
+
+# Localization
+*.lproj/
+
+# Environment
+.env
+.env.local
+.env*.local
+
+# macOS
+.DS_Store
+
+# IDE
+*.swiftpm
+*.swift-deps
