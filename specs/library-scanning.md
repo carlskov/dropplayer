@@ -119,8 +119,8 @@
 **Acceptance Criteria**:
 - Cover art appears immediately when album is discovered
 - Supported image types: jpg, jpeg, png, webp
-- **Priority 1 - Preferred names** (case-insensitive): cover, folder, front, albumart, album, artwork
-- **Priority 2 - Fallback pattern**: Files ending with `-front` or `_front` (e.g., `-front.jpg`, `_front.png`, `album-front.webp`, `cover_front.jpeg`, `00-VA_-_Tribal_Science-front.jpg`)
+- **Priority 1 - Preferred names** (case-insensitive): cover, folder, front, albumart, album, artwork (e.g., `cover.jpg`, `FRONT.png`, `AlbumArt.webp`)
+- **Priority 2 - Fallback pattern**: Files ending with `-front` or `_front` (case-insensitive) (e.g., `-front.jpg`, `_front.png`, `album-front.webp`, `cover_front.jpeg`, `00-VA_-_Tribal_Science-front.jpg`, `-FRONT.PNG`, `ALBUM-FRONT.WEBP`)
 - **Priority 3 - Last resort**: Any image file in the folder
 - First matching image is used as album artwork
 - `album.artworkDropboxPath` populated during initial scan
