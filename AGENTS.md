@@ -51,9 +51,26 @@ Specs for each major feature are in `specs/`.
 
 ## Testing
 
-Unit tests live in `DropPlayerTests/`. Run with:
+Unit tests live in `DropPlayerTests/` and integration tests in `DropPlayerUITests/`.
 
-```
+### Running Tests
+
+```bash
 xcodebuild test -workspace DropPlayer/DropPlayer.xcworkspace \
   -scheme DropPlayer -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
+
+### Test Structure
+
+- **Unit tests**: Focus on individual components (ViewModels, Services)
+- **Integration tests**: Test interactions between components
+- **UI tests**: Verify view behavior and navigation
+
+### Test Naming Convention
+
+- Unit tests: `testMethodName_ExpectedBehavior()`
+- UI tests: `testScreenName_Action_ExpectedResult()`
+
+### Mocking
+
+Use `MockDropboxBrowserService` and `MockPlayerEngine` for isolated testing. Mocks are located in `DropPlayerTests/Mocks/`.
