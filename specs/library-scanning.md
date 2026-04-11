@@ -2,123 +2,252 @@
 
 ## Overview
 
-`LibraryViewModel` builds the album library by recursively traversing the configured Dropbox folders. The scan identifies albums by grouping audio files within the same folder. A second-pass multi-disc merge combines sibling folders that belong to the same release.
+**Purpose**: Build and maintain a browsable music library from Dropbox folders
+
+**User Need**: Users want to browse their music collection with proper album organization and metadata
 
 ---
 
 ## Components
 
-- **`LibraryViewModel`** — `@MainActor ObservableObject`; owns the full scan pipeline
-- **`DropboxBrowserService`** — provides `listFolder(path:)` for directory traversal
-- **`MetadataExtractor`** — used in the quick-scan pre-merge step and the background tag scan (see [metadata.md](metadata.md))
-- **`Album`** / **`Track`** — value types produced by the scan
+### LibraryViewModel
+- **Role**: `@MainActor ObservableObject` that owns the scan pipeline
+- **Responsibilities**: 
+  - Recursive folder traversal
+  - Album discovery and creation
+  - Multi-disc album merging
+  - State management and progress reporting
+
+### DropboxBrowserService
+- **Role**: Dropbox API wrapper for folder listing
+- **Key Method**: `listFolder(path:)` for directory traversal
+
+### MetadataExtractor
+- **Role**: Audio file metadata reader
+- **Usage**: Quick-scan for merge decisions, background tag enrichment
+
+### Data Models
+- **Album**: Container for tracks with metadata
+- **Track**: Individual audio file with parsed metadata
 
 ---
 
-## Published State
+## Published State Requirements
 
-| Property | Type | Description |
-|---|---|---|
-| `albums` | `[Album]` | Full sorted library |
-| `isScanning` | `Bool` | True during the initial folder scan |
-| `scanError` | `String?` | Set if any scan step throws |
-| `scanProgress` | `String` | Human-readable status message (e.g., "Scanning Jazz/Miles Davis...") |
-| `isTagScanning` | `Bool` | True during background tag enrichment |
-| `tagScanProgress` | `Double` | 0.0–1.0 fraction of albums processed |
-| `scanningAlbumId` | `String?` | ID of the album currently being tag-scanned (for per-card indicators) |
+**Requirement**: Maintain real-time scan state for UI updates
 
----
+**Acceptance Criteria**:
+- `albums: [Album]` - Complete album list, updates incrementally during scan
+- `isScanning: Bool` - True during initial folder traversal
+- `scanError: String?` - Non-nil when scan fails
+- `scanProgress: String` - Human-readable status (e.g., "Scanning Jazz/Miles Davis...")
+- `isTagScanning: Bool` - True during background metadata enrichment
+- `tagScanProgress: Double` - 0.0-1.0 completion fraction
+- `scanningAlbumId: String?` - ID of album currently being processed
 
-## Scan Pipeline
-
-### Entry point: `rescanLibrary()`
-
-1. Cancels any in-progress background tag scan.
-2. Sets `isScanning = true`, clears `albums` and `scanError`.
-3. Iterates each path in `AppSettings.musicFolderPaths`.
-4. Calls `scanFolder(path:depth:)` for each root.
-5. After all folders are scanned, runs the multi-disc merge pass.
-6. Sorts the final album list by `displayTitle`.
-7. Sets `isScanning = false`, starts background tag scan (`startTagScan`).
-
-### `scanFolder(path:depth:)` — recursive folder walk (max depth: 5)
-
-- Calls `DropboxBrowserService.listFolder(path:)` to list entries.
-- Audio file entries are collected. If any are found, the folder becomes an `Album`.
-- Sub-folders are recursively scanned (depth - 1).
-
-### Audio file detection
-
-Supported extensions: `mp3`, `flac`, `aac`, `m4a`, `ogg`, `wav`, `aiff`, `aif`, `alac`, `opus`.
-
-### Cover art detection
-
-Image files are checked against these base names (case-insensitive): `cover`, `folder`, `front`, `albumart`, `album`, `artwork`. Supported image types: `jpg`, `jpeg`, `png`, `webp`. The first match is stored in `album.artworkDropboxPath`.
+**Performance**:
+- State updates must not block main thread
+- UI remains responsive during scan
 
 ---
 
-## Track Filename Parsing (`makeTrack(from:)`)
+## Scan Pipeline Requirements
 
-Track metadata is initially derived from the filename alone (tag enrichment happens later). Parsed patterns include:
+### Requirement: Discover and organize music library
 
-| Pattern | Example |
-|---|---|
-| `NN. Title` | `03. Kind of Blue.mp3` |
-| `NN - Title` | `03 - Kind of Blue.mp3` |
-| `Artist - NN - Title` | `Miles Davis - 03 - Kind of Blue.mp3` |
-| `Artist - Title` (no number) | `Miles Davis - Kind of Blue.mp3` |
-| Plain filename | `kind_of_blue.mp3` |
+**User Need**: Users want their music automatically organized into browsable albums
 
-Parsed fields: `trackNumber`, `artist` (if embedded in filename), `title`.
+**Acceptance Criteria**:
+
+#### Entry Point: rescanLibrary()
+1. Cancels any in-progress background operations
+2. Sets `isScanning = true` within 100ms of call
+3. Clears existing `albums` array and `scanError`
+4. Processes each path in `AppSettings.musicFolderPaths`
+5. **Real-time updates**: Albums added to `albums` array as discovered
+6. Completes folder traversal within 5 seconds per 1000 folders
+7. Executes multi-disc merge pass
+8. Sorts final album list by `displayTitle`
+9. Sets `isScanning = false` when complete
+10. Initiates background tag scan
+
+#### scanFolder(path:depth:)
+- **Requirement**: Recursively discover albums in folder hierarchy
+- **Acceptance Criteria**:
+  - Max depth: 5 levels
+  - Lists folder contents via `DropboxBrowserService.listFolder(path:)`
+  - Creates `Album` when audio files found
+  - Recursively processes subfolders
+  - Returns within 2 seconds per folder (95th percentile)
+
+#### Audio File Detection
+- **Requirement**: Identify supported audio files
+- **Acceptance Criteria**:
+  - Supported extensions: mp3, flac, aac, m4a, ogg, wav, aiff, aif, alac, opus
+  - Case-insensitive matching
+  - Files with multiple extensions handled correctly (e.g., "song.mp3.backup" ignored)
 
 ---
 
-## Album Folder Name Parsing (`parseAlbumMetadata`)
+## Real-time Album Discovery
 
-Folder names are parsed to extract album title, artist, and year before any tags are read. Recognised patterns:
+**Requirement**: Display albums incrementally during scan
 
-| Pattern | Example |
-|---|---|
-| `Artist - Album (Year)` | `Miles Davis - Kind of Blue (1959)` |
-| `Artist - Album` | `Miles Davis - Kind of Blue` |
-| `Album (Year)` | `Kind of Blue (1959)` |
-| Plain folder name | `Kind of Blue` |
+**User Need**: Users want immediate feedback during large library scans
+
+**Acceptance Criteria**:
+- Albums appear in UI within 200ms of discovery
+- Cover art displays if available during initial scan
+- Scan progress continues uninterrupted
+- Final album count matches post-scan total
+- Multi-disc merge still functions correctly
+- No duplicate albums appear
+
+**Performance**:
+- UI update latency: <200ms per album
+- Memory impact: <10MB additional during scan
+- No main thread blocking
 
 ---
 
-## Multi-Disc Merge
+## Cover Art Detection
 
-### Quick pre-scan (`quickScanForMerge`)
+**Requirement**: Display album artwork during initial scan with comprehensive filename matching
 
-Before merging, the first track of each album candidate is passed through `MetadataExtractor` to read its disc number and album title tags. This avoids false merges when folder naming patterns are ambiguous.
+**User Need**: Users want visual identification of albums using various naming conventions
 
-### Merge logic (`mergeMultiDiscAlbums`)
+**Acceptance Criteria**:
+- Cover art appears immediately when album is discovered
+- Supported image types: jpg, jpeg, png, webp
+- **Priority 1 - Preferred names** (case-insensitive): cover, folder, front, albumart, album, artwork
+- **Priority 2 - Fallback pattern**: Files ending with `-front` or `_front` (e.g., `-front.jpg`, `_front.png`, `album-front.webp`, `cover_front.jpeg`, `00-VA_-_Tribal_Science-front.jpg`)
+- **Priority 3 - Last resort**: Any image file in the folder
+- First matching image is used as album artwork
+- `album.artworkDropboxPath` populated during initial scan
+- Fallback to default artwork if no cover found
+- Detection completes in <50ms per folder
 
-Albums with the same **base name** are grouped and merged. Disc suffix patterns stripped from folder names before comparison:
+**Examples**:
+- `front.jpg` → Preferred name (highest priority)
+- `-front.png` → Fallback pattern
+- `album-front.webp` → Fallback pattern
+- `00-VA_-_Tribal_Science-front.jpg` → Fallback pattern
+- `random.jpg` → Last resort (if no preferred/fallback found)
 
-- `[Disc N]`, `(Disc N)`
-- `[CD N]`, `(CD N)`
-- `Part N`, `Vol. N`, `Vol N`
-- Trailing ` 2`, ` 3` (bare number suffix)
+---
 
-Albums in a group are merged into a single `Album`:
-- `tracks` are concatenated from all discs, sorted by disc → track number.
-- `discNumber` is assigned per-disc based on position or parsed suffix.
-- Metadata (title, artist, year) is taken from the first disc.
-- `folderPath` is set to the shared parent path.
+## Track Filename Parsing
 
-### Sort order within an album
+**Requirement**: Extract metadata from filenames when tags unavailable
 
-Tracks are sorted: `discNumber` ascending → `trackNumber` ascending → `id` (path) ascending as tiebreaker.
+**User Need**: Users want meaningful track information even without embedded metadata
+
+**Acceptance Criteria**:
+- Supported patterns:
+  - `NN. Title` → `03. Kind of Blue.mp3`
+  - `NN - Title` → `03 - Kind of Blue.mp3`
+  - `Artist - NN - Title` → `Miles Davis - 03 - Kind of Blue.mp3`
+  - `Artist - Title` → `Miles Davis - Kind of Blue.mp3`
+  - Plain filename → `kind_of_blue.mp3`
+- Parsed fields: `trackNumber`, `artist` (if present), `title`
+- Handles malformed filenames gracefully
+- Completes in <10ms per filename
+
+---
+
+## Album Folder Name Parsing
+
+**Requirement**: Extract album metadata from folder names
+
+**User Need**: Users want proper album organization even without tags
+
+**Acceptance Criteria**:
+- Supported patterns:
+  - `Artist - Album (Year)` → `Miles Davis - Kind of Blue (1959)`
+  - `Artist - Album` → `Miles Davis - Kind of Blue`
+  - `Album (Year)` → `Kind of Blue (1959)`
+  - Plain folder name → `Kind of Blue`
+- Extracted fields: `title`, `artist`, `year`
+- Handles special characters and Unicode
+- Completes in <5ms per folder name
+
+---
+
+## Multi-Disc Album Merge
+
+**Requirement**: Combine multi-disc albums into single entries
+
+**User Need**: Users want complete albums, not split across multiple discs
+
+**Acceptance Criteria**:
+
+### Quick Pre-Scan
+- Reads first track of each album candidate
+- Extracts disc number and album title tags
+- Completes in <100ms per album
+- Prevents false merges from ambiguous folder names
+
+### Merge Logic
+- Albums with same base name are grouped
+- Disc suffix patterns stripped before comparison:
+  - `[Disc N]`, `(Disc N)`
+  - `[CD N]`, `(CD N)`
+  - `Part N`, `Vol. N`, `Vol N`
+  - Trailing ` 2`, ` 3` (bare number suffix)
+- Merged album characteristics:
+  - Tracks concatenated from all discs
+  - Sorted by disc number → track number
+  - Metadata from first disc
+  - Folder path set to shared parent
+- Completes merge pass in <2 seconds per 100 albums
 
 ---
 
 ## Final Sorting
 
-After merge, `albums` is sorted by `displayTitle` (case-insensitive, `localizedStandardCompare`). Sort order can be changed by the user in the UI (see [album-library-view.md](album-library-view.md)); the sort is applied at display time by `AlbumListView`, not stored on the model.
+**Requirement**: Present albums in consistent, user-configurable order
+
+**User Need**: Users want to find albums quickly
+
+**Acceptance Criteria**:
+- Default sort: `displayTitle` case-insensitive
+- Sort algorithm: `localizedStandardCompare`
+- Completes in <100ms per 1000 albums
+- Supports user-configured sort orders
+- UI applies sort at display time (not stored in model)
 
 ---
 
 ## Persistence
 
-The completed album list (with tags if available) is serialised to `UserDefaults` as JSON. On next launch the cached library is loaded instantly while a background rescan refreshes it.
+**Requirement**: Cache library for instant startup
+
+**User Need**: Users want fast app launch even with large libraries
+
+**Acceptance Criteria**:
+- Completed album list serialized to `UserDefaults` as JSON
+- Cache includes tags if available
+- Loads from cache on launch in <500ms
+- Background rescan updates cache without UI freeze
+- Cache invalidated on Dropbox auth changes
+- Handles corrupt cache gracefully
+
+---
+
+## Performance Requirements
+
+**Overall Scan**:
+- <10 seconds per 1000 folders (95th percentile)
+- <50MB memory usage during scan
+- No ANRs or UI freezes
+
+**Background Tag Scan**:
+- <30 seconds per 100 albums
+- <20MB additional memory
+- Can be cancelled and resumed
+
+**Error Handling**:
+- Network errors retry automatically (3 attempts)
+- Corrupt files skipped with error logging
+- Scan continues on partial failures
+- User notified only on complete failure
