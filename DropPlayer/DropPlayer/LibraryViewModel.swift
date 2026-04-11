@@ -179,6 +179,13 @@ final class LibraryViewModel: ObservableObject {
                     .filter { isArtworkFile($0.name) }
                 directArtwork = preferredArtworkPath(from: coversImages)
             }
+            
+            // For potential multi-disc albums, also check parent folder for artwork
+            if directArtwork == nil && depth > 0 {
+                let parentFolder = (path as NSString).deletingLastPathComponent
+                directArtwork = await findArtworkInFolder(path: parentFolder)
+            }
+            
             var album = Album(
                 id: path,
                 folderPath: path,
