@@ -6,6 +6,8 @@ An iOS music player written in Swift/SwiftUI that streams audio directly from a 
 
 All app source is under `DropPlayer/DropPlayer/`. Key files:
 
+> **Note**: Detailed specifications for each feature are in the `specs/` folder. Review these before implementing new features or making significant changes.
+
 | File | Role |
 |------|------|
 | `DropPlayerApp.swift` | App entry point, SwiftyDropbox setup, OAuth URL handling |
