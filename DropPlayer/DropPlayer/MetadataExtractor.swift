@@ -303,7 +303,7 @@ final class MetadataExtractor {
     private func extractFLACPictureData(bytes: [UInt8]) -> Data? {
         guard bytes.count >= 32 else { return nil }
         var offset = 0
-        let pictureType = (Int(bytes[0]) << 24) | (Int(bytes[1]) << 16) | (Int(bytes[2]) << 8) | Int(bytes[3])
+        //let pictureType = (Int(bytes[0]) << 24) | (Int(bytes[1]) << 16) | (Int(bytes[2]) << 8) | Int(bytes[3])
         offset = 4
         let mimeLen = (Int(bytes[offset]) << 24) | (Int(bytes[offset+1]) << 16) | (Int(bytes[offset+2]) << 8) | Int(bytes[offset+3])
         offset = 4 + mimeLen + 4

@@ -36,7 +36,7 @@ actor DropboxBrowserService {
                     return
                 }
                 // Handle pagination by collecting all pages
-                var entries = result.entries
+                let entries = result.entries
                 if result.hasMore {
                     Task {
                         do {
