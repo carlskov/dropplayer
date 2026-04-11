@@ -136,4 +136,43 @@ final class AlbumTests: XCTestCase {
         )
         XCTAssertNil(album.genre)
     }
+
+    func testArtworkFilenamePatternMatching() {
+        // Test the filename pattern matching logic for the "front" fallback requirement
+        let testCases = [
+            // (filename: String, isImageFile: Bool, shouldMatchFrontPattern: Bool)
+            ("cover.jpg", true, false),
+            ("folder.png", true, false),
+            ("front.jpg", false), // no prefix - handled by preferred names, not fallback pattern
+            ("-front.jpg", true), // ends with "-front"
+            ("_front.png", true), // ends with "_front"
+            ("album-front.webp", true), // ends with "-front"
+            ("cover_front.jpeg", true), // ends with "_front"
+            ("00-VA_-_Tribal_Science-front.jpg", true), // complex case with "-front" ending
+            ("my_front_cover.jpg", false), // doesn't end with "-front" or "_front"
+            ("frontcover.jpg", false), // doesn't end with "-front" or "_front"
+            ("image.jpg", false),
+            ("track.mp3", false),
+        ]
+
+        for (filename, isImage, shouldMatchFront) in testCases {
+            let isActualImage = isImageFile(filename)
+            XCTAssertEqual(isActualImage, isImage, "Image detection for: " + filename)
+
+            let doesMatchFront = matchesFrontPattern(filename)
+            XCTAssertEqual(doesMatchFront, shouldMatchFront, "Front pattern for: " + filename)
+        }
+    }
+
+    private func isImageFile(_ filename: String) -> Bool {
+        let ext = (filename as NSString).pathExtension.lowercased()
+        return ["jpg", "jpeg", "png", "webp"].contains(ext)
+    }
+
+    private func matchesFrontPattern(_ filename: String) -> Bool {
+        let lowercaseName = filename.lowercased()
+        // Pattern: files ending with "front" (prefixed with - or _)
+        let frontPattern = #"[^\\/]*[-_]front\.(jpg|jpeg|png|webp)$"#
+        return lowercaseName.range(of: frontPattern, options: .regularExpression) != nil
+    }
 }

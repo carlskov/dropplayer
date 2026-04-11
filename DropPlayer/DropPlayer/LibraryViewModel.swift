@@ -221,9 +221,8 @@ final class LibraryViewModel: ObservableObject {
     }
 
     private func isArtworkFile(_ name: String) -> Bool {
-        let nameWithoutExt = ((name as NSString).deletingPathExtension).lowercased()
         let ext = (name as NSString).pathExtension.lowercased()
-        return artworkFileNames.contains(nameWithoutExt) && artworkExtensions.contains(ext)
+        return artworkExtensions.contains(ext)
     }
 
     private func preferredArtworkPath(from files: [Files.FileMetadata]) -> String? {
@@ -235,6 +234,16 @@ final class LibraryViewModel: ObservableObject {
                 }
             }
         }
+        
+        // Fallback: look for files ending with "front" (optionally prefixed with - or _)
+        // Pattern: front.jpg, -front.png, _front.webp, album-front.jpeg, cover_front.jpg, 00-VA_-_Tribal_Science-front.jpg
+        let frontPattern = #"[^\\/]*[-_]front\.(jpg|jpeg|png|webp)$"#
+        if let frontMatch = files.first(where: { 
+            $0.name.range(of: frontPattern, options: [.regularExpression, .caseInsensitive]) != nil 
+        }) {
+            return frontMatch.pathLower ?? frontMatch.name
+        }
+        
         return files.first.flatMap { $0.pathLower ?? $0.name }
     }
 

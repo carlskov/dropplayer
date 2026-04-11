@@ -123,6 +123,7 @@
 - **Priority 2 - Fallback pattern**: Files ending with `-front` or `_front` (case-insensitive) (e.g., `-front.jpg`, `_front.png`, `album-front.webp`, `cover_front.jpeg`, `00-VA_-_Tribal_Science-front.jpg`, `-FRONT.PNG`, `ALBUM-FRONT.WEBP`)
 - **Priority 3 - Last resort**: Any image file in the folder
 - First matching image is used as album artwork
+- For multi-disc releases, cover art file might be located in the main folder (e.g. the one containing subfolders of discs)
 - `album.artworkDropboxPath` populated during initial scan
 - Fallback to default artwork if no cover found
 - Detection completes in <50ms per folder
