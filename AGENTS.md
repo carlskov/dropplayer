@@ -29,6 +29,22 @@ All app source is under `DropPlayer/DropPlayer/`. Key files:
 
 Specs for each major feature are in `specs/`.
 
+## Specification Requirements
+
+**Always update specifications when making feature changes:**
+
+1. **Before implementing**: Review existing specs in `specs/` for the feature you're working on
+2. **When making changes**: Update the corresponding spec file to reflect new requirements
+3. **For new features**: Create a new spec file following the structured format
+4. **Format requirements**: Use the structured format with clear sections:
+   - **Requirement**: What needs to be done
+   - **User Need**: Why this is important for users  
+   - **Acceptance Criteria**: Specific, testable conditions
+   - **Performance**: Measurable targets (response times, memory usage, etc.)
+5. **Review existing specs**: Follow the pattern established in `specs/library-scanning.md`
+
+**Spec files must be kept in sync with implementation** - they are the source of truth for feature requirements.
+
 ## Tech stack
 
 - Swift 5.10+, SwiftUI, iOS 17+
