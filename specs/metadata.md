@@ -14,23 +14,30 @@ Tag reading in DropPlayer is done entirely in-process without third-party tag li
 
 ---
 
-## Background Tag Scan
+## Background Tag Scan Requirements
 
-### Entry point: `startTagScan()`
+**Requirement**: Enrich album and track metadata after library discovery
 
-Called after every `rescanLibrary()` completes. Runs as a cancellable `Task`.
+**User Need**: Users want complete metadata (artist, album, year, etc.) for proper organization and display
 
-1. Iterates every album in `albums`.
-2. For each album, iterates every track.
-3. Downloads the first 1 MB of the track file from Dropbox.
-4. Calls the appropriate `MetadataExtractor` parser.
-5. Updates track fields: `title`, `trackNumber`, `artist`.
-6. Updates album fields: `title`, `artist`, `year`, `copyright`, `label`, `genre`.
-7. Sets `album.tagsLoaded = true` after all tracks in the album are processed.
-8. Persists the updated library to `UserDefaults` after each album.
-9. Updates `isTagScanning`, `tagScanProgress`, and `scanningAlbumId` throughout.
+**Acceptance Criteria**:
+- `startTagScan()` is called automatically after every `rescanLibrary()` completes
+- Runs as a cancellable background `Task` that doesn't block the main thread
+- Processes albums sequentially, tracks within each album sequentially
+- Downloads only the first 1 MB of each track file using byte-range requests
+- Extracts metadata using format-specific parsers
+- Updates track fields: `title`, `trackNumber`, `artist`
+- Updates album fields: `title`, `artist`, `year`, `copyright`, `label`, `genre`
+- Sets `album.tagsLoaded = true` after processing all tracks in an album
+- Persists updated library to `UserDefaults` after each album
+- Updates published state: `isTagScanning`, `tagScanProgress`, `scanningAlbumId`
+- Checks for cancellation between albums
+- Calling `rescanLibrary()` cancels any in-progress tag scan
 
-The task checks for cancellation between albums; calling `rescanLibrary()` cancels the in-progress tag scan before starting a new one.
+**Performance**:
+- Processes <100 albums in <30 seconds
+- Memory usage <20MB during scan
+- Network usage optimized with byte-range requests
 
 ---
 
@@ -72,16 +79,28 @@ ID3v2 numeric genre codes (e.g., `(17)` = Rock) are resolved using the full 207-
 
 ---
 
-## Artwork Loading (`loadArtwork(for:)`)
+## Artwork Loading Requirements
 
-Artwork is loaded lazily when an album card or the Now Playing view needs it. The loading pipeline is:
+**Requirement**: Load album artwork efficiently from multiple sources with caching
 
-1. **In-memory cache** — `artworkCache` dictionary keyed by `album.id`; returned immediately if present.
-2. **Disk cache** — `Caches/AlbumArtwork/` directory; filename is a Base64-encoded album path. If found, decoded to `UIImage` and stored in the in-memory cache.
-3. **Folder image file** — downloads `album.artworkDropboxPath` (set during scan) using `DropboxBrowserService.downloadData(path:)`.
-4. **`Covers/` subfolder** — if no root image was found, `Covers/` inside the album folder is checked for image files matching the same base-name list.
-5. **Embedded tag artwork** — calls `MetadataExtractor.extractArtwork(from:)` on the first track's file data.
-6. On success (any source), the image is resized and saved to disk at 0.85 JPEG quality for future fast loads.
+**User Need**: Users want to see album covers quickly without repeated network requests
+
+**Acceptance Criteria**:
+- `loadArtwork(for:)` loads artwork lazily when needed by UI
+- Follows a multi-tier caching and fallback pipeline:
+  1. **In-memory cache** — `artworkCache` dictionary keyed by `album.id`
+  2. **Disk cache** — `Caches/AlbumArtwork/` directory with Base64-encoded filenames
+  3. **Folder image file** — downloads from `album.artworkDropboxPath`
+  4. **`Covers/` subfolder** — checks for artwork in subfolder
+  5. **Embedded tag artwork** — extracts from first track's metadata
+- Successful loads are resized and saved to disk at 0.85 JPEG quality
+- Each source is tried sequentially until artwork is found
+- Failed attempts don't prevent fallback to next source
+
+**Performance**:
+- In-memory cache hit: <1ms response time
+- Disk cache hit: <10ms response time
+- Network load: <500ms for typical image sizes
 
 ### Embedded artwork extraction
 

@@ -12,13 +12,31 @@ The feature is implemented across three components:
 
 ---
 
-## Session Management
+## Session Management Requirements
 
-- Uses the **Google Cast SDK** (`GoogleCast.xcframework`) with the default media receiver (`kGCKDefaultMediaReceiverApplicationID`).
-- `CastManager` registers as a `GCKSessionManagerListener` and reacts to:
-  - `didStart` / `didResumeCastSession` → marks `isConnected = true`, stores the device's `friendlyName` in `connectedDeviceName`, starts progress polling, and hands off the current track.
-  - `didEnd` / `didSuspend` → marks `isConnected = false`, clears `connectedDeviceName`, stops progress polling, resumes local playback.
-- When a session starts, local `AVPlayer` playback is paused (`pauseForCasting()`) and the current track is loaded onto the Cast device from the current playback position.
+**Requirement**: Manage Cast session lifecycle and synchronize playback state
+
+**User Need**: Users want seamless casting with automatic playback handoff between local and Cast devices
+
+**Acceptance Criteria**:
+- Uses Google Cast SDK with default media receiver (`kGCKDefaultMediaReceiverApplicationID`)
+- `CastManager` registers as `GCKSessionManagerListener`
+- Session start/resume behavior:
+  - Marks `isConnected = true`
+  - Stores device `friendlyName` in `connectedDeviceName`
+  - Starts progress polling
+  - Hands off current track to Cast device
+- Session end/suspend behavior:
+  - Marks `isConnected = false`
+  - Clears `connectedDeviceName`
+  - Stops progress polling
+  - Resumes local playback
+- On session start: pauses local `AVPlayer` and loads current track from current position
+
+**Performance**:
+- Session establishment: <2 seconds
+- Playback handoff: <500ms interruption
+- State synchronization: <100ms
 
 ---
 
@@ -35,47 +53,82 @@ The feature is implemented across three components:
 
 ---
 
-## Track Loading
+## Track Loading Requirements
 
-`loadTrack(_:startTime:album:artwork:)` is the entry point for sending a track to the receiver:
+**Requirement**: Load and stream audio tracks to Cast devices with format-specific handling
 
-1. Cancels any in-progress background transcode task.
-2. Resets `previousPlayerState` to `.unknown` (prevents stale state from triggering auto-advance).
-3. Fetches a fresh Dropbox temporary link for the track.
-4. Dispatches to either the **AIFF path** or the **direct path** based on file extension.
+**User Need**: Users want reliable casting with support for all audio formats in their library
 
-### Direct path (MP3, M4A, FLAC, WAV, OGG)
+**Acceptance Criteria**:
+- `loadTrack(_:startTime:album:artwork:)` is the entry point for track loading
+- Cancels in-progress transcode tasks
+- Resets `previousPlayerState` to prevent stale state issues
+- Fetches fresh Dropbox temporary link for the track
+- Dispatches to appropriate path based on file extension
 
-- The Dropbox temporary URL is sent directly to the Cast receiver via `GCKRemoteMediaClient.loadMedia`.
-- Stream type: `.buffered`.
-- The receiver fetches the file itself from Dropbox.
+### Direct Path Requirements (MP3, M4A, FLAC, WAV, OGG)
 
-### AIFF path (two-phase)
+**Requirement**: Stream supported formats directly to Cast receiver
 
-AIFF files cannot be streamed directly because the Cast default receiver does not support the format.
+**Acceptance Criteria**:
+- Dropbox temporary URL sent via `GCKRemoteMediaClient.loadMedia`
+- Stream type: `.buffered`
+- Receiver fetches file directly from Dropbox
+- Supports seeking and progress tracking
 
-**Phase 1 — Live stream (immediate playback)**
+**Performance**:
+- Track load time: <1 second
+- Seeking response: <300ms
 
-- `AudioTranscodeProxy` opens an HTTP listener on a random local port.
-- On incoming Cast connection: streams the AIFF from Dropbox via `URLSession`, parses the `COMM`/`SSND` chunks on the fly, converts PCM → AAC-LC using `AVAudioConverter`, wraps each output packet in an ADTS header, and sends as `Transfer-Encoding: chunked`.
-- Cast receives `http://<device-ip>:<proxy-port>/stream.aac` (stream type: `.live`).
-- Playback starts within seconds. Seeking is supported by restarting the proxy with an HTTP `Range` request calculated from the cached sample rate and bit depth.
+### AIFF Path Requirements (Two-Phase Transcoding)
 
-**Phase 2 — Background transcode → buffered swap**
+**Requirement**: Support AIFF format through real-time transcoding
 
-- Concurrently, the full AIFF is downloaded to a temp file and exported to M4A via `AVAssetExportSession` (preset: `AVAssetExportPresetAppleM4A`).
-- Once transcoding completes, `LocalAudioServer` serves the M4A file with byte-range support.
-- Cast is reloaded with `http://<device-ip>:<buffered-port>/track.m4a` (stream type: `.buffered`) at the current playback position, enabling full seek support.
-- The live proxy temp file is cleaned up; the M4A temp file is cleaned up when the next track loads or `CastManager` is deallocated.
+**User Need**: Users want to cast AIFF files without pre-conversion
+
+**Acceptance Criteria**:
+- Phase 1 (Live Stream):
+  - `AudioTranscodeProxy` opens HTTP listener on random port
+  - Streams AIFF from Dropbox, parses chunks on-the-fly
+  - Converts PCM → AAC-LC using `AVAudioConverter`
+  - Wraps in ADTS headers, sends as chunked transfer
+  - Playback starts within seconds
+  - Supports seeking via HTTP Range requests
+- Phase 2 (Background Transcode):
+  - Full AIFF downloaded to temp file
+  - Exported to M4A via `AVAssetExportSession`
+  - `LocalAudioServer` serves M4A with byte-range support
+  - Cast reloaded with buffered stream at current position
+  - Temp files cleaned up appropriately
+
+**Performance**:
+- Phase 1 startup: <2 seconds
+- Phase 2 completion: <track duration + 10 seconds
+- Seeking in Phase 2: <100ms response
 
 ---
 
-## Queue & Auto-Advance
+## Queue & Auto-Advance Requirements
 
-- The playback queue is owned by `PlayerEngine` (`queue: [Track]`, `currentIndex: Int`).
-- When a track is started from `AlbumDetailView`, `PlayerEngine.play(track:in:album:)` replaces the entire queue with the album's sorted tracks and sets the index to the selected track. This clears any previous queue.
-- `CastManager` subscribes to `PlayerEngine.$currentTrack`. Whenever `currentTrack` changes while connected, `handleTrackChange` loads the new track onto the receiver.
-- **Auto-advance**: `pollProgress()` (called every 0.5 s) detects the transition `playing → idle/finished` via `GCKMediaPlayerState`. When this occurs, `playerEngine?.skipForward()` is called, which increments `currentIndex` and sets the next `currentTrack`, triggering the Combine sink and loading the next track automatically.
+**Requirement**: Manage playback queue and automatic track advancement during casting
+
+**User Need**: Users want continuous playback and proper queue management when casting
+
+**Acceptance Criteria**:
+- Playback queue owned by `PlayerEngine` (`queue: [Track]`, `currentIndex: Int`)
+- Album playback: replaces entire queue with album's sorted tracks
+- `CastManager` subscribes to `PlayerEngine.$currentTrack`
+- Track change handling: loads new track onto receiver when `currentTrack` changes
+- Auto-advance mechanism:
+  - `pollProgress()` called every 0.5 seconds
+  - Detects `playing → idle/finished` transition via `GCKMediaPlayerState`
+  - Calls `playerEngine?.skipForward()` to increment index
+  - Sets next `currentTrack`, triggering automatic load
+
+**Performance**:
+- Queue replacement: <100ms
+- Auto-advance detection: <500ms from track end
+- Track transition: <1 second total
 
 ---
 

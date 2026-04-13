@@ -33,20 +33,35 @@
 
 ---
 
-## Playback Flow
+## Playback Flow Requirements
 
-### `play(track:in:album:)`
+**Requirement**: Manage track playback initiation and queue setup
 
-1. Sets `queue` to the full album track list (sorted).
-2. Sets `currentIndex` to the position of the selected track.
-3. Calls `loadAndPlay(track:)`.
+**User Need**: Users want reliable playback with proper queue management
 
-### `loadAndPlay(track:)`
+### Play Method Requirements (`play(track:in:album:)`)
 
-1. Sets `isBuffering = true`.
-2. Calls `DropboxBrowserService.shared.temporaryLink(for: track.dropboxPath)`.
-3. On success, calls `startPlayback(url:track:)`.
-4. On failure, sets `errorMessage`.
+**Acceptance Criteria**:
+- Sets `queue` to full album track list (sorted by track number)
+- Sets `currentIndex` to position of selected track
+- Calls `loadAndPlay(track:)` to initiate playback
+
+**Performance**:
+- Queue setup: <50ms
+- Playback initiation: <500ms total
+
+### Load and Play Requirements (`loadAndPlay(track:)`)
+
+**Acceptance Criteria**:
+- Sets `isBuffering = true` immediately
+- Fetches Dropbox temporary link via `DropboxBrowserService.shared.temporaryLink(for:)`
+- On success: calls `startPlayback(url:track:)`
+- On failure: sets `errorMessage` and maintains current state
+- Handles network errors gracefully with user feedback
+
+**Performance**:
+- Temporary link fetch: <300ms
+- Playback start: <200ms after link received
 
 ### `startPlayback(url:track:)`
 
