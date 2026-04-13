@@ -254,7 +254,7 @@ final class LibraryViewModel: ObservableObject {
         return files.first.flatMap { $0.pathLower ?? $0.name }
     }
 
-    private func rescanFolderContents(for album: inout Album) async {
+    private func rescanFolderContents(for album: inout Album) async -> Bool {
         // Build a mapping from parent folder → disc number using existing tracks.
         // For merged multi-disc albums each disc lives in a different subfolder.
         var folderToDisc: [String: Int] = [:]
@@ -272,6 +272,7 @@ final class LibraryViewModel: ObservableObject {
         let isMultiDisc = sortedDiscFolders.count > 1
         let existingTracks = Dictionary(uniqueKeysWithValues: album.tracks.map { ($0.id, $0) })
         var allNewTracks: [Track] = []
+        var folderExists = true
 
         for (folderPath, discNum) in sortedDiscFolders {
             do {
@@ -289,7 +290,13 @@ final class LibraryViewModel: ObservableObject {
                     allNewTracks.append(track)
                 }
             } catch {
-                // Keep existing tracks for this disc folder on error
+                // Check if this is a "folder not found" error
+                if let dropboxError = error as? DropboxError,
+                   case .api(let message) = dropboxError,
+                   message.lowercased().contains("not_found") || message.lowercased().contains("does not exist") {
+                    folderExists = false
+                }
+                // Keep existing tracks for this disc folder on other errors
                 let existingForDisc = album.tracks.filter {
                     ($0.dropboxPath as NSString).deletingLastPathComponent == folderPath
                 }
@@ -300,6 +307,8 @@ final class LibraryViewModel: ObservableObject {
         if !allNewTracks.isEmpty {
             album.tracks = allNewTracks
         }
+        
+        return folderExists
     }
 
     private func findArtworkInFolder(path: String) async -> String? {
@@ -578,7 +587,19 @@ final class LibraryViewModel: ObservableObject {
         removeArtworkFromDisk(key: "embedded:\(updatedAlbum.id)")
 
         // Re-scan folder for audio files
-        await rescanFolderContents(for: &updatedAlbum)
+        let folderExists = await rescanFolderContents(for: &updatedAlbum)
+        
+        // If folder doesn't exist, remove the album from library
+        guard folderExists else {
+            if let indexToRemove = albums.firstIndex(where: { $0.id == updatedAlbum.id }) {
+                albums.remove(at: indexToRemove)
+                saveAlbums()
+            }
+            isTagScanning = false
+            tagScanProgress = ""
+            scanningAlbumId = nil
+            return
+        }
 
         // Scan for artwork files in folder (and Covers subfolder)
         // For multi-disc albums, also check the top-level containing folder

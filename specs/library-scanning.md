@@ -252,3 +252,26 @@
 - Corrupt files skipped with error logging
 - Scan continues on partial failures
 - User notified only on complete failure
+
+## Folder Deletion Handling
+
+**Requirement**: During tag rescan, remove albums if their source folder is deleted
+
+**User Need**: Users want their library to stay in sync with their Dropbox folder structure
+
+**Acceptance Criteria**:
+- When `rescanTagsForAlbum(_:)` is called on a deleted folder:
+  - Dropbox API returns "not_found" or "does not exist" error
+  - Album is removed from the `albums` array
+  - Album artwork cache is cleared
+  - Changes are persisted via `saveAlbums()`
+  - Scanning state is properly cleaned up
+- Other types of errors (network issues, auth errors) keep existing album data
+- UI updates immediately to reflect the removed album
+- No partial album data remains in the library
+
+**Implementation**:
+- `rescanFolderContents(for:)` returns `Bool` indicating folder existence
+- Error message pattern matching detects folder-not-found errors
+- Guard clause in `rescanTagsForAlbum(_:)` handles folder deletion case
+- Album removal happens before artwork/embedded metadata processing
