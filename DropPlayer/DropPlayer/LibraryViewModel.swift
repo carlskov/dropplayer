@@ -58,11 +58,10 @@ final class LibraryViewModel: ObservableObject {
                 discovered.append(contentsOf: results)
             }
             
-            // Quick metadata scan for multi-disc detection
-            await quickScanForMerge(&discovered)
-            
-            let merged = mergeMultiDiscAlbums(discovered)
-            albums = merged.sorted { $0.displayTitle.localizedCaseInsensitiveCompare($1.displayTitle) == .orderedAscending }
+            // Process albums with multi-disc detection using folder names only
+            // Album titles from ID3 tags will be extracted during background tag scan
+            let processed = processAlbumsWithMultiDiscDetection(discovered)
+            albums = processed.sorted { $0.displayTitle.localizedCaseInsensitiveCompare($1.displayTitle) == .orderedAscending }
             saveAlbums()
         } catch {
             scanError = error.localizedDescription
@@ -466,62 +465,56 @@ final class LibraryViewModel: ObservableObject {
         return (folderName, nil)
     }
 
-    private func quickScanForMerge(_ albums: inout [Album]) async {
-        for i in albums.indices {
-            guard let firstTrack = albums[i].tracks.first else { continue }
-            let metadata = await metadataExtractor.extractMetadata(from: firstTrack.dropboxPath)
-            
-            // Extract album title from tags
-            if let albumTitle = metadata["album"], !albumTitle.isEmpty {
-                albums[i].title = albumTitle
-            }
-            
-            // Extract disc info from tags (e.g., "1/2" or just "1")
-            if let diskStr = metadata["disk"] ?? metadata["part"], !diskStr.isEmpty {
-                let parts = diskStr.components(separatedBy: "/")
-                if let firstPart = parts.first, let discNum = Int(firstPart) {
-                    albums[i].discNumber = discNum
-                }
-            }
-        }
-    }
-
-    private func mergeMultiDiscAlbums(_ albums: [Album]) -> [Album] {
+    /// Optimized processing that detects and merges multi-disc albums in a single pass
+    private func processAlbumsWithMultiDiscDetection(_ albums: [Album]) -> [Album] {
         var albumGroups: [String: [Album]] = [:]
 
+        // Group albums by base name (single pass)
+        // Use album title if available, otherwise try to infer from folder structure
         for album in albums {
-            // Use tag-derived title if available, otherwise folder name
             let albumName = album.title.isEmpty ? album.folderName : album.title
             let (baseName, _) = extractBaseAlbumName(albumName)
-            albumGroups[baseName, default: []].append(album)
+            
+            // Special handling for subfolders that look like disc folders (CD1, CD2, etc.)
+            // If the base name looks like a disc folder itself, use parent folder name instead
+            if baseName.range(of: #"(?i)(^|\s)(cd|disc|part|vol)\.?\s*\d+"#, options: .regularExpression) != nil {
+                // This is a disc folder - extract parent folder name for grouping
+                let parentFolder = (album.folderPath as NSString).deletingLastPathComponent
+                let parentBaseName = lastPathComponent(parentFolder)
+                let (cleanParentName, _) = extractBaseAlbumName(parentBaseName)
+                albumGroups[cleanParentName, default: []].append(album)
+            } else {
+                albumGroups[baseName, default: []].append(album)
+            }
         }
 
-        var mergedAlbums: [Album] = []
+        var processedAlbums: [Album] = []
 
         for (_, group) in albumGroups {
             if group.count > 1 {
-                // Sort by disc number
+                // Multi-disc album detected - merge in single pass
                 let sorted = group.sorted { a, b in
                     let (_, discA) = extractBaseAlbumName(a.folderName)
                     let (_, discB) = extractBaseAlbumName(b.folderName)
                     return (discA ?? 0) < (discB ?? 0)
                 }
 
-                // Merge into first album
                 var mainAlbum = sorted[0]
+                
+                // Merge tracks from all discs in single iteration
                 for i in 1..<sorted.count {
                     for track in sorted[i].tracks {
                         var mergedTrack = track
                         mergedTrack.discNumber = i + 1
                         mainAlbum.tracks.append(mergedTrack)
                     }
-                    // Keep artwork from first disc if available
+                    // Preserve artwork from any disc
                     if mainAlbum.artworkDropboxPath == nil && sorted[i].artworkDropboxPath != nil {
                         mainAlbum.artworkDropboxPath = sorted[i].artworkDropboxPath
                     }
                 }
 
-                // Sort tracks by disc number then track number
+                // Sort tracks by disc then track number
                 mainAlbum.tracks.sort { a, b in
                     let d0 = a.discNumber ?? 1
                     let d1 = b.discNumber ?? 1
@@ -529,13 +522,14 @@ final class LibraryViewModel: ObservableObject {
                     return (a.trackNumber ?? Int.max) < (b.trackNumber ?? Int.max)
                 }
 
-                mergedAlbums.append(mainAlbum)
+                processedAlbums.append(mainAlbum)
             } else {
-                mergedAlbums.append(group[0])
+                // Single-disc album
+                processedAlbums.append(group[0])
             }
         }
 
-        return mergedAlbums
+        return processedAlbums
     }
 
     private func lastPathComponent(_ path: String) -> String {

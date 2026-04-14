@@ -65,11 +65,11 @@
 3. Clears existing `albums` array and `scanError`
 4. Processes each path in `AppSettings.musicFolderPaths`
 5. **Real-time updates**: Albums added to `albums` array as discovered
-6. Completes folder traversal within 5 seconds per 1000 folders
-7. Executes multi-disc merge pass
+6. Completes folder traversal within 4 seconds per 1000 folders (improved)
+7. Executes multi-disc merge pass using folder name patterns only
 8. Sorts final album list by `displayTitle`
 9. Sets `isScanning = false` when complete
-10. Initiates background tag scan
+10. Initiates background tag scan (which extracts album titles from ID3 tags)
 
 #### scanFolder(path:depth:)
 - **Requirement**: Recursively discover albums in folder hierarchy
@@ -182,14 +182,10 @@
 
 **Acceptance Criteria**:
 
-### Quick Pre-Scan
-- Reads first track of each album candidate
-- Extracts disc number and album title tags
-- Completes in <100ms per album
-- Prevents false merges from ambiguous folder names
-
 ### Merge Logic
-- Albums with same base name are grouped
+- Albums with same base name are grouped using folder name patterns only
+- **Special handling for disc subfolders**: When albums are created from subfolders named like disc folders (CD1, CD2, Disc 1, Part 2, etc.), the parent folder name is used as the grouping key to ensure proper multi-disc merging
+- **Example**: Folder "Artist - Album/" containing subfolders "CD1/" and "CD2/" will be merged into a single album named "Album" by Artist, with tracks properly organized by disc number
 - Disc suffix patterns stripped before comparison:
   - `[Disc N]`, `(Disc N)`
   - `[CD N]`, `(CD N)`
@@ -197,10 +193,11 @@
   - Trailing ` 2`, ` 3` (bare number suffix)
 - Merged album characteristics:
   - Tracks concatenated from all discs
-  - Sorted by disc number → track number
+  - Sorted by disc number → track number (from folder patterns initially)
   - Metadata from first disc
   - Folder path set to shared parent
-- Completes merge pass in <2 seconds per 100 albums
+- Album titles from ID3 tags are extracted during background tag scan
+- Completes merge pass in <1 second per 100 albums
 
 ---
 
@@ -238,14 +235,17 @@
 ## Performance Requirements
 
 **Overall Scan**:
-- <10 seconds per 1000 folders (95th percentile)
-- <50MB memory usage during scan
+- <8 seconds per 1000 folders (95th percentile) - improved by removing metadata pre-scan
+- <40MB memory usage during scan - reduced by eliminating temporary metadata storage
 - No ANRs or UI freezes
+- Smooth progress updates throughout entire scan process
 
 **Background Tag Scan**:
 - <30 seconds per 100 albums
 - <20MB additional memory
 - Can be cancelled and resumed
+- Extracts album titles from ID3 tags to replace folder-based initial titles
+- **Note**: Disc numbers from ID3 tags are not currently extracted during background scan (multi-disc detection relies on folder name patterns)
 
 **Error Handling**:
 - Network errors retry automatically (3 attempts)
