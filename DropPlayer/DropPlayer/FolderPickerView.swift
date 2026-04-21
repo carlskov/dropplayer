@@ -18,39 +18,44 @@ struct FolderPickerView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if isLoading {
-                    ProgressView("Loading folders…")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if let error = errorMessage {
-                    errorView(message: error)
-                } else {
-                    folderList
-                }
-            }
-            .navigationTitle(currentPath == "/" ? "Dropbox" : lastComponent(of: currentPath))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
+            ZStack {
+                Theme.libraryGradient
+                    .ignoresSafeArea()
 
-                if !navigationStack.isEmpty {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button {
-                            navigateUp()
-                        } label: {
-                            Label("Back", systemImage: "chevron.left")
+                Group {
+                    if isLoading {
+                        ProgressView("Loading folders…")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else if let error = errorMessage {
+                        errorView(message: error)
+                    } else {
+                        folderList
+                    }
+                }
+                .navigationTitle(currentPath == "/" ? "Dropbox" : lastComponent(of: currentPath))
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { dismiss() }
+                    }
+
+                    if !navigationStack.isEmpty {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button {
+                                navigateUp()
+                            } label: {
+                                Label("Back", systemImage: "chevron.left")
+                            }
                         }
                     }
-                }
 
-                ToolbarItem(placement: .primaryAction) {
-                    Button(isInitialSetup ? "Use This Folder" : "Add This Folder") {
-                        selectFolder(currentPath)
+                    ToolbarItem(placement: .primaryAction) {
+                        Button(isInitialSetup ? "Use This Folder" : "Add This Folder") {
+                            selectFolder(currentPath)
+                        }
+                        .bold()
+                        .disabled(settings.musicFolderPaths.contains(currentPath))
                     }
-                    .bold()
-                    .disabled(settings.musicFolderPaths.contains(currentPath))
                 }
             }
         }

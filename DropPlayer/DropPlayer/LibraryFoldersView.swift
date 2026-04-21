@@ -10,38 +10,43 @@ struct LibraryFoldersView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(settings.musicFolderPaths, id: \.self) { path in
-                    HStack {
-                        Image(systemName: "folder.fill")
-                            .foregroundStyle(Theme.accentColor)
-                        Text(path)
-                            .font(.body)
+            ZStack {
+                Theme.libraryGradient
+                    .ignoresSafeArea()
+
+                List {
+                    ForEach(settings.musicFolderPaths, id: \.self) { path in
+                        HStack {
+                            Image(systemName: "folder.fill")
+                                .foregroundStyle(Theme.accentColor)
+                            Text(path)
+                                .font(.body)
+                        }
+                    }
+                    .onDelete(perform: removeFolders)
+                }
+                .navigationTitle("Library Folders")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Done") { dismiss() }
+                    }
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            showFolderPicker = true
+                        } label: {
+                            Image(systemName: "plus")
+                        }
                     }
                 }
-                .onDelete(perform: removeFolders)
-            }
-            .navigationTitle("Library Folders")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") { dismiss() }
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showFolderPicker = true
-                    } label: {
-                        Image(systemName: "plus")
+                .overlay {
+                    if settings.musicFolderPaths.isEmpty {
+                        ContentUnavailableView(
+                            "No Folders",
+                            systemImage: "folder.badge.questionmark",
+                            description: Text("Tap + to add a Dropbox folder to your library.")
+                        )
                     }
-                }
-            }
-            .overlay {
-                if settings.musicFolderPaths.isEmpty {
-                    ContentUnavailableView(
-                        "No Folders",
-                        systemImage: "folder.badge.questionmark",
-                        description: Text("Tap + to add a Dropbox folder to your library.")
-                    )
                 }
             }
             .sheet(isPresented: $showFolderPicker) {

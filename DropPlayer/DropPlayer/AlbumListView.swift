@@ -82,97 +82,102 @@ struct AlbumListView: View {
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            Group {
-                if library.isScanning {
-                    scanningView
-                } else if library.albums.isEmpty && library.scanError == nil {
-                    emptyView
-                } else if let error = library.scanError {
-                    errorView(message: error)
-                } else {
-                    albumGrid
+            ZStack {
+                Theme.libraryGradient
+                    .ignoresSafeArea()
+
+                Group {
+                    if library.isScanning {
+                        scanningView
+                    } else if library.albums.isEmpty && library.scanError == nil {
+                        emptyView
+                    } else if let error = library.scanError {
+                        errorView(message: error)
+                    } else {
+                        albumGrid
+                    }
                 }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .navigationTitle("Library")
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    if library.isTagScanning {
-                        HStack(spacing: 6) {
-                            ProgressView().scaleEffect(0.8)
-                            Text("Scanning file tags")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .navigationTitle("Library")
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        if library.isTagScanning {
+                            HStack(spacing: 6) {
+                                ProgressView().scaleEffect(0.8)
+                                Text("Scanning file tags")
+                                    .font(.headline)
+                            }
+                        } else {
+                            Text("Library")
                                 .font(.headline)
                         }
-                    } else {
-                        Text("Library")
-                            .font(.headline)
                     }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        columnsPerRow = columnsPerRow == 2 ? 3 : 2
-                    } label: {
-                        Image(systemName: columnsPerRow == 2 ? "square.grid.3x3" : "square.grid.2x2")
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            columnsPerRow = columnsPerRow == 2 ? 3 : 2
+                        } label: {
+                            Image(systemName: columnsPerRow == 2 ? "square.grid.3x3" : "square.grid.2x2")
+                        }
                     }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Section("Sort By") {
-                            ForEach(AlbumSortOption.allCases, id: \.self) { option in
-                                Button {
-                                    settings.albumSortOption = option
-                                } label: {
-                                    HStack {
-                                        Text(option.rawValue)
-                                        if settings.albumSortOption == option {
-                                            Image(systemName: "checkmark")
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Menu {
+                            Section("Sort By") {
+                                ForEach(AlbumSortOption.allCases, id: \.self) { option in
+                                    Button {
+                                        settings.albumSortOption = option
+                                    } label: {
+                                        HStack {
+                                            Text(option.rawValue)
+                                            if settings.albumSortOption == option {
+                                                Image(systemName: "checkmark")
+                                            }
                                         }
                                     }
                                 }
                             }
+                        } label: {
+                            Image(systemName: "arrow.up.arrow.down")
                         }
-                    } label: {
-                        Image(systemName: "arrow.up.arrow.down")
+                    }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Menu {
+                            Button {
+                                Task { await library.rescanLibrary(at: settings.musicFolderPaths) }
+                            } label: {
+                                Label("Rescan Library", systemImage: "arrow.clockwise")
+                            }
+                            .disabled(settings.musicFolderPaths.isEmpty)
+
+                            Button {
+                                showFolderManager = true
+                            } label: {
+                                Label("Manage Folders", systemImage: "folder.badge.gearshape")
+                            }
+
+                            Divider()
+
+                            Button(role: .destructive) {
+                                DropboxAuthManager.shared.signOut()
+                                settings.logOut()
+                            } label: {
+                                Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                        }
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button {
-                            Task { await library.rescanLibrary(at: settings.musicFolderPaths) }
-                        } label: {
-                            Label("Rescan Library", systemImage: "arrow.clockwise")
-                        }
-                        .disabled(settings.musicFolderPaths.isEmpty)
-
-                        Button {
-                            showFolderManager = true
-                        } label: {
-                            Label("Manage Folders", systemImage: "folder.badge.gearshape")
-                        }
-
-                        Divider()
-
-                        Button(role: .destructive) {
-                            DropboxAuthManager.shared.signOut()
-                            settings.logOut()
-                        } label: {
-                            Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                    }
+                .sheet(isPresented: $showFolderManager) {
+                    LibraryFoldersView()
                 }
-            }
-            .sheet(isPresented: $showFolderManager) {
-                LibraryFoldersView()
-            }
-            .navigationDestination(for: Album.self) { album in
-                AlbumDetailView(album: album)
-            }
-            .onChange(of: nowPlaying.navigateToAlbum) { _, album in
-                guard let album else { return }
-                navigationPath = [album]
-                nowPlaying.navigateToAlbum = nil
+                .navigationDestination(for: Album.self) { album in
+                    AlbumDetailView(album: album)
+                }
+                .onChange(of: nowPlaying.navigateToAlbum) { _, album in
+                    guard let album else { return }
+                    navigationPath = [album]
+                    nowPlaying.navigateToAlbum = nil
+                }
             }
         }
     }

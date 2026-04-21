@@ -16,6 +16,10 @@ struct ContentView: View {
                 MainTabView()
             }
         }
+        .background {
+            Theme.libraryGradient
+                .ignoresSafeArea()
+        }
         .environmentObject(NowPlayingCoordinator.shared)
         .animation(.easeInOut, value: settings.isAuthenticated)
         .animation(.easeInOut, value: settings.musicFolderPaths.isEmpty)

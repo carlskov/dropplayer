@@ -48,6 +48,10 @@ struct AlbumDetailView: View {
                     .padding(.bottom, 128)
             }
         }
+        .background {
+            Theme.libraryGradient
+                .ignoresSafeArea()
+        }
         .navigationTitle(album.displayTitle)
         .navigationBarTitleDisplayMode(.inline)
         .task {

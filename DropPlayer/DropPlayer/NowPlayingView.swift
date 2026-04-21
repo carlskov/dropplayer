@@ -15,7 +15,7 @@ struct NowPlayingView: View {
     var body: some View {
         ZStack {
             Rectangle()
-                .fill(.ultraThinMaterial)
+                 .fill(.ultraThinMaterial)
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
