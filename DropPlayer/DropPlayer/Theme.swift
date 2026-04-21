@@ -21,8 +21,8 @@ struct Theme {
     static var libraryGradient: some View {
         LinearGradient(
             gradient: Gradient(colors: [
-                Color(hex: 0x180A55, alpha: 0.2),
-                Color(hex: 0x180A55, alpha: 0.1),
+                Color(hex: 0x180a44, alpha: 0.1),
+                Color(hex: 0x180a44, alpha: 0.1),
             ]),
             startPoint: .top,
             endPoint: .bottom
