@@ -443,6 +443,7 @@ final class LibraryViewModel: ObservableObject {
     private func extractBaseAlbumName(_ folderName: String) -> (baseName: String, discNumber: Int?) {
         // Patterns for multi-disc folders
         let discPatterns = [
+            #"(?i)^(cd|disc|part|vol)\s*(\d+)$"#,       // "CD1", "Disc 2", "Part3", "Vol 4"
             #"(?i)\s*\(\s*cd\s*(\d+)\s*\)\s*$"#,     // "(CD1)", "(CD 1)"
             #"(?i)\s*[-–—]\s*cd\s*(\d+)\s*$"#,     // "- CD1", "- CD 1"
             #"(?i)\s*\[?\s*disc\s*(\d+)\s*\]?\s*$"#, // "[Disc 1]", "Disc 1"
@@ -454,10 +455,19 @@ final class LibraryViewModel: ObservableObject {
         for pattern in discPatterns {
             if let regex = try? NSRegularExpression(pattern: pattern, options: []),
                let match = regex.firstMatch(in: folderName, range: NSRange(folderName.startIndex..., in: folderName)) {
-                let baseName = String(folderName[..<folderName.index(folderName.startIndex, offsetBy: match.range.location)]).trimmingCharacters(in: .whitespacesAndNewlines)
-                if let discRange = Range(match.range(at: 1), in: folderName),
-                   let discNum = Int(folderName[discRange]) {
-                    return (baseName, discNum)
+                
+                // Handle the first pattern separately (CD1, Disc 2, etc.)
+                if pattern == #"(?i)^(cd|disc|part|vol)\s*(\d+)$"# {
+                    if let discRange = Range(match.range(at: 2), in: folderName),
+                       let discNum = Int(folderName[discRange]) {
+                        return ("", discNum)  // No base name for pure disc folders
+                    }
+                } else {
+                    let baseName = String(folderName[..<folderName.index(folderName.startIndex, offsetBy: match.range.location)]).trimmingCharacters(in: .whitespacesAndNewlines)
+                    if let discRange = Range(match.range(at: 1), in: folderName),
+                       let discNum = Int(folderName[discRange]) {
+                        return (baseName, discNum)
+                    }
                 }
             }
         }
@@ -469,21 +479,24 @@ final class LibraryViewModel: ObservableObject {
     private func processAlbumsWithMultiDiscDetection(_ albums: [Album]) -> [Album] {
         var albumGroups: [String: [Album]] = [:]
 
-        // Group albums by base name (single pass)
-        // Use album title if available, otherwise try to infer from folder structure
+        // Group albums by their parent folder and base name for more accurate multi-disc detection
         for album in albums {
             let albumName = album.title.isEmpty ? album.folderName : album.title
-            let (baseName, _) = extractBaseAlbumName(albumName)
+            let (baseName, discNumber) = extractBaseAlbumName(albumName)
             
-            // Special handling for subfolders that look like disc folders (CD1, CD2, etc.)
-            // If the base name looks like a disc folder itself, use parent folder name instead
-            if baseName.range(of: #"(?i)(^|\s)(cd|disc|part|vol)\.?\s*\d+"#, options: .regularExpression) != nil {
-                // This is a disc folder - extract parent folder name for grouping
+            // Only consider this album for multi-disc grouping if:
+            // 1. It has an explicit disc number in its name, OR
+            // 2. It's in a folder that looks like a disc folder (CD1, Disc 2, etc.)
+            let isDiscFolder = album.folderName.range(of: #"(?i)(^|\s)(cd|disc|part|vol)\.?\s*\d+"#, options: .regularExpression) != nil
+            
+            if discNumber != nil || isDiscFolder {
+                // For potential multi-disc albums, use parent folder + base name as grouping key
                 let parentFolder = (album.folderPath as NSString).deletingLastPathComponent
                 let parentBaseName = lastPathComponent(parentFolder)
-                let (cleanParentName, _) = extractBaseAlbumName(parentBaseName)
-                albumGroups[cleanParentName, default: []].append(album)
+                let groupingKey = "\(parentBaseName)_\(baseName)"
+                albumGroups[groupingKey, default: []].append(album)
             } else {
+                // For regular albums, use just the base name
                 albumGroups[baseName, default: []].append(album)
             }
         }
@@ -492,44 +505,105 @@ final class LibraryViewModel: ObservableObject {
 
         for (_, group) in albumGroups {
             if group.count > 1 {
-                // Multi-disc album detected - merge in single pass
-                let sorted = group.sorted { a, b in
-                    let (_, discA) = extractBaseAlbumName(a.folderName)
-                    let (_, discB) = extractBaseAlbumName(b.folderName)
-                    return (discA ?? 0) < (discB ?? 0)
-                }
-
-                var mainAlbum = sorted[0]
+                // Verify this is actually a multi-disc set before merging
+                // Check that all albums in the group have valid disc numbers
+                var allHaveDiscNumbers = true
+                var discNumbers = Set<Int>()
                 
-                // Merge tracks from all discs in single iteration
-                for i in 1..<sorted.count {
-                    for track in sorted[i].tracks {
-                        var mergedTrack = track
-                        mergedTrack.discNumber = i + 1
-                        mainAlbum.tracks.append(mergedTrack)
+                for album in group {
+                    let (_, discNumber) = extractBaseAlbumName(album.folderName)
+                    if discNumber == nil {
+                        allHaveDiscNumbers = false
+                        break
                     }
-                    // Preserve artwork from any disc
-                    if mainAlbum.artworkDropboxPath == nil && sorted[i].artworkDropboxPath != nil {
-                        mainAlbum.artworkDropboxPath = sorted[i].artworkDropboxPath
+                    discNumbers.insert(discNumber!)
+                }
+                
+                // Only merge if:
+                // 1. All albums have explicit disc numbers
+                // 2. Disc numbers form a reasonable sequence (1,2,3... or similar)
+                // 3. There are no large gaps in disc numbers (e.g., 1,3,5 would not merge)
+                if allHaveDiscNumbers && isValidDiscSequence(discNumbers) {
+                    // Multi-disc album confirmed - merge in single pass
+                    let sorted = group.sorted { a, b in
+                        let (_, discA) = extractBaseAlbumName(a.folderName)
+                        let (_, discB) = extractBaseAlbumName(b.folderName)
+                        return (discA ?? 0) < (discB ?? 0)
                     }
-                }
 
-                // Sort tracks by disc then track number
-                mainAlbum.tracks.sort { a, b in
-                    let d0 = a.discNumber ?? 1
-                    let d1 = b.discNumber ?? 1
-                    if d0 != d1 { return d0 < d1 }
-                    return (a.trackNumber ?? Int.max) < (b.trackNumber ?? Int.max)
-                }
+                    var mainAlbum = sorted[0]
+                    
+                    // Merge tracks from all discs in single iteration
+                    for i in 1..<sorted.count {
+                        for track in sorted[i].tracks {
+                            var mergedTrack = track
+                            mergedTrack.discNumber = i + 1
+                            mainAlbum.tracks.append(mergedTrack)
+                        }
+                        // Preserve artwork from any disc
+                        if mainAlbum.artworkDropboxPath == nil && sorted[i].artworkDropboxPath != nil {
+                            mainAlbum.artworkDropboxPath = sorted[i].artworkDropboxPath
+                        }
+                    }
 
-                processedAlbums.append(mainAlbum)
+                    // Sort tracks by disc then track number
+                    mainAlbum.tracks.sort { a, b in
+                        let d0 = a.discNumber ?? 1
+                        let d1 = b.discNumber ?? 1
+                        if d0 != d1 { return d0 < d1 }
+                        return (a.trackNumber ?? Int.max) < (b.trackNumber ?? Int.max)
+                    }
+
+                    processedAlbums.append(mainAlbum)
+                } else {
+                    // Not a valid multi-disc set - add albums separately
+                    processedAlbums.append(contentsOf: group)
+                }
             } else {
-                // Single-disc album
+                // Single album in group
                 processedAlbums.append(group[0])
             }
         }
 
         return processedAlbums
+    }
+
+    private func isValidDiscSequence(_ discNumbers: Set<Int>) -> Bool {
+        let sortedNumbers = discNumbers.sorted()
+        
+        // Check that disc numbers form a reasonable sequence
+        // We want to allow sequences like 1,2,3 or 1,2,4 (gap of 1)
+        // But reject sequences like 1,3,5 (gaps of 2) or 1,4 (gap of 3)
+        
+        // First, check if we have a complete sequence (1,2,3...)
+        var hasCompleteSequence = true
+        for i in 0..<sortedNumbers.count {
+            if sortedNumbers[i] != i + 1 {
+                hasCompleteSequence = false
+                break
+            }
+        }
+        
+        if hasCompleteSequence {
+            return true
+        }
+        
+        // If not complete, check for reasonable gaps
+        // Allow at most one gap of 1 (e.g., 1,2,4 is OK, but 1,2,5 is not)
+        var gapCount = 0
+        for i in 1..<sortedNumbers.count {
+            let gap = sortedNumbers[i] - sortedNumbers[i-1]
+            if gap == 2 {
+                gapCount += 1
+                if gapCount > 1 {
+                    return false
+                }
+            } else if gap > 2 {
+                return false
+            }
+        }
+        
+        return true
     }
 
     private func lastPathComponent(_ path: String) -> String {

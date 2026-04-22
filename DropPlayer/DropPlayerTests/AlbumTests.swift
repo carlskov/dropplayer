@@ -139,28 +139,28 @@ final class AlbumTests: XCTestCase {
 
     func testArtworkFilenamePatternMatching() {
         // Test the filename pattern matching logic for the "front" fallback requirement
-        let testCases = [
+        let testCases: [(filename: String, isImage: Bool, shouldMatchFront: Bool)] = [
             // (filename: String, isImageFile: Bool, shouldMatchFrontPattern: Bool)
             ("cover.jpg", true, false),
             ("folder.png", true, false),
-            ("front.jpg", false), // no prefix - handled by preferred names, not fallback pattern
-            ("-front.jpg", true), // ends with "-front"
-            ("_front.png", true), // ends with "_front"
-            ("album-front.webp", true), // ends with "-front"
-            ("cover_front.jpeg", true), // ends with "_front"
-            ("00-VA_-_Tribal_Science-front.jpg", true), // complex case with "-front" ending
-            ("my_front_cover.jpg", false), // doesn't end with "-front" or "_front"
-            ("frontcover.jpg", false), // doesn't end with "-front" or "_front"
-            ("image.jpg", false),
-            ("track.mp3", false),
+            ("front.jpg", true, false), // no prefix - handled by preferred names, not fallback pattern
+            ("-front.jpg", true, true), // ends with "-front"
+            ("_front.png", true, true), // ends with "_front"
+            ("album-front.webp", true, true), // ends with "-front"
+            ("cover_front.jpeg", true, true), // ends with "_front"
+            ("00-VA_-_Tribal_Science-front.jpg", true, true), // complex case with "-front" ending
+            ("my_front_cover.jpg", true, false), // doesn't end with "-front" or "_front"
+            ("frontcover.jpg", true, false), // doesn't end with "-front" or "_front"
+            ("image.jpg", true, false),
+            ("track.mp3", false, false),
         ]
 
-        for (filename, isImage, shouldMatchFront) in testCases {
-            let isActualImage = isImageFile(filename)
-            XCTAssertEqual(isActualImage, isImage, "Image detection for: " + filename)
+        for testCase in testCases {
+            let isActualImage = isImageFile(testCase.filename)
+            XCTAssertEqual(isActualImage, testCase.isImage, "Image detection for: " + testCase.filename)
 
-            let doesMatchFront = matchesFrontPattern(filename)
-            XCTAssertEqual(doesMatchFront, shouldMatchFront, "Front pattern for: " + filename)
+            let doesMatchFront = matchesFrontPattern(testCase.filename)
+            XCTAssertEqual(doesMatchFront, testCase.shouldMatchFront, "Front pattern for: " + testCase.filename)
         }
     }
 

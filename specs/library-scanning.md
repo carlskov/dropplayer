@@ -176,27 +176,46 @@
 
 ## Multi-Disc Album Merge
 
-**Requirement**: Combine multi-disc albums into single entries
+**Requirement**: Combine multi-disc albums into single entries with improved accuracy
 
-**User Need**: Users want complete albums, not split across multiple discs
+**User Need**: Users want complete albums, not split across multiple discs, while avoiding incorrect merges of separate albums
 
 **Acceptance Criteria**:
 
-### Merge Logic
-- Albums with same base name are grouped using folder name patterns only
-- **Special handling for disc subfolders**: When albums are created from subfolders named like disc folders (CD1, CD2, Disc 1, Part 2, etc.), the parent folder name is used as the grouping key to ensure proper multi-disc merging
-- **Example**: Folder "Artist - Album/" containing subfolders "CD1/" and "CD2/" will be merged into a single album named "Album" by Artist, with tracks properly organized by disc number
-- Disc suffix patterns stripped before comparison:
-  - `[Disc N]`, `(Disc N)`
-  - `[CD N]`, `(CD N)`
-  - `Part N`, `Vol. N`, `Vol N`
-  - Trailing ` 2`, ` 3` (bare number suffix)
-- Merged album characteristics:
-  - Tracks concatenated from all discs
-  - Sorted by disc number → track number (from folder patterns initially)
-  - Metadata from first disc
-  - Folder path set to shared parent
-- Album titles from ID3 tags are extracted during background tag scan
+### Merge Logic (Improved)
+- **Stricter disc detection**: Only folders with explicit disc indicators (CD1, CD2, Disc 1, Part 2, Vol. 3, etc.) are considered for multi-disc merging
+- **Parent folder verification**: Potential multi-disc albums must share the same parent folder to be merged
+- **Disc number validation**: All albums in a group must have valid disc numbers that form a reasonable sequence
+- **Sequence validation**: Disc numbers must form a logical sequence (1,2,3... or allow one gap of 1, e.g., 1,2,4)
+
+### Specific Rules:
+1. **Disc Pattern Matching**: Folders matching these patterns are considered disc folders:
+   - `CD1`, `CD2`, `Disc 1`, `Disc 2`, `Part 1`, `Vol. 1`, `Vol 2`
+   - `(CD1)`, `(CD 1)`, `[Disc 1]`, `Disc 1`
+   - `- CD1`, `- CD 1`, `Part 1`, `Vol. 1`
+   - Trailing numbers like `Album 1`, `Album 2`
+
+2. **Grouping Key**: For potential multi-disc albums, the grouping key is `parentFolderName_baseName`
+
+3. **Merge Conditions**: Albums are merged ONLY if ALL conditions are met:
+   - All albums share the same parent folder
+   - All albums have explicit disc numbers
+   - Disc numbers form a valid sequence (1,2,3... or allow one gap of 1)
+   - No large gaps in disc numbers (e.g., 1,3,5 would NOT merge)
+
+4. **Examples**:
+   - **Valid merge**: `/Artist - Album/CD1`, `/Artist - Album/CD2`, `/Artist - Album/CD3`
+   - **Invalid merge (different parents)**: `/Artist - Album/CD1`, `/Different Artist - Album/CD1`
+   - **Invalid merge (no disc numbers)**: `/Artist - Album 1`, `/Artist - Album 2`
+   - **Invalid merge (large gaps)**: `/Artist - Album/Disc 1`, `/Artist - Album/Disc 3`, `/Artist - Album/Disc 5`
+
+### Merged Album Characteristics:
+- Tracks concatenated from all discs with proper disc numbers
+- Sorted by disc number → track number
+- Metadata from first disc preserved
+- Artwork from any disc preserved (first disc preferred)
+- Folder path set to shared parent
+- Album titles from ID3 tags extracted during background tag scan
 - Completes merge pass in <1 second per 100 albums
 
 ---
