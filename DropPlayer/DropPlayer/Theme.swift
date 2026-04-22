@@ -19,13 +19,14 @@ struct Theme {
     }
 
     static var libraryGradient: some View {
-        LinearGradient(
+        RadialGradient(
             gradient: Gradient(colors: [
-                Color(hex: 0x180a44, alpha: 0.1),
-                Color(hex: 0x180a44, alpha: 0.1),
+                Color(hex: 0x180a55, alpha: 0.3),
+                Color(hex: 0x222222, alpha: 0.1),
             ]),
-            startPoint: .top,
-            endPoint: .bottom
+            center: .center,
+            startRadius: 0,
+            endRadius: 800
         )
     }
 

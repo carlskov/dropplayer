@@ -8,53 +8,56 @@ struct SetupView: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
+        GeometryReader { geometry in
+            VStack(spacing: 32) {
+                Spacer()
 
-            Image(systemName: "music.note.house.fill")
-                .font(.system(size: 80))
-                .foregroundStyle(Theme.accentColor.gradient)
+                Image("AppIconImage")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: geometry.size.width * 0.5)
 
-            VStack(spacing: 8) {
-                Text("DropPlayer")
-                    .font(.largeTitle.bold())
-                Text("Stream your music from Dropbox")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            if let error = errorMessage {
-                Text(error)
-                    .font(.footnote)
-                    .foregroundStyle(.red)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-            }
-
-            Button {
-                connectDropbox()
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "link.cloud.fill")
-                    Text(isConnecting ? "Connecting…" : "Connect Dropbox")
+                VStack(spacing: 8) {
+                    Text("DropPlayer")
+                        .font(.largeTitle.bold())
+                    Text("Stream your music from Dropbox")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Theme.accentColor)
-                .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+
+                if let error = errorMessage {
+                    Text(error)
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+
+                Button {
+                    connectDropbox()
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "link.cloud.fill")
+                        Text(isConnecting ? "Connecting…" : "Connect Dropbox")
+                    }
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Theme.accentColor)
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+                .disabled(isConnecting)
+                .padding(.horizontal, 32)
+
+                Spacer()
+
+                Text("You'll be asked to authorise DropPlayer\nin your browser.")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.bottom)
             }
-            .disabled(isConnecting)
-            .padding(.horizontal, 32)
-
-            Spacer()
-
-            Text("You'll be asked to authorise DropPlayer\nin your browser.")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-                .multilineTextAlignment(.center)
-                .padding(.bottom)
         }
         .onReceive(NotificationCenter.default.publisher(for: .dropboxAuthSucceeded)) { _ in
             isConnecting = false
