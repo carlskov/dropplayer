@@ -21,7 +21,7 @@ struct Theme {
     static var libraryGradient: some View {
         RadialGradient(
             gradient: Gradient(colors: [
-                Color(hex: 0x180a55, alpha: 0.3),
+                Color(hex: 0x3416B7, alpha: 0.1),
                 Color(hex: 0x222222, alpha: 0.1),
             ]),
             center: .center,
